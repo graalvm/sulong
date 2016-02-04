@@ -4,7 +4,9 @@ python:
 jdk:
   - oraclejdk8
 before_install:
+  - sudo add-apt-repository ppa:git-core/ppa
   - sudo apt-get update
+  - sudo apt-get install git
   - sudo apt-get install gcc-4.6
   - sudo apt-get install gobjc++-4.6
   - sudo apt-get install g++-4.6
@@ -12,6 +14,7 @@ before_install:
   - sudo pip install astroid==1.1.0
   - sudo pip install pylint==1.1.0
   - pylint --version
+  - git --version
 install:
   - git clone https://github.com/graalvm/mx.git
   - wget http://ftp.halifax.rwth-aachen.de/eclipse//eclipse/downloads/drops4/R-4.5.1-201509040015/ecj-4.5.1.jar
