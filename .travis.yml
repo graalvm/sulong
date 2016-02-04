@@ -4,6 +4,7 @@ python:
 jdk:
   - oraclejdk8
 before_install:
+  - sudo apt-get update
   - sudo apt-get install gcc-4.6
   - sudo apt-get install gobjc++-4.6
   - sudo apt-get install g++-4.6
