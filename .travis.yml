@@ -4,7 +4,7 @@ python:
 jdk:
   - oraclejdk8
 before_install:
-  - sudo add-apt-repository ppa:mercurial-ppa/releases
+  - sudo add-apt-repository -y ppa:mercurial-ppa/releases
   - sudo apt-get update
   - sudo apt-get upgrade
   - sudo apt-get install gcc-4.6
