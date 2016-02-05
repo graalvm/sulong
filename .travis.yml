@@ -28,7 +28,7 @@ install:
 script:
   - $TEST_COMMAND
 env:
-  - TEST_COMMAND='mx/mx --vm server gate --strict-mode'
+  - TEST_COMMAND='mx/mx -v --vm server gate --strict-mode'
   - TEST_COMMAND='mx/mx --vm server pylint'
   - TEST_COMMAND='mx/mx --vm server checkstyle'
   - TEST_COMMAND='mx/mx --vm server checkoverlap'
