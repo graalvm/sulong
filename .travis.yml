@@ -28,12 +28,12 @@ before_install:
   - sudo add-apt-repository -y ppa:mercurial-ppa/releases
   - sudo add-apt-repository -y ppa:fkrull/deadsnakes
   - sudo apt-get -y update
-  - sudo apt-get install python2.7
-  - sudo apt-get install mercurial
-  - sudo apt-get install gcc-4.6
-  - sudo apt-get install gobjc++-4.6
-  - sudo apt-get install g++-4.6
-  - sudo apt-get install gfortran-4.6
+  - sudo apt-get -y install python2.7
+  - sudo apt-get -y install mercurial
+  - sudo apt-get -y install gcc-4.6
+  - sudo apt-get -y install gobjc++-4.6
+  - sudo apt-get -y install g++-4.6
+  - sudo apt-get -y install gfortran-4.6
 install:
   - export MX_PATH=$TRAVIS_BUILD_DIR/../mx
   - git clone https://github.com/graalvm/mx.git $MX_PATH
