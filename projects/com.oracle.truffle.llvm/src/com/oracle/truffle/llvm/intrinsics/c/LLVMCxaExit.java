@@ -27,46 +27,26 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.factories;
+package com.oracle.truffle.llvm.intrinsics.c;
 
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.llvm.LLVMIntrinsic.LLVMI32Intrinsic;
 import com.oracle.truffle.llvm.nodes.base.LLVMAddressNode;
-import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMFunctionNode;
-import com.oracle.truffle.llvm.nodes.base.floating.LLVM80BitFloatNode;
-import com.oracle.truffle.llvm.nodes.base.floating.LLVMDoubleNode;
-import com.oracle.truffle.llvm.nodes.base.floating.LLVMFloatNode;
-import com.oracle.truffle.llvm.nodes.base.integers.LLVMI16Node;
-import com.oracle.truffle.llvm.nodes.base.integers.LLVMI1Node;
-import com.oracle.truffle.llvm.nodes.base.integers.LLVMI32Node;
-import com.oracle.truffle.llvm.nodes.base.integers.LLVMI64Node;
-import com.oracle.truffle.llvm.nodes.base.integers.LLVMI8Node;
+import com.oracle.truffle.llvm.types.LLVMAddress;
+import com.oracle.truffle.llvm.types.LLVMFunction;
 
-public class LLVMNativeFactory {
+// see http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/baselib---cxa-atexit.html
+@NodeChildren({@NodeChild(type = LLVMFunctionNode.class), @NodeChild(type = LLVMAddressNode.class), @NodeChild(type = LLVMAddressNode.class)})
+public abstract class LLVMCxaExit extends LLVMI32Intrinsic {
 
-    public static Class<?> getJavaClass(LLVMExpressionNode node) {
-        if (node instanceof LLVMI1Node) {
-            return boolean.class;
-        } else if (node instanceof LLVMI8Node) {
-            return byte.class;
-        } else if (node instanceof LLVMI16Node) {
-            return short.class;
-        } else if (node instanceof LLVMI32Node) {
-            return int.class;
-        } else if (node instanceof LLVMI64Node) {
-            return long.class;
-        } else if (node instanceof LLVMFloatNode) {
-            return float.class;
-        } else if (node instanceof LLVMDoubleNode) {
-            return double.class;
-        } else if (node instanceof LLVMAddressNode) {
-            return long.class;
-        } else if (node instanceof LLVM80BitFloatNode) {
-            return byte[].class;
-        } else if (node instanceof LLVMFunctionNode) {
-            return long.class;
-        } else {
-            throw new AssertionError(node);
-        }
+    @SuppressWarnings("unused")
+    @Specialization
+    public int executeI32(LLVMFunction func, LLVMAddress addr, LLVMAddress addr2) {
+        // FIXME we should call the destructor function here
+        return 0;
     }
 
 }

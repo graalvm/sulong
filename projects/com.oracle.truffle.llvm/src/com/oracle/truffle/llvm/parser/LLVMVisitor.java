@@ -333,12 +333,28 @@ public class LLVMVisitor implements LLVMParserRuntime {
         }
     }
 
-    private static List<LLVMNode> addGlobalVars(LLVMVisitor visitor, List<GlobalVariable> globalVars) {
+    private List<LLVMNode> addGlobalVars(LLVMVisitor visitor, List<GlobalVariable> globalVariables) {
         List<LLVMNode> globalNodes = new ArrayList<>();
-        for (GlobalVariable globalVar : globalVars) {
+        for (GlobalVariable globalVar : globalVariables) {
             LLVMNode globalVarWrite = visitor.visitGlobalVariable(globalVar);
             if (globalVarWrite != null) {
                 globalNodes.add(globalVarWrite);
+            }
+            if (globalVar.getName().equals("@llvm.global_ctors")) {
+                ResolvedArrayType type = (ResolvedArrayType) typeResolver.resolve(globalVar.getType());
+                int size = type.getSize();
+                assert size == 1 : "currently only one constructor is support!";
+                LLVMAddress allocGlobalVariable = findOrAllocateGlobal(globalVar);
+                ResolvedType structType = type.getContainedType(0);
+                LLVMAddressNode loadedStruct = (LLVMAddressNode) factoryFacade.createLoad(structType, new LLVMAddressLiteralNode(allocGlobalVariable));
+                ResolvedType functionType = structType.getContainedType(1);
+                int indexedTypeLength = LLVMTypeHelper.getAlignmentByte(functionType);
+                LLVMAddressNode functionLoadTarget = factoryFacade.createGetElementPtr(LLVMBaseType.I32, loadedStruct, new LLVMI32LiteralNode(1), indexedTypeLength);
+                LLVMFunctionNode loadedFunction = (LLVMFunctionNode) factoryFacade.createLoad(functionType, functionLoadTarget);
+                LLVMNode functionCall = factoryFacade.createFunctionCall(loadedFunction, new LLVMExpressionNode[0], LLVMBaseType.VOID);
+                globalNodes.add(functionCall);
+            } else if (globalVar.getName().equals("llvm.global_dtors")) {
+                throw new AssertionError("destructors not yet supported!");
             }
         }
         return globalNodes;
