@@ -58,10 +58,12 @@ import com.oracle.truffle.llvm.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMSqrt
 import com.oracle.truffle.llvm.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMTanFactory;
 import com.oracle.truffle.llvm.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMTanhFactory;
 import com.oracle.truffle.llvm.intrinsics.c.LLVMCallocFactory;
+import com.oracle.truffle.llvm.intrinsics.c.LLVMCxaExitFactory;
 import com.oracle.truffle.llvm.intrinsics.c.LLVMExitFactory;
 import com.oracle.truffle.llvm.intrinsics.c.LLVMFreeFactory;
 import com.oracle.truffle.llvm.intrinsics.c.LLVMMallocFactory;
 import com.oracle.truffle.llvm.nodes.base.LLVMAddressNode;
+import com.oracle.truffle.llvm.nodes.base.LLVMFunctionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.base.floating.LLVMDoubleNode;
 import com.oracle.truffle.llvm.nodes.base.floating.LLVMFloatNode;
@@ -89,6 +91,9 @@ public class LLVMFunctionRegistry {
         // C
         intrinsics.put("@abort", LLVMAbortFactory.getInstance());
         intrinsics.put("@exit", LLVMExitFactory.getInstance());
+
+        // C++
+        intrinsics.put("@__cxa_atexit", LLVMCxaExitFactory.getInstance());
 
         if (optimizationConfig.intrinsifyCLibraryFunctions()) {
             // math.h
@@ -165,6 +170,8 @@ public class LLVMFunctionRegistry {
             argNode = LLVMArgNodeFactory.LLVMDoubleArgNodeGen.create(i);
         } else if (clazz.equals(LLVMAddressNode.class)) {
             argNode = LLVMArgNodeFactory.LLVMAddressArgNodeGen.create(i);
+        } else if (clazz.equals(LLVMFunctionNode.class)) {
+            argNode = LLVMArgNodeFactory.LLVMFunctionArgNodeGen.create(i);
         } else {
             throw new AssertionError(clazz);
         }
