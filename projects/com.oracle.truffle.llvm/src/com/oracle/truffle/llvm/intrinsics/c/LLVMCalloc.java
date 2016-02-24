@@ -29,14 +29,20 @@
  */
 package com.oracle.truffle.llvm.intrinsics.c;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.llvm.LLVMIntrinsic;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.llvm.LLVMIntrinsic.LLVMAddressIntrinsic;
+import com.oracle.truffle.llvm.nodes.base.integers.LLVMI64Node;
+import com.oracle.truffle.llvm.types.LLVMAddress;
+import com.oracle.truffle.llvm.types.memory.LLVMHeap;
 
-public class LLVMSqrt extends LLVMIntrinsic {
+@NodeChildren({@NodeChild(type = LLVMI64Node.class), @NodeChild(type = LLVMI64Node.class)})
+public abstract class LLVMCalloc extends LLVMAddressIntrinsic {
 
-    @Override
-    public Object execute(VirtualFrame frame) {
-        return Math.sqrt((double) frame.getArguments()[0]);
+    @Specialization
+    public LLVMAddress executeIntrinsic(long numberItems, long size) {
+        return LLVMHeap.allocateZeroedMemory(numberItems * size);
     }
 
 }

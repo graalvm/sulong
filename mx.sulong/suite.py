@@ -5,8 +5,8 @@ suite = {
   "imports" : {
     "suites" : [
         {
-           "name" : "graal",
-           "version" : "c7d957f63b5c8cf51349b1c8a3a4357daef22539",
+           "name" : "graal-core",
+           "version" : "e2bcb37a582509e2af81486c4ff4afa4508ada8a",
            "urls" : [
                 {"url" : "https://github.com/graalvm/graal-core", "kind" : "git"},
             ]
@@ -256,7 +256,7 @@ suite = {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "graal:GRAAL_TRUFFLE_HOTSPOT",
+        "graal-core:GRAAL_TRUFFLE_HOTSPOT",
         "com.oracle.truffle.llvm.runtime",
         "com.oracle.truffle.llvm.types",
       ],
@@ -318,10 +318,10 @@ suite = {
       ],
       "distDependencies" : [
         "truffle:TRUFFLE_API",
-        "graal:GRAAL_API",
-        "graal:GRAAL_COMPILER",
-        "graal:GRAAL_HOTSPOT",
-        "graal:GRAAL_TRUFFLE_HOTSPOT",
+        "graal-core:GRAAL_API",
+        "graal-core:GRAAL_COMPILER",
+        "graal-core:GRAAL_HOTSPOT",
+        "graal-core:GRAAL_TRUFFLE_HOTSPOT",
       ]
   },
  }

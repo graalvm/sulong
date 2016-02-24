@@ -241,6 +241,10 @@ import com.oracle.truffle.llvm.types.LLVMMetadata;
 import com.oracle.truffle.llvm.types.memory.LLVMHeap;
 import com.oracle.truffle.llvm.types.memory.LLVMStack;
 
+/**
+ * This class traverses the LLVM IR AST as provided by the <code>com.intel.llvm.ireditor</code>
+ * project and returns an executable AST.
+ */
 public class LLVMVisitor implements LLVMParserRuntime {
 
     private static final int HEX_BASE = 16;
@@ -261,6 +265,8 @@ public class LLVMVisitor implements LLVMParserRuntime {
     private NodeFactoryFacade factoryFacade;
     private final LLVMOptimizationConfiguration optimizationConfiguration;
 
+    private Map<BasicBlock, List<Phi>> phiRefs;
+
     public LLVMVisitor(LLVMContext context, LLVMOptimizationConfiguration optimizationConfiguration) {
         currentContext = context;
         this.optimizationConfiguration = optimizationConfiguration;
@@ -277,8 +283,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
         allocateGlobals(this, objects);
         for (EObject object : objects) {
             if (object instanceof FunctionDef) {
-                phiVisitor = new LLVMPhiVisitor();
-                phiVisitor.visit((FunctionDef) object);
+                phiRefs = LLVMPhiVisitor.visit((FunctionDef) object);
                 LLVMFunction function = visitFunction((FunctionDef) object);
                 Map<String, Integer> functionLabels = labelList;
                 functionToLabelMapping.put(((FunctionDef) object).getHeader(), functionLabels);
@@ -333,12 +338,31 @@ public class LLVMVisitor implements LLVMParserRuntime {
         }
     }
 
-    private static List<LLVMNode> addGlobalVars(LLVMVisitor visitor, List<GlobalVariable> globalVars) {
+    private List<LLVMNode> addGlobalVars(LLVMVisitor visitor, List<GlobalVariable> globalVariables) {
         List<LLVMNode> globalNodes = new ArrayList<>();
-        for (GlobalVariable globalVar : globalVars) {
+        for (GlobalVariable globalVar : globalVariables) {
             LLVMNode globalVarWrite = visitor.visitGlobalVariable(globalVar);
             if (globalVarWrite != null) {
                 globalNodes.add(globalVarWrite);
+            }
+            if (globalVar.getName().equals("@llvm.global_ctors")) {
+                ResolvedArrayType type = (ResolvedArrayType) typeResolver.resolve(globalVar.getType());
+                int size = type.getSize();
+                LLVMAddress allocGlobalVariable = findOrAllocateGlobal(globalVar);
+                ResolvedType structType = type.getContainedType(0);
+                int structSize = LLVMTypeHelper.getByteSize(structType);
+                for (int i = 0; i < size; i++) {
+                    LLVMAddressNode structPointer = factoryFacade.createGetElementPtr(LLVMBaseType.I32, new LLVMAddressLiteralNode(allocGlobalVariable), new LLVMI32LiteralNode(i), structSize);
+                    LLVMAddressNode loadedStruct = (LLVMAddressNode) factoryFacade.createLoad(structType, structPointer);
+                    ResolvedType functionType = structType.getContainedType(1);
+                    int indexedTypeLength = LLVMTypeHelper.getAlignmentByte(functionType);
+                    LLVMAddressNode functionLoadTarget = factoryFacade.createGetElementPtr(LLVMBaseType.I32, loadedStruct, new LLVMI32LiteralNode(1), indexedTypeLength);
+                    LLVMFunctionNode loadedFunction = (LLVMFunctionNode) factoryFacade.createLoad(functionType, functionLoadTarget);
+                    LLVMNode functionCall = factoryFacade.createFunctionCall(loadedFunction, new LLVMExpressionNode[0], LLVMBaseType.VOID);
+                    globalNodes.add(functionCall);
+                }
+            } else if (globalVar.getName().equals("llvm.global_dtors")) {
+                throw new AssertionError("destructors not yet supported!");
             }
         }
         return globalNodes;
@@ -590,19 +614,18 @@ public class LLVMVisitor implements LLVMParserRuntime {
         return getWriteNode(writeValue, frameSlot, type);
     }
 
-    private static Map<String, Integer> getBlockLabelIndexMapping(FunctionDef functionDef) {
+    private Map<String, Integer> getBlockLabelIndexMapping(FunctionDef functionDef) {
         int labelIndex = 0;
         HashMap<String, Integer> labels = new HashMap<>();
         for (BasicBlock basicBlock : functionDef.getBasicBlocks()) {
             labels.put(basicBlock.getName(), labelIndex);
             int nrInstructions = basicBlock.getInstructions().size();
-            int nrAdditionalPhiAssignments = phiVisitor.getPhiReferences(basicBlock).size();
+            int nrAdditionalPhiAssignments = phiRefs.get(basicBlock).size();
             labelIndex += nrInstructions + nrAdditionalPhiAssignments;
         }
         return labels;
     }
 
-    private static LLVMPhiVisitor phiVisitor;
     public static DataSpecConverter layoutConverter;
 
     private List<LLVMNode> visitBasicBlock(BasicBlock basicBlock) {
@@ -619,8 +642,8 @@ public class LLVMVisitor implements LLVMParserRuntime {
     private List<LLVMNode> visitInstruction(BasicBlock basicBlock, Instruction instr) {
         if (instr instanceof TerminatorInstruction) {
             List<LLVMNode> statements = new ArrayList<>();
-            if (!phiVisitor.getPhiReferences(basicBlock).isEmpty()) {
-                List<Phi> phiValues = phiVisitor.getPhiReferences(basicBlock);
+            if (!phiRefs.get(basicBlock).isEmpty()) {
+                List<Phi> phiValues = phiRefs.get(basicBlock);
                 if (isConditionalBranch(instr)) {
                     Instruction_brImpl conditionalBranch = (Instruction_brImpl) ((TerminatorInstruction) instr).getInstruction();
                     for (Phi valueRef : phiValues) {
@@ -1068,13 +1091,15 @@ public class LLVMVisitor implements LLVMParserRuntime {
             } else if (constant.getRef() instanceof GlobalVariable) {
                 GlobalVariable globalVariable = (GlobalVariable) constant.getRef();
                 String globalVarName = globalVariable.getName();
-                if (globalVarName.equals("@stdout") || globalVarName.equals("@stdin") || globalVarName.equals("@stderr")) {
+                String linkage = globalVariable.getLinkage();
+                if ("external".equals(linkage)) {
                     long getNativeSymbol = getContext().getNativeHandle(globalVarName);
                     return new LLVMAddressLiteralNode(LLVMAddress.fromLong(getNativeSymbol));
+                } else {
+                    LLVMAddress findOrAllocateGlobal = findOrAllocateGlobal(globalVariable);
+                    assert findOrAllocateGlobal != null;
+                    return new LLVMAddressLiteralNode(findOrAllocateGlobal);
                 }
-                LLVMAddress findOrAllocateGlobal = findOrAllocateGlobal(globalVariable);
-                assert findOrAllocateGlobal != null;
-                return new LLVMAddressLiteralNode(findOrAllocateGlobal);
             } else if (constant instanceof ZeroInitializer) {
                 return visitZeroInitializer(type);
             } else if (constant instanceof ConstantExpression_convert) {
