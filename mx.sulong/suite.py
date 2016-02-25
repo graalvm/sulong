@@ -1,12 +1,12 @@
 suite = {
-  "mxversion" : "5.6.16",
+  "mxversion" : "5.8.1",
   "name" : "sulong",
 
   "imports" : {
     "suites" : [
         {
            "name" : "graal-core",
-           "version" : "e2bcb37a582509e2af81486c4ff4afa4508ada8a",
+           "version" : "f6df63bb9f88ae44efb8005ec7a6914305d62cab",
            "urls" : [
                 {"url" : "https://github.com/graalvm/graal-core", "kind" : "git"},
             ]
