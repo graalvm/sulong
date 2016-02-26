@@ -20,7 +20,7 @@ install:
   - git clone https://github.com/graalvm/mx
   - wget http://ftp.halifax.rwth-aachen.de/eclipse//eclipse/downloads/drops4/R-4.5.1-201509040015/ecj-4.5.1.jar
   - mv ecj-4.5.1.jar mx/ecj.jar
-  - export JDT=mx/ecj.jar
+  - export JDT=`pwd`/mx/ecj.jar
   - wget https://lafo.ssw.uni-linz.ac.at/slavefiles/gate/eclipse-jdk8-linux-x86_64.tar.gz
   - tar -xvzf eclipse-jdk8-linux-x86_64.tar.gz
   - export ECLIPSE_EXE=eclipse/eclipse
@@ -31,3 +31,4 @@ env:
   - TEST_COMMAND='mx/mx --src-suitemodel nested gate'
 after_failure: 
   - find . -iname "*.log" -print0 | xargs -0 cat
+  - ls mx
