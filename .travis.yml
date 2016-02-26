@@ -31,6 +31,16 @@ install:
 script:
   - $TEST_COMMAND
 env:
-  - TEST_COMMAND='mx/mx --src-suitemodel nested gate'
+  - TEST_COMMAND='mx/mx pylint'
+  - TEST_COMMAND='mx/mx checkstyle'
+  - TEST_COMMAND='mx/mx checkoverlap'
+  - TEST_COMMAND='mx/mx canonicalizeprojects'
+  - TEST_COMMAND='mx/mx buildvms -c --vms server --builds product'
+  - TEST_COMMAND='mx/mx su-tests-bench'
+  - TEST_COMMAND='mx/mx su-tests-llvm'
+  - TEST_COMMAND='mx/mx su-tests-types'
+  - TEST_COMMAND='mx/mx su-tests-nwcc'
+  - TEST_COMMAND='mx/mx su-tests-sulong'
+  - TEST_COMMAND='mx/mx su-tests-gcc'
 after_failure: 
   - find . -iname "*.log" -print0 | xargs -0 cat
