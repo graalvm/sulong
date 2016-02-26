@@ -13,6 +13,7 @@ install:
   - sudo apt-get install gobjc++-4.6
   - sudo apt-get install g++-4.6
   - sudo apt-get install gfortran-4.6
+  - sudo apt-get install libgmp3-dev
   - sudo pip install astroid==1.1.0
   - sudo pip install pylint==1.1.0
   - pylint --version
