@@ -29,3 +29,5 @@ script:
   - $TEST_COMMAND
 env:
   - TEST_COMMAND='mx/mx --src-suitemodel nested gate'
+after_failure: 
+  - cat *.log
