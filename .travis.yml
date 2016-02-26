@@ -10,6 +10,7 @@ install:
   - sudo apt-get install python2.7
   - sudo apt-get install mercurial
   - sudo apt-get install gcc-4.6
+  - sudo apt-get install gcc-4.6-plugin-dev
   - sudo apt-get install gobjc++-4.6
   - sudo apt-get install g++-4.6
   - sudo apt-get install gfortran-4.6
