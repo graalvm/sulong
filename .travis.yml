@@ -30,4 +30,4 @@ script:
 env:
   - TEST_COMMAND='mx/mx --src-suitemodel nested gate'
 after_failure: 
-  - cat *.log
+  - find . -iname "*.log" -print0 | xargs -0 cat
