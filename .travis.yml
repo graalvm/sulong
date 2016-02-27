@@ -35,6 +35,6 @@ env:
   - TEST_COMMAND='mx/mx checkstyle'
   - TEST_COMMAND='mx/mx checkoverlap'
   - TEST_COMMAND='mx/mx canonicalizeprojects'
-  - TEST_COMMAND='mx/mx --vm server --vmbuild product build -c && mx build && mx findbugs &&  mx su-tests-gcc'
+  - TEST_COMMAND='mx/mx --vm server --vmbuild product build -c && mx/mx build && mx/mx findbugs && mx/mx su-tests-gcc'
 after_failure: 
   - find . -iname "*.log" -print0 | xargs -0 cat
