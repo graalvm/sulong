@@ -85,6 +85,7 @@ public final class LLVMLanguage extends TruffleLanguage<LLVMContext> {
         return createFindContextNode();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected Visualizer getVisualizer() {
         return null;
