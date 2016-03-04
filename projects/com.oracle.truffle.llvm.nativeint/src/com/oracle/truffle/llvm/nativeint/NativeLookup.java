@@ -122,7 +122,7 @@ public class NativeLookup {
         Class<?> retType = getJavaClass(function.getLlvmReturnType());
         Class<?>[] paramTypes = getJavaClassses(args, function.getLlvmParamTypes());
         String functionName = function.getName().substring(1);
-        if (cachedHandles.containsKey(functionName)) {
+        if (!function.isVarArgs() && cachedHandles.containsKey(functionName)) {
             recordFoundFunctionHandle(function, cachedHandles.get(functionName));
             return cachedHandles.get(functionName);
         } else {
