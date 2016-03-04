@@ -34,6 +34,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -49,7 +50,7 @@ import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMFunctionNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMLanguage;
 import com.oracle.truffle.llvm.nodes.impl.base.floating.LLVM80BitFloatNode;
-import com.oracle.truffle.llvm.nodes.impl.cast.LLVMToI64NodeFactory.LLVMAddressToI64NodeGen;
+import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI64Node;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNodeFactory.LLVM80BitArgConvertNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNodeFactory.LLVMFunctionCallChainNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMNativeCallConvertNode.LLVMResolvedNative80BitFloatCallNode;
@@ -146,9 +147,8 @@ public abstract class LLVMCallNode {
             CompilerAsserts.neverPartOfCompilation();
             LLVMExpressionNode[] newNodes = new LLVMExpressionNode[originalArgs.length];
             for (int i = 0; i < newNodes.length; i++) {
-                if (originalArgs[i] instanceof LLVMAddressNode) {
-                    newNodes[i] = LLVMAddressToI64NodeGen.create((LLVMAddressNode) originalArgs[i]);
-                } else if (originalArgs[i] instanceof LLVM80BitFloatNode) {
+                assert !(originalArgs[i] instanceof LLVMAddressNode) : "should be passed as " + LLVMI64Node.class.getSimpleName();
+                if (originalArgs[i] instanceof LLVM80BitFloatNode) {
                     newNodes[i] = LLVM80BitArgConvertNodeGen.create((LLVM80BitFloatNode) originalArgs[i]);
                     throw new AssertionError("foreign function interface does not support 80 bit floats yet");
                 } else if (originalArgs[i] instanceof LLVMFunctionNode) {
@@ -243,6 +243,7 @@ public abstract class LLVMCallNode {
 
         public abstract Object executeDispatch(VirtualFrame frame, LLVMFunction function, Object[] arguments);
 
+        @TruffleBoundary
         public static CallTarget getIndirectCallTarget(LLVMContext context, LLVMFunction function, LLVMExpressionNode[] args) {
             CallTarget callTarget = context.getFunction(function);
             if (callTarget == null) {
@@ -273,7 +274,8 @@ public abstract class LLVMCallNode {
         @Specialization(contains = "doDirect")
         protected Object doIndirect(VirtualFrame frame, LLVMFunction function, Object[] arguments, //
                         @Cached("create()") IndirectCallNode callNode) {
-            return callNode.call(frame, context.getFunction(function), arguments);
+            CallTarget lookedUpFunction = getIndirectCallTarget(getContext(), function, getNodes());
+            return callNode.call(frame, lookedUpFunction, arguments);
         }
 
         public LLVMContext getContext() {

@@ -170,17 +170,18 @@ public class LLVM {
             int argParamCount = mainSignature.getLlvmParamTypes().length;
             LLVMGlobalRootNode globalFunction;
             LLVMContext context = module.getContext();
+            // FIXME should create in parser
             if (argParamCount == 0) {
                 globalFunction = LLVMGlobalRootNode.createNoArgumentsMain(context, module.getStaticInits(), originalCallTarget, module.getAllocatedAddresses());
             } else if (argParamCount == 1) {
                 globalFunction = LLVMGlobalRootNode.createArgsCountMain(context, module.getStaticInits(), originalCallTarget, module.getAllocatedAddresses(), args.length + 1);
             } else {
-                LLVMAddress allocatedArgsStartAddress = getArgsAsStringArray(fileSource, args);
+                long allocatedArgsStartAddress = getArgsAsStringArray(fileSource, args).getVal();
                 if (argParamCount == 2) {
                     globalFunction = LLVMGlobalRootNode.createArgsMain(context, module.getStaticInits(), originalCallTarget, module.getAllocatedAddresses(), args.length + 1,
                                     allocatedArgsStartAddress);
                 } else if (argParamCount == THREE_ARGS) {
-                    LLVMAddress posixEnvPointer = LLVMAddress.NULL_POINTER;
+                    long posixEnvPointer = LLVMAddress.NULL_POINTER.getVal();
                     globalFunction = LLVMGlobalRootNode.createArgsEnvMain(context, module.getStaticInits(), originalCallTarget, module.getAllocatedAddresses(), args.length + 1,
                                     allocatedArgsStartAddress,
                                     posixEnvPointer);

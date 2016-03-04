@@ -140,7 +140,7 @@ public abstract class LLVMIntrinsicRootNode extends RootNode {
 
         @Specialization
         public Object execute(LLVMAddress value) {
-            return value;
+            return value.getVal();
         }
 
     }

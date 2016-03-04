@@ -302,4 +302,9 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
         return LLVMGetElementPtrFactory.createGetElementPtr((LLVMAddressNode) currentAddress, oneValueNode, currentOffset);
     }
 
+    @Override
+    public LLVMExpressionNode createActualParameter(LLVMExpressionNode parameter) {
+        return LLVMFunctionFactory.createActualParameter(parameter);
+    }
+
 }

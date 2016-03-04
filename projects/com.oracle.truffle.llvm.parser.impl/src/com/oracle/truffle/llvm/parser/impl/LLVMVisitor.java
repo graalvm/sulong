@@ -641,10 +641,11 @@ public class LLVMVisitor implements LLVMParserRuntime {
             argNodes.add(allocateFunctionLifetime(retType));
         }
         for (Argument arg : args) {
-            argNodes.add(visitValueRef(arg.getRef(), arg.getType().getType()));
+            LLVMExpressionNode actualParameter = visitValueRef(arg.getRef(), arg.getType().getType());
+            argNodes.add(actualParameter);
         }
-        LLVMExpressionNode[] finalArgs = argNodes.toArray(new LLVMExpressionNode[argNodes.size()]);
         if (callee instanceof GlobalValueRef && ((GlobalValueRef) callee).getConstant().getRef() instanceof FunctionHeader) {
+            LLVMExpressionNode[] finalArgs = argNodes.toArray(new LLVMExpressionNode[argNodes.size()]);
             FunctionHeader functionHeader = (FunctionHeader) ((GlobalValueRef) callee).getConstant().getRef();
             String functionName = functionHeader.getName();
             if (functionName.startsWith("@llvm.")) {
@@ -653,7 +654,15 @@ public class LLVMVisitor implements LLVMParserRuntime {
         }
         LLVMExpressionNode func = visitValueRef((ValueRef) callee, null);
         LLVMFunctionNode functionNode = (LLVMFunctionNode) func;
-        return factoryFacade.createFunctionCall(functionNode, finalArgs, LLVMTypeHelper.getLLVMType(retType));
+        return factoryFacade.createFunctionCall(functionNode, unwrapFunctionCallArgs(argNodes), LLVMTypeHelper.getLLVMType(retType));
+    }
+
+    private LLVMExpressionNode[] unwrapFunctionCallArgs(List<LLVMExpressionNode> argNodes) {
+        LLVMExpressionNode[] actualArgs = new LLVMExpressionNode[argNodes.size()];
+        for (int i = 0; i < actualArgs.length; i++) {
+            actualArgs[i] = factoryFacade.createActualParameter(argNodes.get(i));
+        }
+        return actualArgs;
     }
 
     private LLVMNode visitStoreInstruction(Instruction_store instr) {

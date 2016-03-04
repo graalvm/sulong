@@ -34,7 +34,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNode.LLVMResolvedDirectNativeCallNode;
-import com.oracle.truffle.llvm.types.LLVMAddress;
 import com.oracle.truffle.llvm.types.LLVMFunction;
 import com.oracle.truffle.llvm.types.LLVMFunction.LLVMRuntimeType;
 
@@ -54,8 +53,7 @@ public abstract class LLVMNativeCallConvertNode {
 
         @Override
         public Object executeGeneric(VirtualFrame frame) {
-            long addr = (long) super.executeGeneric(frame);
-            return LLVMAddress.fromLong(addr);
+            return (long) super.executeGeneric(frame);
         }
     }
 
