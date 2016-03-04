@@ -34,6 +34,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -242,6 +243,7 @@ public abstract class LLVMCallNode {
 
         public abstract Object executeDispatch(VirtualFrame frame, LLVMFunction function, Object[] arguments);
 
+        @TruffleBoundary
         public static CallTarget getIndirectCallTarget(LLVMContext context, LLVMFunction function, LLVMExpressionNode[] args) {
             CallTarget callTarget = context.getFunction(function);
             if (callTarget == null) {
@@ -272,7 +274,8 @@ public abstract class LLVMCallNode {
         @Specialization(contains = "doDirect")
         protected Object doIndirect(VirtualFrame frame, LLVMFunction function, Object[] arguments, //
                         @Cached("create()") IndirectCallNode callNode) {
-            return callNode.call(frame, context.getFunction(function), arguments);
+            CallTarget lookedUpFunction = getIndirectCallTarget(getContext(), function, getNodes());
+            return callNode.call(frame, lookedUpFunction, arguments);
         }
 
         public LLVMContext getContext() {
