@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.nativeint;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -111,6 +112,8 @@ public class NativeLookup {
         return lookupSymbol(name.substring(1));
     }
 
+    private final Map<String, NativeFunctionHandle> cachedHandles = new HashMap<>();
+
     public NativeFunctionHandle getNativeHandle(LLVMFunction function, LLVMExpressionNode[] args) {
         CompilerAsserts.neverPartOfCompilation();
         if (nfi == null) {
@@ -119,20 +122,25 @@ public class NativeLookup {
         Class<?> retType = getJavaClass(function.getLlvmReturnType());
         Class<?>[] paramTypes = getJavaClassses(args, function.getLlvmParamTypes());
         String functionName = function.getName().substring(1);
-        NativeFunctionHandle functionHandle;
-        if (functionName.equals("fork") || functionName.equals("pthread_create") || functionName.equals("pipe")) {
-            throw new LLVMUnsupportedException(UnsupportedReason.MULTITHREADING);
-        }
-        if (LLVMOptions.getDynamicLibraryPaths() == null) {
-            functionHandle = nfi.getFunctionHandle(functionName, retType, paramTypes);
+        if (cachedHandles.containsKey(functionName)) {
+            return cachedHandles.get(functionName);
         } else {
-            NativeLibraryHandle[] handles = getNativeFunctionHandles();
-            functionHandle = nfi.getFunctionHandle(handles, functionName, retType, paramTypes);
+            NativeFunctionHandle functionHandle;
+            if (functionName.equals("fork") || functionName.equals("pthread_create") || functionName.equals("pipe")) {
+                throw new LLVMUnsupportedException(UnsupportedReason.MULTITHREADING);
+            }
+            if (LLVMOptions.getDynamicLibraryPaths() == null) {
+                functionHandle = nfi.getFunctionHandle(functionName, retType, paramTypes);
+            } else {
+                NativeLibraryHandle[] handles = getNativeFunctionHandles();
+                functionHandle = nfi.getFunctionHandle(handles, functionName, retType, paramTypes);
+            }
+            if (LLVMOptions.printNativeCallStats() && functionHandle != null) {
+                recordNativeFunctionCallSite(function);
+            }
+            cachedHandles.put(functionName, functionHandle);
+            return functionHandle;
         }
-        if (LLVMOptions.printNativeCallStats() && functionHandle != null) {
-            recordNativeFunctionCallSite(function);
-        }
-        return functionHandle;
     }
 
     private static NativeLibraryHandle[] getNativeFunctionHandles() {
