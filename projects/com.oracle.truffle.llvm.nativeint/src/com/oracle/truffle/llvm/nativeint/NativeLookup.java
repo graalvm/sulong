@@ -123,6 +123,7 @@ public class NativeLookup {
         Class<?>[] paramTypes = getJavaClassses(args, function.getLlvmParamTypes());
         String functionName = function.getName().substring(1);
         if (cachedHandles.containsKey(functionName)) {
+            recordFoundFunctionHandle(function, cachedHandles.get(functionName));
             return cachedHandles.get(functionName);
         } else {
             NativeFunctionHandle functionHandle;
@@ -135,11 +136,17 @@ public class NativeLookup {
                 NativeLibraryHandle[] handles = getNativeFunctionHandles();
                 functionHandle = nfi.getFunctionHandle(handles, functionName, retType, paramTypes);
             }
-            if (LLVMOptions.printNativeCallStats() && functionHandle != null) {
-                recordNativeFunctionCallSite(function);
+            recordFoundFunctionHandle(function, functionHandle);
+            if (functionHandle != null) {
+                cachedHandles.put(functionName, functionHandle);
             }
-            cachedHandles.put(functionName, functionHandle);
             return functionHandle;
+        }
+    }
+
+    private void recordFoundFunctionHandle(LLVMFunction function, NativeFunctionHandle functionHandle) {
+        if (LLVMOptions.printNativeCallStats() && functionHandle != null) {
+            recordNativeFunctionCallSite(function);
         }
     }
 
