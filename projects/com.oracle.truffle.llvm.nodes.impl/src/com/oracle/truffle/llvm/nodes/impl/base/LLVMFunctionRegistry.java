@@ -46,6 +46,7 @@ import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI16Node;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI32Node;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI64Node;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI8Node;
+import com.oracle.truffle.llvm.nodes.impl.cast.LLVMToAddressNodeFactory.LLVMI64ToAddressNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMAbortFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMACosFactory;
@@ -168,7 +169,7 @@ public class LLVMFunctionRegistry {
         } else if (clazz.equals(LLVMDoubleNode.class)) {
             argNode = LLVMArgNodeFactory.LLVMDoubleArgNodeGen.create(i);
         } else if (clazz.equals(LLVMAddressNode.class)) {
-            argNode = LLVMArgNodeFactory.LLVMAddressArgNodeGen.create(i);
+            argNode = LLVMI64ToAddressNodeGen.create(LLVMArgNodeFactory.LLVMI64ArgNodeGen.create(i));
         } else if (clazz.equals(LLVMFunctionNode.class)) {
             argNode = LLVMArgNodeFactory.LLVMFunctionArgNodeGen.create(i);
         } else {

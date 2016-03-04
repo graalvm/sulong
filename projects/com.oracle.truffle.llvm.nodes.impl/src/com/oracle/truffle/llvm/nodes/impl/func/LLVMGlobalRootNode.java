@@ -57,12 +57,13 @@ public class LLVMGlobalRootNode extends RootNode {
         return new LLVMGlobalRootNode(context, staticInits, main, llvmAddresses, argsCount);
     }
 
-    public static LLVMGlobalRootNode createArgsMain(LLVMContext context, LLVMNode[] staticInits, CallTarget main, LLVMAddress[] llvmAddresses, int argsCount, LLVMAddress args) {
-        return new LLVMGlobalRootNode(context, staticInits, main, llvmAddresses, argsCount, args);
+    public static LLVMGlobalRootNode createArgsMain(LLVMContext context, LLVMNode[] staticInits, CallTarget main, LLVMAddress[] llvmAddresses, int argsCount, long allocatedArgsStartAddress) {
+        return new LLVMGlobalRootNode(context, staticInits, main, llvmAddresses, argsCount, allocatedArgsStartAddress);
     }
 
-    public static LLVMGlobalRootNode createArgsEnvMain(LLVMContext context, LLVMNode[] staticInits, CallTarget main, LLVMAddress[] llvmAddresses, int argsCount, LLVMAddress args, LLVMAddress envp) {
-        return new LLVMGlobalRootNode(context, staticInits, main, llvmAddresses, argsCount, args, envp);
+    public static LLVMGlobalRootNode createArgsEnvMain(LLVMContext context, LLVMNode[] staticInits, CallTarget main, LLVMAddress[] llvmAddresses, int argsCount, long allocatedArgsStartAddress,
+                    long posixEnvPointer) {
+        return new LLVMGlobalRootNode(context, staticInits, main, llvmAddresses, argsCount, allocatedArgsStartAddress, posixEnvPointer);
     }
 
     @Children private final LLVMNode[] staticInits;

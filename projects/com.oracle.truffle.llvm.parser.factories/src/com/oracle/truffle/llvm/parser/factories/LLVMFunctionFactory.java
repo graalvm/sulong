@@ -48,8 +48,9 @@ import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI64Node;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI8Node;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMIVarBitNode;
 import com.oracle.truffle.llvm.nodes.impl.base.vector.LLVMVectorNode;
+import com.oracle.truffle.llvm.nodes.impl.cast.LLVMToAddressNodeFactory.LLVMI64ToAddressNodeGen;
+import com.oracle.truffle.llvm.nodes.impl.cast.LLVMToI64NodeFactory.LLVMAddressToI64NodeGen;
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVM80BitFloatRetNodeGen;
-import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMAddressRetNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMDoubleRetNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMFloatRetNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMFunctionRetNodeGen;
@@ -63,7 +64,6 @@ import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMStructR
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMVectorRetNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMVoidReturnNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVM80BitFloatArgNodeGen;
-import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMAddressArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMDoubleArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMDoubleVectorArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMFloatArgNodeGen;
@@ -83,7 +83,6 @@ import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMIVarBitArg
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNode.LLVMUnresolvedCallNode;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallUnboxNode.LLVMVoidCallUnboxNode;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallUnboxNodeFactory.LLVM80BitFloatCallUnboxNodeGen;
-import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallUnboxNodeFactory.LLVMAddressCallUnboxNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallUnboxNodeFactory.LLVMDoubleCallUnboxNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallUnboxNodeFactory.LLVMFloatCallUnboxNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallUnboxNodeFactory.LLVMFunctionCallUnboxNodeGen;
@@ -137,7 +136,7 @@ public final class LLVMFunctionFactory {
                 case X86_FP80:
                     return LLVM80BitFloatRetNodeGen.create((LLVM80BitFloatNode) retValue, retSlot);
                 case ADDRESS:
-                    return LLVMAddressRetNodeGen.create((LLVMAddressNode) retValue, retSlot);
+                    return LLVMI64RetNodeGen.create(LLVMAddressToI64NodeGen.create((LLVMAddressNode) retValue), retSlot);
                 case FUNCTION_ADDRESS:
                     return LLVMFunctionRetNodeGen.create((LLVMFunctionNode) retValue, retSlot);
                 case STRUCT:
@@ -175,7 +174,7 @@ public final class LLVMFunctionFactory {
                 return LLVM80BitFloatArgNodeGen.create(argIndex);
             case ADDRESS:
             case STRUCT:
-                return LLVMAddressArgNodeGen.create(argIndex);
+                return LLVMI64ToAddressNodeGen.create(LLVMI64ArgNodeGen.create(argIndex));
             case FUNCTION_ADDRESS:
                 return LLVMFunctionArgNodeGen.create(argIndex);
             case I1_VECTOR:
@@ -225,7 +224,7 @@ public final class LLVMFunctionFactory {
                 case X86_FP80:
                     return LLVM80BitFloatCallUnboxNodeGen.create(unresolvedCallNode);
                 case ADDRESS:
-                    return LLVMAddressCallUnboxNodeGen.create(unresolvedCallNode);
+                    return LLVMI64ToAddressNodeGen.create(LLVMI64CallUnboxNodeGen.create(unresolvedCallNode));
                 case FUNCTION_ADDRESS:
                     return LLVMFunctionCallUnboxNodeGen.create(unresolvedCallNode);
                 case STRUCT:
@@ -235,6 +234,14 @@ public final class LLVMFunctionFactory {
             }
         }
 
+    }
+
+    public static LLVMExpressionNode createActualParameter(LLVMExpressionNode parameter) {
+        if (parameter instanceof LLVMAddressNode) {
+            return LLVMAddressToI64NodeGen.create((LLVMAddressNode) parameter);
+        } else {
+            return parameter;
+        }
     }
 
 }

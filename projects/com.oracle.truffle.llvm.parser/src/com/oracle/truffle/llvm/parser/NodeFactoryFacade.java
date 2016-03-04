@@ -162,4 +162,13 @@ public interface NodeFactoryFacade {
 
     LLVMExpressionNode createGetElementPtr(LLVMExpressionNode currentAddress, LLVMExpressionNode oneValueNode, int currentOffset);
 
+    /**
+     * This method allows the wrapping of actual arguments to a normal (not intrinsified) function
+     * call.
+     *
+     * @param actualParameter the parameter for a function call
+     * @return a wrapped node or the original parameter
+     */
+    LLVMExpressionNode createActualParameter(LLVMExpressionNode actualParameter);
+
 }

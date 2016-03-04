@@ -49,7 +49,7 @@ import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMFunctionNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMLanguage;
 import com.oracle.truffle.llvm.nodes.impl.base.floating.LLVM80BitFloatNode;
-import com.oracle.truffle.llvm.nodes.impl.cast.LLVMToI64NodeFactory.LLVMAddressToI64NodeGen;
+import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI64Node;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNodeFactory.LLVM80BitArgConvertNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNodeFactory.LLVMFunctionCallChainNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMNativeCallConvertNode.LLVMResolvedNative80BitFloatCallNode;
@@ -146,9 +146,8 @@ public abstract class LLVMCallNode {
             CompilerAsserts.neverPartOfCompilation();
             LLVMExpressionNode[] newNodes = new LLVMExpressionNode[originalArgs.length];
             for (int i = 0; i < newNodes.length; i++) {
-                if (originalArgs[i] instanceof LLVMAddressNode) {
-                    newNodes[i] = LLVMAddressToI64NodeGen.create((LLVMAddressNode) originalArgs[i]);
-                } else if (originalArgs[i] instanceof LLVM80BitFloatNode) {
+                assert !(originalArgs[i] instanceof LLVMAddressNode) : "should be passed as " + LLVMI64Node.class.getSimpleName();
+                if (originalArgs[i] instanceof LLVM80BitFloatNode) {
                     newNodes[i] = LLVM80BitArgConvertNodeGen.create((LLVM80BitFloatNode) originalArgs[i]);
                     throw new AssertionError("foreign function interface does not support 80 bit floats yet");
                 } else if (originalArgs[i] instanceof LLVMFunctionNode) {
