@@ -133,7 +133,6 @@ import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMFunctionNode;
-import com.oracle.truffle.llvm.nodes.impl.base.LLVMLanguage;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMMetadataNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMStatementNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMStructWriteNode;
@@ -201,6 +200,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
     private static final TypeResolver typeResolver = new TypeResolver();
     private FrameDescriptor frameDescriptor;
     private LLVMContext currentContext;
+    private FrameDescriptor globalFrameDescriptor;
     private List<LLVMNode> functionEpilogue;
     private Map<FunctionHeader, Map<String, Integer>> functionToLabelMapping;
     private final Map<LLVMFunction, RootCallTarget> functionCallTargets = new HashMap<>();
@@ -246,7 +246,8 @@ public class LLVMVisitor implements LLVMParserRuntime {
                     globalFunction = factoryFacade.createGlobalRootNode(staticInits, mainCallTarget, deallocations, argsCount, allocatedArgsStartAddress);
                 } else if (argParamCount == 3) {
                     LLVMAddress posixEnvPointer = LLVMAddress.NULL_POINTER;
-                    globalFunction = factoryFacade.createGlobalRootNode(staticInits, mainCallTarget, deallocations, argsCount, allocatedArgsStartAddress, posixEnvPointer);
+                    globalFunction = factoryFacade.createGlobalRootNode(staticInits, mainCallTarget, deallocations, argsCount, allocatedArgsStartAddress,
+                                    posixEnvPointer);
                 } else {
                     throw new AssertionError(argParamCount);
                 }
@@ -384,6 +385,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
                 throw new AssertionError("destructors not yet supported!");
             }
         }
+        globalFrameDescriptor = frameDescriptor;
         return globalVarNodes;
     }
 
@@ -490,8 +492,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
         LLVMFunctionBodyNode functionBodyNode = new LLVMFunctionBodyNode(block, retSlot);
         LLVMNode[] beforeFunction = formalParameters.toArray(new LLVMNode[formalParameters.size()]);
         LLVMNode[] afterFunction = functionEpilogue.toArray(new LLVMNode[functionEpilogue.size()]);
-        LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
-        LLVMFunctionStartNode rootNode = new LLVMFunctionStartNode(functionBodyNode, stackPointerSlot, beforeFunction, afterFunction, frameDescriptor, functionName, context);
+        LLVMFunctionStartNode rootNode = new LLVMFunctionStartNode(functionBodyNode, beforeFunction, afterFunction, frameDescriptor, functionName);
         if (LLVMOptions.printFunctionASTs()) {
             NodeUtil.printTree(System.out, rootNode);
         }
@@ -590,6 +591,8 @@ public class LLVMVisitor implements LLVMParserRuntime {
         List<LLVMNode> formalParamInits = new ArrayList<>();
         FunctionHeader functionHeader = def.getHeader();
         EList<Parameter> pars = functionHeader.getParameters().getParameters();
+        LLVMExpressionNode stackPointerNode = factoryFacade.createFunctionArgNode(0, LLVMBaseType.ADDRESS);
+        formalParamInits.add(factoryFacade.createFrameWrite(LLVMBaseType.ADDRESS, stackPointerNode, getStackPointerSlot()));
         int argIndex = LLVMCallNode.ARG_START_INDEX;
         if (resolve(functionHeader.getRettype()).isStruct()) {
             LLVMExpressionNode functionRetParNode = factoryFacade.createFunctionArgNode(argIndex++, LLVMBaseType.STRUCT);
@@ -713,6 +716,8 @@ public class LLVMVisitor implements LLVMParserRuntime {
             throw new LLVMUnsupportedException(UnsupportedReason.INLINE_ASSEMBLER);
         }
         List<LLVMExpressionNode> argNodes = new ArrayList<>(args.size());
+        LLVMExpressionNode stackPointerRead = factoryFacade.createFrameRead(LLVMBaseType.ADDRESS, getStackPointerSlot());
+        argNodes.add(stackPointerRead);
         if (retType.isStruct()) {
             argNodes.add(allocateFunctionLifetime(retType));
         }
@@ -1551,5 +1556,9 @@ public class LLVMVisitor implements LLVMParserRuntime {
 
     public int getBitAlignment(LLVMBaseType type) {
         return layoutConverter.getBitAlignment(type);
+    }
+
+    public FrameDescriptor getGlobalFrameDescriptor() {
+        return globalFrameDescriptor;
     }
 }
