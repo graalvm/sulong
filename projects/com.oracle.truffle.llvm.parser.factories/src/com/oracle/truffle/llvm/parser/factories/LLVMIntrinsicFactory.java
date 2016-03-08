@@ -150,7 +150,7 @@ public final class LLVMIntrinsicFactory {
         EList<Parameter> paramList = functionDef.getHeader().getParameters().getParameters();
         LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
         LLVMAddressNode readStackPointerNode = (LLVMAddressNode) argNodes[0];
-        Object realArgNodes[] = new Object[argNodes.length - LLVMCallNode.ARG_START_INDEX];
+        Object[] realArgNodes = new Object[argNodes.length - LLVMCallNode.ARG_START_INDEX];
         System.arraycopy(argNodes, LLVMCallNode.ARG_START_INDEX, realArgNodes, 0, realArgNodes.length);
         if (factory == null) {
             if (functionName.equals("@llvm.uadd.with.overflow.i32")) {

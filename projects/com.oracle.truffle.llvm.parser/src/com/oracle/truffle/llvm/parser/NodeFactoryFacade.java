@@ -39,7 +39,6 @@ import com.intel.llvm.ireditor.lLVM_IR.Type;
 import com.intel.llvm.ireditor.types.ResolvedType;
 import com.intel.llvm.ireditor.types.ResolvedVectorType;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;

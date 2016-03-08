@@ -259,7 +259,9 @@ public abstract class LLVMCallNode {
         @TruffleBoundary
         private static CallTarget getNativeCallTarget(LLVMContext context, LLVMFunction function, LLVMExpressionNode[] args) {
             if (LLVMOptions.debugEnabled()) {
+                // Checkstyle: stop
                 System.err.println("indirectly calling a native function is expensive at the moment!");
+                // Checkstyle: resume
             }
             final NativeFunctionHandle nativeHandle = context.getNativeHandle(function, prepareForNative(args, context));
             if (nativeHandle == null) {
