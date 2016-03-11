@@ -42,8 +42,6 @@ public class LLVMStack extends LLVMMemory {
 
     private static final int STACK_SIZE_BYTE = STACK_SIZE_KB * 1024;
 
-    private long stackPointer;
-
     @CompilationFinal private long lowerBounds;
     @CompilationFinal private long upperBounds;
 
@@ -61,8 +59,8 @@ public class LLVMStack extends LLVMMemory {
         upperBounds = stackAllocation + STACK_SIZE_BYTE;
     }
 
-    public void reset() {
-        stackPointer = upperBounds;
+    public LLVMAddress reset() {
+        return LLVMAddress.fromLong(upperBounds);
     }
 
     /**
@@ -72,10 +70,27 @@ public class LLVMStack extends LLVMMemory {
         UNSAFE.freeMemory(lowerBounds);
         lowerBounds = 0;
         upperBounds = 0;
-        stackPointer = 0;
     }
 
     public static final int NO_ALIGNMENT_REQUIREMENTS = 1;
+
+    public static class AllocationResult {
+        private final LLVMAddress stackPointer;
+        private final LLVMAddress allocatedMemory;
+
+        public AllocationResult(LLVMAddress stackPointer, LLVMAddress allocatedMemory) {
+            this.stackPointer = stackPointer;
+            this.allocatedMemory = allocatedMemory;
+        }
+
+        public LLVMAddress getStackPointer() {
+            return stackPointer;
+        }
+
+        public LLVMAddress getAllocatedMemory() {
+            return allocatedMemory;
+        }
+    }
 
     /**
      * Allocates stack memory.
@@ -84,32 +99,21 @@ public class LLVMStack extends LLVMMemory {
      * @param alignment the alignment, either {@link #NO_ALIGNMENT_REQUIREMENTS} or a power of two.
      * @return the allocated memory, satisfying the alignment requirements
      */
-    public LLVMAddress allocateMemory(final long size, final int alignment) {
+    public AllocationResult allocateMemory(final LLVMAddress stackPointer, final long size, final int alignment) {
         assert size >= 0;
         assert alignment != 0 && powerOfTo(alignment);
-        final long alignedAllocation = (stackPointer - size) & -alignment;
-        stackPointer = alignedAllocation;
-        if (stackPointer < lowerBounds) {
+        final long alignedAllocation = (stackPointer.getVal() - size) & -alignment;
+        LLVMAddress newStackPointer = LLVMAddress.fromLong(alignedAllocation);
+        if (newStackPointer.getVal() < lowerBounds) {
             CompilerDirectives.transferToInterpreter();
             throw new StackOverflowError("stack overflow");
         }
         final LLVMAddress allocatedMemory = LLVMAddress.fromLong(alignedAllocation);
-        return allocatedMemory;
+        return new AllocationResult(newStackPointer, allocatedMemory);
     }
 
     private static boolean powerOfTo(int value) {
         return (value & -value) == value;
-    }
-
-    public LLVMAddress getStackPointer() {
-        return LLVMAddress.fromLong(stackPointer);
-    }
-
-    public void setStackPointer(final LLVMAddress addr) {
-        assert stackPointer <= addr.getVal();
-        assert lowerBounds < addr.getVal();
-        assert upperBounds >= addr.getVal();
-        stackPointer = addr.getVal();
     }
 
 }
