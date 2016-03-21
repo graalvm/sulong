@@ -7,20 +7,20 @@ python:
 jdk:
   - oraclejdk8
 install:
-  - sudo add-apt-repository -y ppa:mercurial-ppa/releases
-  - sudo add-apt-repository -y ppa:fkrull/deadsnakes
-  - sudo apt-get -y update
-  - sudo apt-get install python2.7
-  - sudo apt-get install mercurial
-  - sudo apt-get install gcc-4.6
-  - sudo apt-get install gcc-4.6-plugin-dev
-  - sudo apt-get install gobjc++-4.6
-  - sudo apt-get install g++-4.6
-  - sudo apt-get install gfortran-4.6
-  - sudo apt-get install libgmp3-dev
-  - sudo apt-get install llvm-3.3
-  - sudo pip install astroid==1.1.0
-  - sudo pip install pylint==1.1.0
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository -y ppa:mercurial-ppa/releases	; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository -y ppa:fkrull/deadsnakes		; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -y update									; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install python2.7							; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install mercurial							; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install gcc-4.6							; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install gcc-4.6-plugin-dev					; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install gobjc++-4.6						; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install g++-4.6							; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install gfortran-4.6						; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libgmp3-dev						; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install llvm-3.3							; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install astroid==1.1.0							; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install pylint==1.1.0							; fi
   - pylint --version
   - hg --version
   - git clone https://github.com/graalvm/mx
