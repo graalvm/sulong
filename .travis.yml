@@ -1,4 +1,7 @@
 language: java
+os:
+  - linux
+  - osx
 python:
   - "2.7"
 jdk:
@@ -42,3 +45,6 @@ env:
   - TEST_COMMAND='mx/mx su-travis2'
 after_failure:
   - find . -iname "*.log" -print0 | xargs -0 cat
+matrix:
+  allow_failures:
+    - os: osx
