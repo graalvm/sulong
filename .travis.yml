@@ -17,9 +17,9 @@ addons:
     - gfortran-4.6
     - libgmp3-dev
     - llvm-3.3
+    - gobjc++-4.6
+    - gcc-4.6-plugin-dev
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install gcc-4.6-plugin-dev                 ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install gobjc++-4.6                        ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install astroid==1.1.0                         ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install pylint==1.1.0                          ; fi
   - pylint --version
