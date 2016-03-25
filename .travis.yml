@@ -19,7 +19,7 @@ addons:
     - gcc-4.6-plugin-dev
     - oracle-java8-installer
 install:
-  - then sudo pip install astroid==1.1.0
+  - sudo pip install astroid==1.1.0
   - sudo pip install pylint==1.1.0
   - pylint --version
   - hg --version
