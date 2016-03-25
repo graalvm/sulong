@@ -4,8 +4,6 @@ os:
   - osx
 python:
   - "2.7"
-jdk:
-  - oraclejdk8
 addons:
   apt:
     sources:
@@ -19,6 +17,7 @@ addons:
     - llvm-3.3
     - gobjc++-4.6
     - gcc-4.6-plugin-dev
+    - oracle-java8-installer
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install astroid==1.1.0                         ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install pylint==1.1.0                          ; fi
