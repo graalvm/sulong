@@ -17,8 +17,9 @@ addons:
     - llvm-3.3
     - gobjc++-4.6
     - gcc-4.6-plugin-dev
-    - oracle-java8-installer
 install:
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then export JAVA_HOME=$(/usr/libexec/java_home); fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then jdk_switcher use oraclejdk8; fi
   - sudo pip install astroid==1.1.0
   - sudo pip install pylint==1.1.0
   - pylint --version
