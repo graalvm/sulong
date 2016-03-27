@@ -1,21 +1,28 @@
 language: java
+os:
+  - linux
+  - osx
 python:
   - "2.7"
-jdk:
-  - oraclejdk8
+addons:
+  apt:
+    sources:
+    - deadsnakes
+    packages:
+    - python2.7
+    - gcc-4.6
+    - g++-4.6
+    - gfortran-4.6
+    - libgmp3-dev
+    - llvm-3.3
+    - gobjc++-4.6
+    - gcc-4.6-plugin-dev
 install:
-  - sudo add-apt-repository -y ppa:mercurial-ppa/releases
-  - sudo add-apt-repository -y ppa:fkrull/deadsnakes
-  - sudo apt-get -y update
-  - sudo apt-get install python2.7
-  - sudo apt-get install mercurial
-  - sudo apt-get install gcc-4.6
-  - sudo apt-get install gcc-4.6-plugin-dev
-  - sudo apt-get install gobjc++-4.6
-  - sudo apt-get install g++-4.6
-  - sudo apt-get install gfortran-4.6
-  - sudo apt-get install libgmp3-dev
-  - sudo apt-get install llvm-3.3
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then export JAVA_HOME=$(/usr/libexec/java_home); fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then jdk_switcher use oraclejdk8; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; "wget --no-cookies --no-check-certificate --header \"Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie\" http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-macosx-x64.dmg"; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; hdiutil mount jdk-8u66-macosx-x64.dmg; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; sudo installer -pkg /Volumes/JDK\ 8\ Update\ 66/JDK\ 8\ Update\ 66.pkg -target LocalSystem; fi
   - sudo pip install astroid==1.1.0
   - sudo pip install pylint==1.1.0
   - pylint --version
@@ -42,3 +49,6 @@ env:
   - TEST_COMMAND='mx/mx su-travis2'
 after_failure:
   - find . -iname "*.log" -print0 | xargs -0 cat
+matrix:
+  allow_failures:
+    - os: osx
