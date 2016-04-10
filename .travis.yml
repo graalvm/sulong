@@ -12,6 +12,7 @@ addons:
     sources:
     - deadsnakes
     packages:
+    - ruby
     - python2.7
     - gcc-4.6
     - g++-4.6
