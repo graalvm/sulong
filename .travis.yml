@@ -1,6 +1,10 @@
 language: java
 python:
   - "2.7"
+rvm:
+  - 2.2
+  - jruby
+  - rbx-2
 jdk:
   - oraclejdk8
 addons:
