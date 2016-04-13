@@ -47,6 +47,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller;
@@ -57,7 +58,8 @@ import com.oracle.truffle.llvm.parser.instructions.LLVMIntegerComparisonType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMLogicalInstructionType;
 import com.oracle.truffle.llvm.runtime.LLVMOptimizationConfiguration;
 import com.oracle.truffle.llvm.types.LLVMAddress;
-import com.oracle.truffle.llvm.types.LLVMFunction.LLVMRuntimeType;
+import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
+import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor.LLVMRuntimeType;
 
 /**
  * This interface decouples the parser and the concrete implementation of the nodes by only making
@@ -197,9 +199,11 @@ public interface NodeFactoryFacade {
      * @param mainCallTarget
      * @param allocatedGlobalAddresses
      * @param args
+     * @param mainTypes
+     * @param sourceFile
      * @return the global root
      */
-    RootNode createGlobalRootNode(LLVMNode[] staticInits, RootCallTarget mainCallTarget, LLVMAddress[] allocatedGlobalAddresses, Object... args);
+    RootNode createGlobalRootNode(LLVMNode[] staticInits, RootCallTarget mainCallTarget, LLVMAddress[] allocatedGlobalAddresses, Object[] args, Source sourceFile, LLVMRuntimeType[] mainTypes);
 
     /**
      * Wraps the global root (e.g., the main function in C) to convert its result.
@@ -292,5 +296,7 @@ public interface NodeFactoryFacade {
      * @return the root node for the intrinsic
      */
     RootNode createFunctionSubstitutionRootNode(LLVMNode intrinsicNode);
+
+    LLVMFunctionDescriptor createFunctionDescriptor(String name, LLVMRuntimeType convertType, LLVMRuntimeType[] convertTypes, boolean varArgs);
 
 }

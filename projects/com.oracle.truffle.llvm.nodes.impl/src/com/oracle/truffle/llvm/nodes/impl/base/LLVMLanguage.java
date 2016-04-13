@@ -36,13 +36,28 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.llvm.types.LLVMFunction;
 
-@TruffleLanguage.Registration(name = "Sulong", version = "0.01", mimeType = LLVMLanguage.LLVM_MIME_TYPE)
+@TruffleLanguage.Registration(name = "Sulong", version = "0.01", mimeType = {LLVMLanguage.LLVM_MIME_TYPE, LLVMLanguage.SULONG_LIBRARY_MIME_TYPE})
 public final class LLVMLanguage extends TruffleLanguage<LLVMContext> {
+
+    /*
+     * The LLVM class has static initializers with side effects that we rely on, but we have no
+     * dependency on it here, and no way to statically reference it even.
+     */
+
+    static {
+        try {
+            Class.forName("com.oracle.truffle.llvm.LLVM", true, ClassLoader.getSystemClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static final String LLVM_MIME_TYPE = "application/x-llvm-ir-text";
     public static final String LLVM_BITCODE_EXTENSION = "ll";
+
+    public static final String SULONG_LIBRARY_MIME_TYPE = "application/x-sulong-library";
+    public static final String SULONG_LIBRARY_EXTENSION = "su";
 
     public static final LLVMLanguage INSTANCE = new LLVMLanguage();
 
@@ -69,7 +84,7 @@ public final class LLVMLanguage extends TruffleLanguage<LLVMContext> {
 
     @Override
     protected Object findExportedSymbol(LLVMContext context, String globalName, boolean onlyExplicit) {
-        return LLVMFunction.createFromName(globalName);
+        throw new AssertionError(globalName);
     }
 
     @Override

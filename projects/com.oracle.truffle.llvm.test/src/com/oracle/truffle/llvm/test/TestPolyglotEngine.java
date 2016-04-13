@@ -27,21 +27,41 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.nodes.impl.literals;
+package com.oracle.truffle.llvm.test;
 
-import com.oracle.truffle.api.dsl.NodeField;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.llvm.nodes.impl.base.LLVMFunctionNode;
-import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
+import static org.junit.Assert.assertEquals;
 
-@NodeField(type = LLVMFunctionDescriptor.class, name = "function")
-public abstract class LLVMFunctionLiteralNode extends LLVMFunctionNode {
+import java.io.File;
+import java.io.IOException;
 
-    public abstract LLVMFunctionDescriptor getFunction();
+import org.junit.Test;
 
-    @Specialization
-    public LLVMFunctionDescriptor executeFunction() {
-        return getFunction();
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.vm.PolyglotEngine;
+import com.oracle.truffle.api.vm.PolyglotEngine.Value;
+
+public class TestPolyglotEngine {
+
+    @Test
+    public void testExecute() throws IOException {
+        final PolyglotEngine engine = PolyglotEngine.newBuilder().build();
+        try {
+            engine.eval(Source.fromFileName(new File(LLVMPaths.LOCAL_TESTS, "llvmir/simple/1.ll").getPath()));
+        } finally {
+            engine.dispose();
+        }
+    }
+
+    @Test
+    public void testExecuteFunction() throws IOException {
+        final PolyglotEngine engine = PolyglotEngine.newBuilder().build();
+        try {
+            engine.eval(Source.fromFileName(new File(LLVMPaths.LOCAL_TESTS, "llvmir/micro/ret/i32ret.ll").getPath()));
+            final Value main = engine.findGlobalSymbol("@main");
+            assertEquals(5, (int) main.execute().as(Integer.class));
+        } finally {
+            engine.dispose();
+        }
     }
 
 }

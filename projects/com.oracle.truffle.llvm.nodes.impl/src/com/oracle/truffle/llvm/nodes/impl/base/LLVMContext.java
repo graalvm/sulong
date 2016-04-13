@@ -32,6 +32,7 @@ package com.oracle.truffle.llvm.nodes.impl.base;
 import java.util.Map;
 
 import com.oracle.nfi.api.NativeFunctionHandle;
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.ExecutionContext;
 import com.oracle.truffle.api.RootCallTarget;
@@ -40,7 +41,7 @@ import com.oracle.truffle.llvm.nativeint.NativeLookup;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.parser.NodeFactoryFacade;
 import com.oracle.truffle.llvm.runtime.LLVMOptimizationConfiguration;
-import com.oracle.truffle.llvm.types.LLVMFunction;
+import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.types.memory.LLVMStack;
 
 public class LLVMContext extends ExecutionContext {
@@ -59,9 +60,10 @@ public class LLVMContext extends ExecutionContext {
         nativeLookup = new NativeLookup(facade);
         this.registry = new LLVMFunctionRegistry(optimizationConfig, facade);
 
+        lastContext = this;
     }
 
-    public RootCallTarget getFunction(LLVMFunction function) {
+    public RootCallTarget getFunction(LLVMFunctionDescriptor function) {
         return registry.lookup(function);
     }
 
@@ -70,7 +72,7 @@ public class LLVMContext extends ExecutionContext {
         return registry;
     }
 
-    public NativeFunctionHandle getNativeHandle(LLVMFunction function, LLVMExpressionNode[] args) {
+    public NativeFunctionHandle getNativeHandle(LLVMFunctionDescriptor function, LLVMExpressionNode[] args) {
         return nativeLookup.getNativeHandle(function, args);
     }
 
@@ -78,7 +80,7 @@ public class LLVMContext extends ExecutionContext {
         return nativeLookup.getNativeHandle(functionName);
     }
 
-    public Map<LLVMFunction, Integer> getNativeFunctionLookupStats() {
+    public Map<LLVMFunctionDescriptor, Integer> getNativeFunctionLookupStats() {
         return nativeLookup.getNativeFunctionLookupStats();
     }
 
@@ -100,6 +102,18 @@ public class LLVMContext extends ExecutionContext {
 
     public Source getSourceFile() {
         return sourceFile;
+    }
+
+    // TODO No static access to this class from LLVMFunction at the moment
+
+    private static LLVMContext lastContext;
+
+    public static CallTarget getCallTarget(LLVMFunctionDescriptor function) {
+        return lastContext.registry.lookup(function);
+    }
+
+    public static LLVMStack getStaticStack() {
+        return lastContext.stack;
     }
 
 }
