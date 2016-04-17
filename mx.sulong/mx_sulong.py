@@ -698,7 +698,7 @@ def getBitcodeLibrariesOption():
         for f in files:
             # TODO: also allow other extensions, best introduce a command "compile" that compiles C, C++, Fortran and other files
             if f.endswith('.c'):
-                bitcodeFile = f.rsplit( ".", 1 )[0] + '.ll'
+                bitcodeFile = f.rsplit(".", 1)[0] + '.ll'
                 absBitcodeFile = path + '/' + bitcodeFile
                 if not os.path.isfile(absBitcodeFile):
                     compileWithClang(['-S', '-emit-llvm', path + '/' + f, '-o', absBitcodeFile])
