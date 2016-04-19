@@ -46,7 +46,12 @@ import com.oracle.truffle.llvm.runtime.LLVMOptimizationConfiguration;
 import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.types.memory.LLVMStack;
 
-public class LLVMContext extends ExecutionContext {
+public final class LLVMContext extends ExecutionContext {
+
+    public static LLVMContext create(NodeFactoryFacade facade, LLVMOptimizationConfiguration optimizationConfig) {
+        LLVMContext context = new LLVMContext(facade, optimizationConfig);
+        return lastContext = context;
+    }
 
     private final List<RootCallTarget> staticInitializers = new ArrayList<>();
     private final List<RootCallTarget> staticDestructors = new ArrayList<>();

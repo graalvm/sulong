@@ -39,8 +39,11 @@ public class LLVMFileDetector extends FileTypeDetector {
 
     @Override
     public String probeContentType(Path path) throws IOException {
+        if (path.getFileName().toString().endsWith("." + LLVMLanguage.LLVM_IR_EXTENSION)) {
+            return LLVMLanguage.LLVM_IR_MIME_TYPE;
+        }
         if (path.getFileName().toString().endsWith("." + LLVMLanguage.LLVM_BITCODE_EXTENSION)) {
-            return LLVMLanguage.LLVM_MIME_TYPE;
+            return LLVMLanguage.LLVM_BITCODE_MIME_TYPE;
         }
         if (path.getFileName().toString().endsWith("." + LLVMLanguage.SULONG_LIBRARY_EXTENSION)) {
             return LLVMLanguage.SULONG_LIBRARY_MIME_TYPE;

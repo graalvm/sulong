@@ -56,9 +56,9 @@ import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMLanguage;
+import com.oracle.truffle.llvm.parser.LLVMParserResult;
 import com.oracle.truffle.llvm.parser.factories.NodeFactoryFacadeImpl;
 import com.oracle.truffle.llvm.parser.impl.LLVMVisitor;
-import com.oracle.truffle.llvm.parser.impl.LLVMVisitor.ParserResult;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.LLVMOptions;
 import com.oracle.truffle.llvm.runtime.LLVMPropertyOptimizationConfiguration;
@@ -83,14 +83,21 @@ public class LLVM {
                 LLVMContext context = LLVMLanguage.INSTANCE.findContext0(findContext);
                 parseDynamicBitcodeLibraries(context);
                 CallTarget mainFunction;
-                if (code.getMimeType() == LLVMLanguage.LLVM_MIME_TYPE) {
-                    ParserResult parserResult = parseFile(code.getPath(), context);
+                if (code.getMimeType().equals(LLVMLanguage.LLVM_IR_MIME_TYPE)) {
+                    LLVMParserResult parserResult = parseIRFile(code.getPath(), context);
                     mainFunction = parserResult.getMainFunction();
                     context.getFunctionRegistry().register(parserResult.getParsedFunctions());
                     context.registerStaticInitializer(parserResult.getStaticInits());
                     context.registerStaticDestructor(parserResult.getStaticDestructors());
                     parserResult.getStaticInits().call();
-                } else if (code.getMimeType() == LLVMLanguage.SULONG_LIBRARY_MIME_TYPE) {
+                } else if (code.getMimeType().equals(LLVMLanguage.LLVM_BITCODE_MIME_TYPE)) {
+                    LLVMParserResult parserResult = parseBitcodeFile(code.getPath(), context);
+                    mainFunction = parserResult.getMainFunction();
+                    context.getFunctionRegistry().register(parserResult.getParsedFunctions());
+                    context.registerStaticInitializer(parserResult.getStaticInits());
+                    context.registerStaticDestructor(parserResult.getStaticDestructors());
+                    parserResult.getStaticInits().call();
+                } else if (code.getMimeType().equals(LLVMLanguage.SULONG_LIBRARY_MIME_TYPE)) {
 
                     final List<CallTarget> mainFunctions = new ArrayList<>();
                     final SulongLibrary library = new SulongLibrary(new File(code.getPath()));
@@ -99,7 +106,7 @@ public class LLVM {
                         library.readContents(dependentLibrary -> {
                             throw new UnsupportedOperationException();
                         }, source -> {
-                            ParserResult parserResult;
+                            LLVMParserResult parserResult;
                             try {
                                 parserResult = parseString(source.getCode(), context);
                             } catch (IOException e) {
@@ -130,7 +137,7 @@ public class LLVM {
                 String[] dynamicLibraryPaths = LLVMOptions.getDynamicBitcodeLibraries();
                 if (dynamicLibraryPaths != null && dynamicLibraryPaths.length != 0) {
                     for (String s : dynamicLibraryPaths) {
-                        ParserResult result = parseFile(s, context);
+                        LLVMParserResult result = parseIRFile(s, context);
                         context.getFunctionRegistry().register(result.getParsedFunctions());
                     }
                 }
@@ -173,7 +180,7 @@ public class LLVM {
         System.exit(status);
     }
 
-    public static ParserResult parseString(String source, LLVMContext context) throws IOException {
+    public static LLVMParserResult parseString(String source, LLVMContext context) throws IOException {
         final File file = File.createTempFile("sulong", ".ll");
 
         try {
@@ -181,13 +188,17 @@ public class LLVM {
                 stream.write(source.getBytes(StandardCharsets.UTF_8));
             }
 
-            return parseFile(file.getPath(), context);
+            return parseIRFile(file.getPath(), context);
         } finally {
             file.delete();
         }
     }
 
-    public static ParserResult parseFile(String filePath, LLVMContext context) {
+    public static LLVMParserResult parseBitcodeFile(String filePath, LLVMContext context) {
+        return parseIRFile(filePath, context);
+    }
+
+    public static LLVMParserResult parseIRFile(String filePath, LLVMContext context) {
         LLVM_IRStandaloneSetup setup = new LLVM_IRStandaloneSetup();
         Injector injector = setup.createInjectorAndDoEMFRegistration();
         XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
@@ -214,15 +225,15 @@ public class LLVM {
     }
 
     public static int executeMain(String codeString, Object... args) {
-        Source fromText = Source.fromText(codeString, "code string").withMimeType(LLVMLanguage.LLVM_MIME_TYPE);
+        Source fromText = Source.fromText(codeString, "code string").withMimeType(LLVMLanguage.LLVM_IR_MIME_TYPE);
         LLVMLogger.info("current code string: " + codeString);
         return evaluateFromSource(fromText, args);
     }
 
     private static int evaluateFromSource(Source fileSource, Object... args) {
         Builder engineBuilder = PolyglotEngine.newBuilder();
-        engineBuilder.config(LLVMLanguage.LLVM_MIME_TYPE, LLVMLanguage.MAIN_ARGS_KEY, args);
-        engineBuilder.config(LLVMLanguage.LLVM_MIME_TYPE, LLVMLanguage.LLVM_SOURCE_FILE_KEY, fileSource);
+        engineBuilder.config(LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.MAIN_ARGS_KEY, args);
+        engineBuilder.config(LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.LLVM_SOURCE_FILE_KEY, fileSource);
         PolyglotEngine vm = engineBuilder.build();
         try {
             Integer result = vm.eval(fileSource).as(Integer.class);
