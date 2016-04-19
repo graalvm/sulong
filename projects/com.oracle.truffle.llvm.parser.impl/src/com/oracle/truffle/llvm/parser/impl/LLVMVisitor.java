@@ -134,6 +134,7 @@ import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMIntNuller;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMLongNuller;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMObjectNuller;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
+import com.oracle.truffle.llvm.parser.LLVMParserResult;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.NodeFactoryFacade;
 import com.oracle.truffle.llvm.parser.impl.LLVMPhiVisitor.Phi;
@@ -197,7 +198,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
         LLVMTypeHelper.setParserRuntime(this);
     }
 
-    public class ParserResult {
+    public class ParserResult implements LLVMParserResult {
 
         private final RootCallTarget mainFunction;
         private final RootCallTarget staticInits;
