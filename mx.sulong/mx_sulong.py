@@ -3,6 +3,9 @@ import os
 from os.path import join
 import shutil
 import zipfile
+import subprocess
+import re
+import argparse
 
 import mx
 import mx_findbugs
@@ -31,6 +34,11 @@ _nwccSuiteDir = join(_root, "com.oracle.truffle.llvm.test/suites/nwcc/")
 _benchGameSuiteDir = join(_root, "com.oracle.truffle.llvm.test/suites/benchmarkgame/")
 
 _dragonEggPath = _toolDir + 'tools/dragonegg/dragonegg-3.2.src/dragonegg.so'
+
+gitLogFile = _mx + 'gitlogfile.cfg'
+gitLogOneLine = re.compile(r'^(?P<message>[0-9a-f]*) (?P<id>.*)$')
+titleWithEndingPunct = re.compile(r'^(.*)[\.!?]$')
+pastTenseWords = ['installed', 'implemented', 'fixed', 'merged', 'improved', 'simplified', 'enhanced', 'changed', 'removed', 'replaced', 'substituted', 'corrected', 'used', 'moved', 'refactored']
 
 def _graal_llvm_gate_runner(args, tasks):
     """gate function"""
@@ -662,14 +670,6 @@ def gccBench(args=None):
 def standardLinkerCommands(args=None):
     return ['-lm', '-lgmp']
 
-import subprocess
-import re
-import argparse
-
-gitLogOneLine = re.compile(r'^(?P<message>[0-9a-f]*) (?P<id>.*)$')
-titleWithEndingPunct = re.compile(r'^(.*)[\.!?]$')
-pastTenseWords = ['installed', 'implemented', 'fixed', 'merged', 'improved', 'simplified', 'enhanced', 'changed', 'removed', 'replaced', 'substituted', 'corrected', 'used', 'moved', 'refactored']
-
 def checkCommitMessage(commitMessage):
     error = False
     message = ''
@@ -685,8 +685,6 @@ def checkCommitMessage(commitMessage):
             error = True
             message = quotedCommitMessage + ' contains past tense word', pastTenseWord
     return (error, message)
-
-gitLogFile = _mx + 'gitlogfile.cfg'
 
 def logCheck(args=None):
     parser = argparse.ArgumentParser(description='Check the git log commit messages.')
