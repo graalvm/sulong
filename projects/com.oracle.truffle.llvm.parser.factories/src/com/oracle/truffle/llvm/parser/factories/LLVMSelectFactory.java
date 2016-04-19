@@ -65,7 +65,6 @@ import com.oracle.truffle.llvm.nodes.impl.others.LLVMSelectNodeFactory.LLVMI8Sel
 import com.oracle.truffle.llvm.nodes.impl.others.LLVMVectorSelectNodeFactory.LLVMI32VectorSelectNodeGen;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
-import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMOptimizationConfiguration;
 
 public class LLVMSelectFactory {
