@@ -66,11 +66,9 @@ public final class LLVMContext extends ExecutionContext {
 
     private Source sourceFile;
 
-    public LLVMContext(NodeFactoryFacade facade, LLVMOptimizationConfiguration optimizationConfig) {
+    private LLVMContext(NodeFactoryFacade facade, LLVMOptimizationConfiguration optimizationConfig) {
         nativeLookup = new NativeLookup(facade);
         this.registry = new LLVMFunctionRegistry(optimizationConfig, facade);
-
-        lastContext = this;
     }
 
     public RootCallTarget getFunction(LLVMFunctionDescriptor function) {

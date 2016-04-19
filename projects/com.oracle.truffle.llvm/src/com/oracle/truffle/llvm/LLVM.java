@@ -71,7 +71,7 @@ public class LLVM {
     static final LLVMPropertyOptimizationConfiguration OPTIMIZATION_CONFIGURATION = new LLVMPropertyOptimizationConfiguration();
 
     static {
-        LLVMLanguage.provider = getProvider();
+        LLVMLanguage.setProvider(getProvider());
     }
 
     private static LLVMLanguage.LLVMLanguageProvider getProvider() {
@@ -146,7 +146,7 @@ public class LLVM {
             @Override
             public LLVMContext createContext(Env env) {
                 NodeFactoryFacadeImpl facade = new NodeFactoryFacadeImpl();
-                LLVMContext context = new LLVMContext(facade, OPTIMIZATION_CONFIGURATION);
+                LLVMContext context = LLVMContext.create(facade, OPTIMIZATION_CONFIGURATION);
                 LLVMVisitor runtime = new LLVMVisitor(OPTIMIZATION_CONFIGURATION, context.getMainArguments(), context.getSourceFile());
                 facade.setParserRuntime(runtime);
                 context.setMainArguments((Object[]) env.getConfig().get(LLVMLanguage.MAIN_ARGS_KEY));
