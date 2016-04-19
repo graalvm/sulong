@@ -664,26 +664,56 @@ def standardLinkerCommands(args=None):
 
 import subprocess
 import re
+import argparse
 
+gitLogOneLine = re.compile(r'^(?P<message>[0-9a-f]*) (?P<id>.*)$')
 titleWithEndingPunct = re.compile(r'^(.*)[\.!?]$')
 pastTenseWords = ['installed', 'implemented', 'fixed', 'merged', 'improved', 'simplified', 'enhanced', 'changed', 'removed', 'replaced', 'substituted', 'corrected', 'used', 'moved', 'refactored']
 
-def logCheck(args=None):
+def checkCommitMessage(commitMessage):
     error = False
-    output = subprocess.check_output(['git', 'log', '--pretty=format:"%s"', '--after="2016-04-08"'])
+    message = ''
+    quotedCommitMessage = '"' + commitMessage + '"'
+    if commitMessage[0].islower():
+        error = True
+        message = quotedCommitMessage + ' starts with a lower case character'
+    if titleWithEndingPunct.match(commitMessage):
+        error = True
+        message = quotedCommitMessage + ' ends with period, question mark, or exclamation mark'
+    for pastTenseWord in pastTenseWords:
+        if pastTenseWord in commitMessage.lower().split():
+            error = True
+            message = quotedCommitMessage + ' contains past tense word', pastTenseWord
+    return (error, message)
+
+gitLogFile = _mx + 'gitlogfile.cfg'
+
+def logCheck(args=None):
+    parser = argparse.ArgumentParser(description='Check the git log commit messages.')
+    parser.add_argument('--create-ignore-file', help='Adds current git log message syntax errors to the list of allowed errors', dest='createExceptionFile', action='store_true')
+    options = parser.parse_args(args)
+    createExceptionFile = options.createExceptionFile
+    output = subprocess.check_output(['git', 'log', '--pretty=oneline'])
+    foundErrors = []
+    exceptions = []
+    if not createExceptionFile and os.path.isfile(gitLogFile):
+        with open(gitLogFile, 'r') as f:
+            exceptions = f.read().splitlines()
     for s in output.splitlines():
-        withoutQuotes = s[1:-1]
-        if withoutQuotes[0].islower():
-            error = True
-            print s, 'starts with a lower case character'
-        if titleWithEndingPunct.match(withoutQuotes):
-            error = True
-            print s, 'ends with period, question mark, or exclamation mark'
-        for pastTenseWord in pastTenseWords:
-            if pastTenseWord in withoutQuotes.lower().split():
-                error = True
-                print s, 'contains past tense word', pastTenseWord
-    if error:
+        match = gitLogOneLine.match(s)
+        commitId = match.group('message')
+        commitMessage = match.group('id')
+        if not commitId in exceptions:
+            (isError, curMessage) = checkCommitMessage(commitMessage)
+            if isError:
+                foundErrors.append((commitId, curMessage))
+    if createExceptionFile:
+        outFile = open(gitLogFile, 'w')
+        for (commitId, _) in foundErrors:
+            outFile.write("%s\n" % commitId)
+    elif foundErrors:
+        for (_, curMessage) in foundErrors:
+            print curMessage
         print "\nFound illegal git log messages! Please check CONTRIBUTING.md for commit message guidelines."
         exit(-1)
 
