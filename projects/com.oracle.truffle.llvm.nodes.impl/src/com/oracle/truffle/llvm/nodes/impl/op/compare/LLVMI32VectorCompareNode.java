@@ -45,7 +45,7 @@ import com.oracle.truffle.llvm.types.vector.LLVMI32Vector;
     @NodeChild(value = "rightNode", type = LLVMI32VectorNode.class)})
 public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
-    protected LLVMI1Vector _executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
+    protected LLVMI1Vector executeI1VectorBody(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
         int length = left.getLength();
         boolean[] values = new boolean[length];
 
@@ -62,7 +62,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -76,7 +76,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -90,7 +90,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -104,7 +104,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -118,7 +118,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -132,7 +132,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -146,7 +146,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -160,7 +160,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -174,7 +174,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override
@@ -188,7 +188,7 @@ public abstract class LLVMI32VectorCompareNode extends LLVMI1VectorNode {
 
         @Specialization
         public LLVMI1Vector executeI1Vector(LLVMAddress target, LLVMI32Vector left, LLVMI32Vector right) {
-            return _executeI1Vector(target, left, right);
+            return executeI1VectorBody(target, left, right);
         }
 
         @Override

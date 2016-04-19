@@ -46,7 +46,7 @@ import com.oracle.truffle.llvm.types.vector.LLVMVector;
 
 public abstract class LLVMToI8VectorNode extends LLVMI8VectorNode {
 
-    protected LLVMI8Vector _executeI8Vector(LLVMAddress target, LLVMVector<? extends Number> from) {
+    protected LLVMI8Vector executeI8VectorBody(LLVMAddress target, LLVMVector<? extends Number> from) {
         int length = from.getLength();
 
         byte[] values = new byte[length];
@@ -57,31 +57,31 @@ public abstract class LLVMToI8VectorNode extends LLVMI8VectorNode {
 
         return LLVMI8Vector.fromI8Array(target, values);
     }
-    
+
     @NodeChildren({@NodeChild(value = "addressNode", type = LLVMAddressNode.class), @NodeChild(value = "fromNode", type = LLVMI16VectorNode.class)})
     public abstract static class LLVMI16VectorToI8VectorNode extends LLVMToI8VectorNode {
 
         @Specialization
         public LLVMI8Vector executeI8Vector(LLVMAddress target, LLVMI16Vector from) {
-            return _executeI8Vector(target, from);
+            return executeI8VectorBody(target, from);
         }
     }
-    
+
     @NodeChildren({@NodeChild(value = "addressNode", type = LLVMAddressNode.class), @NodeChild(value = "fromNode", type = LLVMI32VectorNode.class)})
     public abstract static class LLVMI32VectorToI8VectorNode extends LLVMToI8VectorNode {
 
         @Specialization
         public LLVMI8Vector executeI8Vector(LLVMAddress target, LLVMI32Vector from) {
-            return _executeI8Vector(target, from);
+            return executeI8VectorBody(target, from);
         }
     }
-    
+
     @NodeChildren({@NodeChild(value = "addressNode", type = LLVMAddressNode.class), @NodeChild(value = "fromNode", type = LLVMI64VectorNode.class)})
     public abstract static class LLVMI64VectorToI8VectorNode extends LLVMToI8VectorNode {
 
         @Specialization
         public LLVMI8Vector executeI8Vector(LLVMAddress target, LLVMI64Vector from) {
-            return _executeI8Vector(target, from);
+            return executeI8VectorBody(target, from);
         }
     }
 }
