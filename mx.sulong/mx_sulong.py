@@ -5,7 +5,6 @@ import shutil
 import zipfile
 import subprocess
 import re
-import argparse
 
 import mx
 import mx_findbugs
@@ -35,8 +34,7 @@ _benchGameSuiteDir = join(_root, "com.oracle.truffle.llvm.test/suites/benchmarkg
 
 _dragonEggPath = _toolDir + 'tools/dragonegg/dragonegg-3.2.src/dragonegg.so'
 
-gitLogFile = _mx + 'gitlogfile.cfg'
-gitLogOneLine = re.compile(r'^(?P<message>[0-9a-f]*) (?P<id>.*)$')
+gitLogOneLine = re.compile(r'^(?P<message>.*)$')
 titleWithEndingPunct = re.compile(r'^(.*)[\.!?]$')
 pastTenseWords = ['installed', 'implemented', 'fixed', 'merged', 'improved', 'simplified', 'enhanced', 'changed', 'removed', 'replaced', 'substituted', 'corrected', 'used', 'moved', 'refactored']
 
@@ -670,10 +668,10 @@ def gccBench(args=None):
 def standardLinkerCommands(args=None):
     return ['-lm', '-lgmp']
 
-def checkCommitMessage(commitMessage):
+def checkCommitMessage(quotedCommitMessage):
     error = False
     message = ''
-    quotedCommitMessage = '"' + commitMessage + '"'
+    commitMessage = quotedCommitMessage[1:-1]
     if commitMessage[0].islower():
         error = True
         message = quotedCommitMessage + ' starts with a lower case character'
@@ -687,30 +685,16 @@ def checkCommitMessage(commitMessage):
     return (error, message)
 
 def logCheck(args=None):
-    parser = argparse.ArgumentParser(description='Check the git log commit messages.')
-    parser.add_argument('--create-ignore-file', help='Adds current git log message syntax errors to the list of allowed errors', dest='createExceptionFile', action='store_true')
-    options = parser.parse_args(args)
-    createExceptionFile = options.createExceptionFile
-    output = subprocess.check_output(['git', 'log', '--pretty=oneline'])
+    output = subprocess.check_output(['git', 'log', '--pretty=format:"%s"', 'master@{u}..'])
     foundErrors = []
-    exceptions = []
-    if not createExceptionFile and os.path.isfile(gitLogFile):
-        with open(gitLogFile, 'r') as f:
-            exceptions = f.read().splitlines()
     for s in output.splitlines():
         match = gitLogOneLine.match(s)
-        commitId = match.group('message')
-        commitMessage = match.group('id')
-        if not commitId in exceptions:
-            (isError, curMessage) = checkCommitMessage(commitMessage)
-            if isError:
-                foundErrors.append((commitId, curMessage))
-    if createExceptionFile:
-        outFile = open(gitLogFile, 'w')
-        for (commitId, _) in foundErrors:
-            outFile.write("%s\n" % commitId)
-    elif foundErrors:
-        for (_, curMessage) in foundErrors:
+        commitMessage = match.group('message')
+        (isError, curMessage) = checkCommitMessage(commitMessage)
+        if isError:
+            foundErrors.append(curMessage)
+    if foundErrors:
+        for curMessage in foundErrors:
             print curMessage
         print "\nFound illegal git log messages! Please check CONTRIBUTING.md for commit message guidelines."
         exit(-1)
