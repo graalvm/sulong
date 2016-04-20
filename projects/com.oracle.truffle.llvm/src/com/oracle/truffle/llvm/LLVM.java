@@ -54,6 +54,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.llvm.frontend.bc.LLVMBitcodeVisitor;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMLanguage;
 import com.oracle.truffle.llvm.parser.LLVMParserResult;
@@ -137,7 +138,9 @@ public class LLVM {
                 String[] dynamicLibraryPaths = LLVMOptions.getDynamicBitcodeLibraries();
                 if (dynamicLibraryPaths != null && dynamicLibraryPaths.length != 0) {
                     for (String s : dynamicLibraryPaths) {
-                        LLVMParserResult result = parseIRFile(s, context);
+                        LLVMParserResult result = s.endsWith(LLVMLanguage.LLVM_BITCODE_EXTENSION)
+                                ? parseBitcodeFile(s, context)
+                                : parseIRFile(s, context);
                         context.getFunctionRegistry().register(result.getParsedFunctions());
                     }
                 }
@@ -195,7 +198,7 @@ public class LLVM {
     }
 
     public static LLVMParserResult parseBitcodeFile(String filePath, LLVMContext context) {
-        return parseIRFile(filePath, context);
+        return LLVMBitcodeVisitor.getMain(context.getSourceFile(), context, OPTIMIZATION_CONFIGURATION);
     }
 
     public static LLVMParserResult parseIRFile(String filePath, LLVMContext context) {
@@ -205,7 +208,7 @@ public class LLVM {
         resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
         Resource resource = resourceSet.getResource(URI.createURI(filePath), true);
         EList<EObject> contents = resource.getContents();
-        if (contents.size() == 0) {
+        if (contents.isEmpty()) {
             throw new IllegalStateException("empty file?");
         }
         Model model = (Model) contents.get(0);

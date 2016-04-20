@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false" name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/../../mxbuild/projects/com.oracle.truffle.llvm.frontend/bin"/>
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder isTestSource="false" url="file://$MODULE_DIR$/src"/>
+      <excludeFolder url="file://$MODULE_DIR$/.settings"/>
+      <excludeFolder url="file://$MODULE_DIR$/nbproject"/>
+    </content>
+    <content url="file:///home/barrettc/Documents/github/crbb/sulong/mxbuild/projects/com.oracle.truffle.llvm.frontend">
+      <sourceFolder generated="true" isTestSource="false" url="file:///home/barrettc/Documents/github/crbb/sulong/mxbuild/projects/com.oracle.truffle.llvm.frontend/src_gen"/>
+      <excludeFolder url="file:///home/barrettc/Documents/github/crbb/sulong/mxbuild/projects/com.oracle.truffle.llvm.frontend/bin"/>
+    </content>
+    <orderEntry jdkName="1.8" jdkType="JavaSDK" type="jdk"/>
+    <orderEntry forTests="false" type="sourceFolder"/>
+    <orderEntry module-name="com.oracle.truffle.api" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.dsl" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.interop" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.instrumentation" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.dsl.processor" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.object" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.object.dsl" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.object.dsl.processor" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.interop.java" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.profiles" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.vm" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.api.debug" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.object" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.object.basic" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.services" type="module"/>
+    <orderEntry module-name="com.oracle.graal.serviceprovider" type="module"/>
+    <orderEntry module-name="com.oracle.graal.serviceprovider.processor" type="module"/>
+    <orderEntry module-name="com.oracle.graal.nodeinfo" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.inittimer" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.meta" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.code" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.runtime" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.common" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.aarch64" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.amd64" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.sparc" type="module"/>
+    <orderEntry module-name="com.oracle.graal.options" type="module"/>
+    <orderEntry module-name="com.oracle.graal.options.processor" type="module"/>
+    <orderEntry module-name="com.oracle.graal.nodeinfo.processor" type="module"/>
+    <orderEntry module-name="com.oracle.graal.api.replacements" type="module"/>
+    <orderEntry module-name="com.oracle.graal.debug" type="module"/>
+    <orderEntry module-name="com.oracle.graal.compiler.common" type="module"/>
+    <orderEntry module-name="com.oracle.graal.api.collections" type="module"/>
+    <orderEntry module-name="com.oracle.graal.graph" type="module"/>
+    <orderEntry module-name="com.oracle.graal.replacements.verifier" type="module"/>
+    <orderEntry module-name="com.oracle.graal.api.runtime" type="module"/>
+    <orderEntry module-name="com.oracle.graal.bytecode" type="module"/>
+    <orderEntry module-name="com.oracle.graal.asm" type="module"/>
+    <orderEntry module-name="com.oracle.graal.code" type="module"/>
+    <orderEntry module-name="com.oracle.graal.lir" type="module"/>
+    <orderEntry module-name="com.oracle.graal.nodes" type="module"/>
+    <orderEntry module-name="com.oracle.graal.phases" type="module"/>
+    <orderEntry module-name="com.oracle.graal.phases.common" type="module"/>
+    <orderEntry module-name="com.oracle.graal.virtual" type="module"/>
+    <orderEntry module-name="com.oracle.graal.loop" type="module"/>
+    <orderEntry module-name="com.oracle.graal.loop.phases" type="module"/>
+    <orderEntry module-name="com.oracle.graal.compiler" type="module"/>
+    <orderEntry module-name="com.oracle.graal.runtime" type="module"/>
+    <orderEntry module-name="com.oracle.graal.api.directives" type="module"/>
+    <orderEntry module-name="com.oracle.graal.java" type="module"/>
+    <orderEntry module-name="com.oracle.graal.word" type="module"/>
+    <orderEntry module-name="com.oracle.graal.replacements" type="module"/>
+    <orderEntry module-name="com.oracle.graal.truffle" type="module"/>
+    <orderEntry module-name="com.oracle.graal.compiler.match.processor" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.hotspotvmconfig" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.hotspotvmconfig.processor" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.hotspot" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.hotspot.aarch64" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.hotspot.amd64" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.hotspot.sparc" type="module"/>
+    <orderEntry module-name="jdk.vm.ci.hotspot.jfr" type="module"/>
+    <orderEntry module-name="com.oracle.graal.hotspot" type="module"/>
+    <orderEntry module-name="com.oracle.nfi" type="module"/>
+    <orderEntry module-name="com.oracle.graal.truffle.hotspot" type="module"/>
+    <orderEntry module-name="com.oracle.graal.asm.amd64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.lir.amd64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.compiler.amd64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.replacements.amd64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.hotspot.amd64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.truffle.hotspot.amd64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.asm.sparc" type="module"/>
+    <orderEntry module-name="com.oracle.graal.truffle.hotspot.sparc" type="module"/>
+    <orderEntry module-name="com.oracle.graal.asm.aarch64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.lir.aarch64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.compiler.aarch64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.replacements.aarch64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.hotspot.aarch64" type="module"/>
+    <orderEntry module-name="com.oracle.graal.lir.sparc" type="module"/>
+    <orderEntry module-name="com.oracle.graal.compiler.sparc" type="module"/>
+    <orderEntry module-name="com.oracle.graal.replacements.sparc" type="module"/>
+    <orderEntry module-name="com.oracle.graal.hotspot.sparc" type="module"/>
+    <orderEntry module-name="com.oracle.graal.printer" type="module"/>
+    <orderEntry module-name="com.oracle.graal.salver" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.llvm.nodes" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.llvm.runtime" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.llvm.types" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.llvm.parser" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.llvm.parser.factories" type="module"/>
+    <orderEntry module-name="com.oracle.truffle.llvm.nativeint" type="module"/>
+    <orderEntry level="project" name="LLVM_BITCODE" type="library"/>
+  </component>
+  <component name="CheckStyle-IDEA-Module">
+    <option name="configuration">
+      <map>
+        <entry key="active-configuration" value="PROJECT_RELATIVE:/home/barrettc/Documents/github/crbb/sulong/projects/com.oracle.truffle.llvm/.checkstyle_checks.xml:com.oracle.truffle.llvm"/>
+      </map>
+    </option>
+  </component>
+</module>
