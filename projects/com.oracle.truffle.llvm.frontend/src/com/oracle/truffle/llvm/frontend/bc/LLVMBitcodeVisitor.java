@@ -75,7 +75,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
     public static LLVMParserResult getMain(Source source, LLVMContext context, LLVMOptimizationConfiguration configuration) {
          Model model = new Model();
 
-        new LLVMParser(model).parse(ModuleVersion.LLVM_3_4, source.getPath());
+        new LLVMParser(model).parse(ModuleVersion.LLVM_3_2, source.getPath());
 
         LLVMPhiManager phis = LLVMPhiManager.generate(model);
 
@@ -277,8 +277,8 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
         LLVMNode[] afterFunction = new LLVMNode[0];
 
         LLVMFunctionStartNode rootNode = new LLVMFunctionStartNode(body, beforeFunction, afterFunction, frame, method.getName());
-        LLVMRuntimeType llvmReturnType = LLVMBitcodeHelper.toRuntimeType(method.base());
-        LLVMRuntimeType[] llvmParamTypes = LLVMBitcodeHelper.toRuntimeTypes(method.args());
+        LLVMRuntimeType llvmReturnType = LLVMBitcodeHelper.toRuntimeType(method.getReturnType());
+        LLVMRuntimeType[] llvmParamTypes = LLVMBitcodeHelper.toRuntimeTypes(method.getArgumentTypes());
         LLVMFunctionDescriptor function = context.getFunctionRegistry().createFunctionDescriptor(method.getName(), llvmReturnType, llvmParamTypes, method.isVarArg());
         RootCallTarget callTarget = Truffle.getRuntime().createCallTarget(rootNode);
         functions.put(function, callTarget);

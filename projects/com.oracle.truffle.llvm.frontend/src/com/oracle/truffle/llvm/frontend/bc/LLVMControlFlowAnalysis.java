@@ -165,7 +165,7 @@ public final class LLVMControlFlowAnalysis {
 
         @Override
         public void visit(BranchInstruction branch) {
-            workspace.add(branch.successor());
+            workspace.add(branch.getSuccessor());
         }
 
         @Override
@@ -182,8 +182,8 @@ public final class LLVMControlFlowAnalysis {
 
         @Override
         public void visit(ConditionalBranchInstruction branch) {
-            workspace.add(branch.trueSuccessor());
-            workspace.add(branch.falseSuccessor());
+            workspace.add(branch.getTrueSuccessor());
+            workspace.add(branch.getFalseSuccessor());
         }
 
         @Override

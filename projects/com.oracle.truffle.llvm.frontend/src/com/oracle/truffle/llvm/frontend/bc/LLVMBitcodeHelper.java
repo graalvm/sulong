@@ -395,7 +395,7 @@ public final class LLVMBitcodeHelper {
             FunctionType type = (FunctionType) value;
 
             LLVMRuntimeType returnType = LLVMBitcodeHelper.toRuntimeType(type.base());
-            LLVMRuntimeType[] argTypes = LLVMBitcodeHelper.toRuntimeTypes(type.args());
+            LLVMRuntimeType[] argTypes = LLVMBitcodeHelper.toRuntimeTypes(type.getArgumentTypes());
 
             return LLVMFunctionLiteralNodeGen.create(context.getFunctionRegistry().createFunctionDescriptor(name, returnType, argTypes, type.isVarArg()));
         }
@@ -423,66 +423,66 @@ public final class LLVMBitcodeHelper {
 
             switch (llvmsubtype) {
                 case I8: {
-                    LLVMI8Node[] elements = new LLVMI8Node[array.size()];
+                    LLVMI8Node[] elements = new LLVMI8Node[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMI8Node) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMI8Node) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMI8ArrayLiteralNodeGen.create(elements, stride, allocation);
                 }
                 case I16: {
-                    LLVMI16Node[] elements = new LLVMI16Node[array.size()];
+                    LLVMI16Node[] elements = new LLVMI16Node[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMI16Node) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMI16Node) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMI16ArrayLiteralNodeGen.create(elements, stride, allocation);
                 }
                 case I32: {
-                    LLVMI32Node[] elements = new LLVMI32Node[array.size()];
+                    LLVMI32Node[] elements = new LLVMI32Node[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMI32Node) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMI32Node) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMI32ArrayLiteralNodeGen.create(elements, stride, allocation);
                 }
                 case I64: {
-                    LLVMI64Node[] elements = new LLVMI64Node[array.size()];
+                    LLVMI64Node[] elements = new LLVMI64Node[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMI64Node) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMI64Node) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMI64ArrayLiteralNodeGen.create(elements, stride, allocation);
                 }
                 case FLOAT: {
-                    LLVMFloatNode[] elements = new LLVMFloatNode[array.size()];
+                    LLVMFloatNode[] elements = new LLVMFloatNode[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMFloatNode) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMFloatNode) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMFloatArrayLiteralNodeGen.create(elements, stride, allocation);
                 }
                 case DOUBLE: {
-                    LLVMDoubleNode[] elements = new LLVMDoubleNode[array.size()];
+                    LLVMDoubleNode[] elements = new LLVMDoubleNode[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMDoubleNode) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMDoubleNode) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMDoubleArrayLiteralNodeGen.create(elements, stride, allocation);
                 }
                 case ARRAY:
                 case STRUCT: {
-                    LLVMAddressNode[] elements = new LLVMAddressNode[array.size()];
+                    LLVMAddressNode[] elements = new LLVMAddressNode[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMAddressNode) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMAddressNode) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMAddressArrayCopyNodeGen.create(elements, stride, allocation);
                 }
                 case ADDRESS: {
-                    LLVMAddressNode[] elements = new LLVMAddressNode[array.size()];
+                    LLVMAddressNode[] elements = new LLVMAddressNode[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMAddressNode) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMAddressNode) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMAddressArrayLiteralNodeGen.create(elements, stride, allocation);
                 }
                 case FUNCTION_ADDRESS: {
-                    LLVMFunctionNode[] elements = new LLVMFunctionNode[array.size()];
+                    LLVMFunctionNode[] elements = new LLVMFunctionNode[array.getElementCount()];
                     for (int i = 0; i < elements.length; i++) {
-                        elements[i] = (LLVMFunctionNode) toConstantNode(array.element(i), align, variables, context, stack);
+                        elements[i] = (LLVMFunctionNode) toConstantNode(array.getElement(i), align, variables, context, stack);
                     }
                     return LLVMFunctionArrayLiteralNodeGen.create(elements, stride, allocation);
                 }

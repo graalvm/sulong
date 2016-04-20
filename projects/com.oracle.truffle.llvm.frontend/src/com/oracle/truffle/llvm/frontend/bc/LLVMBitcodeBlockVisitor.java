@@ -82,12 +82,15 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
 
     private LLVMNode[] getPhiWriteNodes() {
         List<LLVMNode> nodes = new ArrayList<>();
-        for (Phi phi : method.getPhiManager().get(block)) {
-            FrameSlot slot = method.getSlot(phi.getPhiValue().getName());
-            LLVMExpressionNode value = resolve(phi.getValue());
-            LLVMBaseType baseType = LLVMBitcodeHelper.toBaseType(phi.getValue().getType());
-            LLVMNode phiWriteNode = LLVMFrameReadWriteFactory.createFrameWrite(baseType, value, slot);
-            nodes.add(phiWriteNode);
+        List<Phi> phis = method.getPhiManager().get(block);
+        if (phis != null) {
+            for (Phi phi : phis) {
+                FrameSlot slot = method.getSlot(phi.getPhiValue().getName());
+                LLVMExpressionNode value = resolve(phi.getValue());
+                LLVMBaseType baseType = LLVMBitcodeHelper.toBaseType(phi.getValue().getType());
+                LLVMNode phiWriteNode = LLVMFrameReadWriteFactory.createFrameWrite(baseType, value, slot);
+                nodes.add(phiWriteNode);
+            }
         }
         return nodes.toArray(new LLVMNode[nodes.size()]);
     }
@@ -103,7 +106,7 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
             FunctionType type = (FunctionType) symbol;
 
             LLVMRuntimeType returnType = LLVMBitcodeHelper.toRuntimeType(type.base());
-            LLVMRuntimeType[] argTypes = LLVMBitcodeHelper.toRuntimeTypes(type.args());
+            LLVMRuntimeType[] argTypes = LLVMBitcodeHelper.toRuntimeTypes(type.getArgumentTypes());
 
             return LLVMFunctionLiteralNodeGen.create(method.getContext().getFunctionRegistry().createFunctionDescriptor(name, returnType, argTypes, type.isVarArg()));
         } else {
@@ -312,7 +315,7 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
     @Override
     public void visit(BranchInstruction branch) {
         method.addTerminatingInstruction(LLVMBranchFactory.createUnconditionalBranch(
-                method.labels().get(branch.successor().getName()),
+                method.labels().get(branch.getSuccessor().getName()),
                 getPhiWriteNodes()));
     }
 
@@ -330,7 +333,7 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
         LLVMExpressionNode result;
 
         if (name.startsWith("@llvm.")) {
-            result = (LLVMExpressionNode) LLVMIntrinsicFactory.create(name, args, call.getCallType().args().length, method.getStackSlot(), method.getOptimizationConfiguration());
+            result = (LLVMExpressionNode) LLVMIntrinsicFactory.create(name, args, call.getCallType().getArgumentTypes().length, method.getStackSlot(), method.getOptimizationConfiguration());
         } else {
             LLVMFunctionNode function = (LLVMFunctionNode) resolve(target);
             result = (LLVMExpressionNode) LLVMFunctionFactory.createFunctionCall(function, args, LLVMBitcodeHelper.toBaseType(call.getType()));
@@ -386,22 +389,22 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
 
     @Override
     public void visit(ConditionalBranchInstruction branch) {
-        LLVMExpressionNode conditionNode = resolve(branch.condition());
-        int trueIndex = method.labels().get(branch.trueSuccessor().getName());
-        int falseIndex = method.labels().get(branch.falseSuccessor().getName());
+        LLVMExpressionNode conditionNode = resolve(branch.getCondition());
+        int trueIndex = method.labels().get(branch.getTrueSuccessor().getName());
+        int falseIndex = method.labels().get(branch.getFalseSuccessor().getName());
 
         List<LLVMNode> trueConditionPhiWriteNodes = new ArrayList<>();
         List<LLVMNode> falseConditionPhiWriteNodes = new ArrayList<>();
 
         List<Phi> phis = method.getPhiManager().get(block);
-        if (!phis.isEmpty()) {
+        if (phis != null) {
             for (Phi phi : phis) {
                 FrameSlot slot = method.getSlot(phi.getPhiValue().getName());
                 LLVMExpressionNode value = resolve(phi.getValue());
                 LLVMBaseType baseType = LLVMBitcodeHelper.toBaseType(phi.getValue().getType());
                 LLVMNode phiWriteNode = LLVMFrameReadWriteFactory.createFrameWrite(baseType, value, slot);
 
-                if (branch.trueSuccessor() == phi.getBlock()) {
+                if (branch.getTrueSuccessor() == phi.getBlock()) {
                     trueConditionPhiWriteNodes.add(phiWriteNode);
                 } else {
                     falseConditionPhiWriteNodes.add(phiWriteNode);
@@ -688,7 +691,7 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
         LLVMNode node;
 
         if (name.startsWith("@llvm.")) {
-            node = LLVMIntrinsicFactory.create(name, args, call.getCallType().args().length, method.getStackSlot(), method.getOptimizationConfiguration());
+            node = LLVMIntrinsicFactory.create(name, args, call.getCallType().getArgumentTypes().length, method.getStackSlot(), method.getOptimizationConfiguration());
         } else {
             LLVMFunctionNode function = (LLVMFunctionNode) resolve(target);
             node = LLVMFunctionFactory.createFunctionCall(function, args, LLVMBitcodeHelper.toBaseType(call.getType()));
