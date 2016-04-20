@@ -212,18 +212,22 @@ public class LLVMVisitor implements LLVMParserRuntime {
             this.parsedFunctions = parsedFunctions;
         }
 
+        @Override
         public RootCallTarget getMainFunction() {
             return mainFunction;
         }
 
+        @Override
         public Map<LLVMFunctionDescriptor, RootCallTarget> getParsedFunctions() {
             return parsedFunctions;
         }
 
+        @Override
         public RootCallTarget getStaticInits() {
             return staticInits;
         }
 
+        @Override
         public RootCallTarget getStaticDestructors() {
             return staticDestructors;
         }
