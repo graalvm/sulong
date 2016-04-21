@@ -324,10 +324,14 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
         Symbol target = call.getCallTarget();
         String name = ((ValueSymbol) target).getName();
 
-        LLVMExpressionNode[] args = new LLVMExpressionNode[call.getArguments().length];
+        int argumentCount = call.getArguments().length;
 
-        for (int i = 0; i < args.length; i++) {
-            args[i] = resolve(call.getArguments()[i]);
+        LLVMExpressionNode[] args = new LLVMExpressionNode[argumentCount + 1];
+
+        args[0] = LLVMFrameReadWriteFactory.createFrameRead(LLVMBaseType.ADDRESS, method.getStackSlot());
+
+        for (int i = 0; i < argumentCount; i++) {
+            args[i + 1] = resolve(call.getArguments()[i]);
         }
 
         LLVMExpressionNode result;
@@ -682,10 +686,14 @@ public final class LLVMBitcodeBlockVisitor implements BlockVisitor {
         Symbol target = call.getCallTarget();
         String name = ((ValueSymbol) target).getName();
 
-        LLVMExpressionNode[] args = new LLVMExpressionNode[call.getArguments().length];
+        int argumentCount = call.getArguments().length;
 
-        for (int i = 0; i < args.length; i++) {
-            args[i] = resolve(call.getArguments()[i]);
+        LLVMExpressionNode[] args = new LLVMExpressionNode[argumentCount + 1];
+
+        args[0] = LLVMFrameReadWriteFactory.createFrameRead(LLVMBaseType.ADDRESS, method.getStackSlot());
+
+        for (int i = 0; i < argumentCount; i++) {
+            args[i + 1] = resolve(call.getArguments()[i]);
         }
 
         LLVMNode node;
