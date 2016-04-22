@@ -319,14 +319,14 @@ public final class LLVMBitcodeBlockVisitor implements InstructionVisitor {
     public void visit(CallInstruction call) {
         Symbol target = call.getCallTarget();
 
-        int argumentCount = call.getArguments().length;
+        int argumentCount = call.getArgumentCount();
 
         LLVMExpressionNode[] args = new LLVMExpressionNode[argumentCount + 1];
 
         args[0] = LLVMFrameReadWriteFactory.createFrameRead(LLVMBaseType.ADDRESS, method.getStackSlot());
 
         for (int i = 0; i < argumentCount; i++) {
-            args[i + 1] = resolve(call.getArguments()[i]);
+            args[i + 1] = resolve(call.getArgument(i));
         }
 
         LLVMExpressionNode result;
@@ -704,14 +704,14 @@ public final class LLVMBitcodeBlockVisitor implements InstructionVisitor {
     public void visit(VoidCallInstruction call) {
         Symbol target = call.getCallTarget();
 
-        int argumentCount = call.getArguments().length;
+        int argumentCount = call.getArgumentCount();
 
         LLVMExpressionNode[] args = new LLVMExpressionNode[argumentCount + 1];
 
         args[0] = LLVMFrameReadWriteFactory.createFrameRead(LLVMBaseType.ADDRESS, method.getStackSlot());
 
         for (int i = 0; i < argumentCount; i++) {
-            args[i + 1] = resolve(call.getArguments()[i]);
+            args[i + 1] = resolve(call.getArgument(i));
         }
 
         LLVMNode node;
