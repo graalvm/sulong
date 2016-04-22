@@ -34,27 +34,25 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import uk.ac.man.cs.llvm.ir.Symbol;
-import uk.ac.man.cs.llvm.ir.ValueSymbol;
 import uk.ac.man.cs.llvm.ir.model.*;
 import uk.ac.man.cs.llvm.ir.model.elements.*;
 import uk.ac.man.cs.llvm.ir.types.Type;
 
 public final class LLVMPhiManager implements ModelVisitor  {
-    
+
     public static LLVMPhiManager generate(Model model) {
         LLVMPhiManager visitor = new LLVMPhiManager();
-        
+
         model.accept(visitor);
-        
+
         return visitor;
     }
-    
-    private final Map<String, Map<Block, List<Phi>>> edges = new HashMap();   
-    
+
+    private final Map<String, Map<Block, List<Phi>>> edges = new HashMap();
+
     private LLVMPhiManager() {
     }
-    
+
     public Map<Block, List<Phi>> getPhiMap(String method) {
         Map<Block, List<Phi>> references = edges.get(method);
         if (references == null) {
@@ -79,29 +77,29 @@ public final class LLVMPhiManager implements ModelVisitor  {
     @Override
     public void visit(FunctionDefinition method) {
         LLVMPhiManagerFunctionVisitor visitor = new LLVMPhiManagerFunctionVisitor();
-        
+
         method.accept(visitor);
-        
+
         edges.put(method.getName(), visitor.getEdges());
     }
 
     @Override
     public void visit(Type type) {
     }
-    
-    private static class LLVMPhiManagerFunctionVisitor implements FunctionVisitor, BlockVisitor{
-        
+
+    private static class LLVMPhiManagerFunctionVisitor implements FunctionVisitor, InstructionVisitor {
+
         private final Map<Block, List<Phi>> edges = new HashMap<>();
-        
+
         private Block block = null;
-        
-        public LLVMPhiManagerFunctionVisitor() { 
+
+        public LLVMPhiManagerFunctionVisitor() {
         }
-        
+
         public Map<Block, List<Phi>> getEdges() {
             return edges;
         }
-        
+
         @Override
         public void visit(Block block) {
             this.block = block;
@@ -198,6 +196,10 @@ public final class LLVMPhiManager implements ModelVisitor  {
         }
 
         @Override
+        public void visit(SwitchOldInstruction si) {
+        }
+
+        @Override
         public void visit(UnreachableInstruction ui) {
         }
 
@@ -209,9 +211,9 @@ public final class LLVMPhiManager implements ModelVisitor  {
     public static final class Phi {
 
         private final Block block;
-        
+
         private final ValueSymbol phi;
-        
+
         private final Symbol value;
 
         public Phi(Block block, ValueSymbol phi, Symbol value) {
@@ -223,7 +225,7 @@ public final class LLVMPhiManager implements ModelVisitor  {
         public Block getBlock() {
             return block;
         }
-        
+
         public ValueSymbol getPhiValue() {
             return phi;
         }

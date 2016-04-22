@@ -117,14 +117,14 @@ public final class LLVMControlFlowAnalysis {
         }
     }
 
-    private static class LLVMControlFlowFunctionVisitor implements FunctionVisitor, BlockVisitor {
+    private static class LLVMControlFlowFunctionVisitor implements FunctionVisitor, InstructionVisitor {
 
         private final Map<Block, Set<Block>> predecessors = new HashMap<>();
 
         private final Map<Block, Set<Block>> successors = new HashMap<>();
 
         private Set<Block> workspace;
-        
+
         public LLVMControlFlowFunctionVisitor() {
         }
 
@@ -239,6 +239,14 @@ public final class LLVMControlFlowAnalysis {
 
         @Override
         public void visit(SwitchInstruction si) {
+            workspace.add(si.getDefaultBlock());
+            for (int i = 0; i < si.getCaseCount(); i++) {
+                workspace.add(si.getCaseBlock(i));
+            }
+        }
+
+        @Override
+        public void visit(SwitchOldInstruction si) {
             workspace.add(si.getDefaultBlock());
             for (int i = 0; i < si.getCaseCount(); i++) {
                 workspace.add(si.getCaseBlock(i));

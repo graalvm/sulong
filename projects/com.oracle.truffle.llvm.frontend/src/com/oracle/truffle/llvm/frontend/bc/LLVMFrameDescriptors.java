@@ -125,7 +125,7 @@ public class LLVMFrameDescriptors {
         }
     }
 
-    private static class LLVMFrameDescriptorsFunctionVisitor implements FunctionVisitor, BlockVisitor {
+    private static class LLVMFrameDescriptorsFunctionVisitor implements FunctionVisitor, InstructionVisitor {
 
         private final FrameDescriptor frame;
 
@@ -298,6 +298,10 @@ public class LLVMFrameDescriptors {
 
         @Override
         public void visit(SwitchInstruction branch) {
+        }
+
+        @Override
+        public void visit(SwitchOldInstruction si) {
         }
 
         @Override
