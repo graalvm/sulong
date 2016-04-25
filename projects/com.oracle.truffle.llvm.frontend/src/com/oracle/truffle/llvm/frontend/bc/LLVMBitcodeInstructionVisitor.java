@@ -67,13 +67,13 @@ import uk.ac.man.cs.llvm.ir.model.constants.*;
 import uk.ac.man.cs.llvm.ir.model.elements.*;
 import uk.ac.man.cs.llvm.ir.types.*;
 
-public final class LLVMBitcodeBlockVisitor implements InstructionVisitor {
+public final class LLVMBitcodeInstructionVisitor implements InstructionVisitor {
 
     private final LLVMBitcodeFunctionVisitor method;
 
     private final Block block;
 
-    public LLVMBitcodeBlockVisitor(LLVMBitcodeFunctionVisitor method, Block block) {
+    public LLVMBitcodeInstructionVisitor(LLVMBitcodeFunctionVisitor method, Block block) {
         this.method = method;
         this.block = block;
     }

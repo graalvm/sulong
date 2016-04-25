@@ -137,7 +137,7 @@ public class LLVMBitcodeFunctionVisitor implements FunctionVisitor {
     public void visit(Block block) {
         this.block.clear();
 
-        block.accept(new LLVMBitcodeBlockVisitor(this, block));
+        block.accept(new LLVMBitcodeInstructionVisitor(this, block));
         nullers.add(createNullers(slots.get(block)));
     }
 
