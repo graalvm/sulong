@@ -173,6 +173,18 @@ suite = {
         "version" : "3.6.200.v20130402-1505.jar",
       }
     },
+    "LLVM_BITCODE_FOR_JAVA" : {
+      "path" : "lib/llvm-bcj-1.0-SNAPSHOT.jar",
+      "urls" : [
+        "https://github.com/beehive-lab/llvm-bcj/blob/master/bin/llvm-bcj-1.0-SNAPSHOT.jar?raw=true",
+      ],
+      "sha1" : "b7366a5c109595f307c4c358afcc0a5e8a70442f",
+      "maven" : {
+        "groupId" : "uk.ac.man.cs",
+        "artifactId" : "llvm-bcj",
+        "version" : "1.0-SNAPSHOT.jar",
+      }
+    },
   },
 
   "projects" : {
@@ -228,7 +240,7 @@ suite = {
       "license" : "BSD-new",
     },
 
-   "com.oracle.truffle.llvm.types.test" : {
+    "com.oracle.truffle.llvm.types.test" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
@@ -253,7 +265,7 @@ suite = {
       "license" : "BSD-new",
     },
 
-  "com.oracle.truffle.llvm.nodes" : {
+   "com.oracle.truffle.llvm.nodes" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
@@ -290,7 +302,7 @@ suite = {
       "license" : "BSD-new",
     },
 
-     "com.oracle.truffle.llvm.parser" : {
+    "com.oracle.truffle.llvm.parser" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
@@ -306,7 +318,7 @@ suite = {
       "license" : "BSD-new",
     },
 
-     "com.oracle.truffle.llvm.parser.impl" : {
+    "com.oracle.truffle.llvm.parser.impl" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
@@ -325,6 +337,7 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.llvm.parser.factories",
         "com.oracle.truffle.llvm.parser.impl",
+	"com.oracle.truffle.llvm.frontend"
        ],
       "checkstyle" : "com.oracle.truffle.llvm",
       "javaCompliance" : "1.8",
@@ -333,7 +346,7 @@ suite = {
       "license" : "BSD-new",
     },
 
-   "com.oracle.truffle.llvm.parser.factories" : {
+    "com.oracle.truffle.llvm.parser.factories" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
@@ -345,12 +358,33 @@ suite = {
       "workingSets" : "Truffle, LLVM",
       "license" : "BSD-new",
     },
-   "com.oracle.truffle.llvm.nativeint" : {
+
+    "com.oracle.truffle.llvm.nativeint" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
         "graal-core:GRAAL_TRUFFLE_HOTSPOT",
         "com.oracle.truffle.llvm.parser"
+       ],
+      "checkstyle" : "com.oracle.truffle.llvm",
+      "javaCompliance" : "1.8",
+      "annotationProcessors" : ["truffle:TRUFFLE_DSL_PROCESSOR"],
+      "workingSets" : "Truffle, LLVM",
+      "license" : "BSD-new",
+    },
+
+    "com.oracle.truffle.llvm.frontend" : {
+      "subDir" : "projects",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "truffle:TRUFFLE_API",
+        "com.oracle.truffle.llvm.nodes",
+        "com.oracle.truffle.llvm.nodes.impl",
+        "com.oracle.truffle.llvm.parser",
+        "com.oracle.truffle.llvm.parser.factories",
+        "com.oracle.truffle.llvm.runtime",
+        "com.oracle.truffle.llvm.types",
+        "LLVM_BITCODE_FOR_JAVA",
        ],
       "checkstyle" : "com.oracle.truffle.llvm",
       "javaCompliance" : "1.8",
@@ -381,6 +415,7 @@ suite = {
        "XTEXT_ANTLR_RUNTIME",
        "XTEXT_UTIL",
        "ECLIPSE_EQUINOX",
+       "LLVM_BITCODE_FOR_JAVA",
       ],
       "distDependencies" : [
         "truffle:TRUFFLE_API",
@@ -409,6 +444,7 @@ suite = {
        "XTEXT_ANTLR_RUNTIME",
        "XTEXT_UTIL",
        "ECLIPSE_EQUINOX",
+       "LLVM_BITCODE_FOR_JAVA",
        "mx:JUNIT"
       ],
       "distDependencies" : [
