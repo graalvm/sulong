@@ -29,6 +29,16 @@
  */
 package com.oracle.truffle.llvm.test;
 
+import com.oracle.truffle.llvm.runtime.LLVMOptions;
+import com.oracle.truffle.llvm.tools.Clang;
+import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
+import com.oracle.truffle.llvm.tools.GCC;
+import com.oracle.truffle.llvm.tools.LLC;
+import com.oracle.truffle.llvm.tools.LLVM_AS;
+import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
+import com.oracle.truffle.llvm.tools.util.PathUtil;
+import com.oracle.truffle.llvm.tools.util.ProcessUtil;
+import com.oracle.truffle.llvm.tools.util.ProcessUtil.ProcessResult;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
@@ -37,17 +47,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.oracle.truffle.llvm.runtime.LLVMOptions;
-import com.oracle.truffle.llvm.tools.Clang;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
-import com.oracle.truffle.llvm.tools.GCC;
-import com.oracle.truffle.llvm.tools.LLC;
-import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
-import com.oracle.truffle.llvm.tools.util.PathUtil;
-import com.oracle.truffle.llvm.tools.util.ProcessUtil;
-import com.oracle.truffle.llvm.tools.util.ProcessUtil.ProcessResult;
-
 public class TestHelper {
+
+    public static File assembleToBitcode(File irFile) {
+        LLVM_AS.assembleToBitcodeFile(irFile);
+        String path = irFile.getAbsolutePath();
+        return new File(path.substring(0, path.length() - 3) + ".bc");
+    }
 
     /**
      * Recursively collects files of the specified extensions starting from the given root folder.
