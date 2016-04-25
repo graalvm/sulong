@@ -436,14 +436,14 @@ public final class LLVMBitcodeBlockVisitor implements InstructionVisitor {
 
     @Override
     public void visit(GetElementPointerInstruction gep) {
-        LLVMAddressNode baseNode = (LLVMAddressNode) resolve(gep.getPointer());
+        LLVMAddressNode baseNode = (LLVMAddressNode) resolve(gep.getBasePointer());
         LLVMAddressNode currentAddress = baseNode;
 
-        Type type = gep.getPointer().getType();
+        Type type = gep.getBasePointer().getType();
 
         int align = 0;
-        if (gep.getPointer() instanceof ValueSymbol) {
-            align = ((ValueSymbol) gep.getPointer()).getAlign();
+        if (gep.getBasePointer() instanceof ValueSymbol) {
+            align = ((ValueSymbol) gep.getBasePointer()).getAlign();
         }
 
         for (int i = 0; i < gep.getIndexCount(); i++) {
@@ -525,8 +525,7 @@ public final class LLVMBitcodeBlockVisitor implements InstructionVisitor {
 
         if (load.getType() instanceof VectorType) {
             VectorType type = (VectorType) load.getType();
-            LLVMAddressNode target = (LLVMAddressNode) LLVMAllocaInstructionNodeGen.create(LLVMBitcodeHelper.getSize(type, 0), type.getAlignment(), method.getContext(), method.getStackSlot());
-            result = LLVMMemoryReadWriteFactory.createLoadVector(resultType, target, type.getElementCount());
+            result = LLVMMemoryReadWriteFactory.createLoadVector(resultType, source, type.getElementCount());
         } else {
             int bits = load.getType() instanceof IntegerType
                     ? ((IntegerType) load.getType()).getBitCount()
