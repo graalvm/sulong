@@ -38,7 +38,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
-import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;;
+import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNode;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMFunctionStartNode;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMFreeFactory;
@@ -86,9 +86,9 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
         model.accept(module);
 
         LLVMFunctionDescriptor mainFunction = module.getFunction("@main");
-        FrameDescriptor frame = module.frames.getDescriptor();
 
-        FrameSlot stack = frame.findFrameSlot(LLVMBitcodeHelper.STACK_ADDRESS_FRAME_SLOT_ID);
+        FrameDescriptor frame = new FrameDescriptor();
+        FrameSlot stack = frame.addFrameSlot(LLVMBitcodeHelper.STACK_ADDRESS_FRAME_SLOT_ID);
 
         LLVMNode[] globals = module.getGobalVariables(stack).toArray(new LLVMNode[0]);
 
