@@ -61,6 +61,8 @@ public class LLVMContext extends ExecutionContext {
 
     private Source sourceFile;
 
+    private boolean parseOnly;
+
     public LLVMContext(NodeFactoryFacade facade, LLVMOptimizationConfiguration optimizationConfig) {
         nativeLookup = new NativeLookup(facade);
         this.registry = new LLVMFunctionRegistry(optimizationConfig, facade);
@@ -77,7 +79,23 @@ public class LLVMContext extends ExecutionContext {
     }
 
     public NativeFunctionHandle getNativeHandle(LLVMFunctionDescriptor function, LLVMExpressionNode[] args) {
-        return nativeLookup.getNativeHandle(function, args);
+        LLVMFunctionDescriptor sameFunction = getFunctionDescriptor(function);
+        return nativeLookup.getNativeHandle(sameFunction, args);
+    }
+
+    /**
+     * Creates a complete function descriptor from the given one.
+     *
+     * {@link LLVMFunctionRegistry#createFromIndex} creates an incomplete function descriptor, with
+     * illegal types and no function name but a valid index. Not having to look up the whole
+     * function descriptor makes most indirect calls faster. However, since the native interface
+     * needs the return type of the function, we here have to look up the complete function
+     * descriptor.
+     */
+    private LLVMFunctionDescriptor getFunctionDescriptor(LLVMFunctionDescriptor incompleteFunctionDescriptor) {
+        int validFunctionIndex = incompleteFunctionDescriptor.getFunctionIndex();
+        LLVMFunctionDescriptor[] completeFunctionDescriptors = registry.getFunctionDescriptors();
+        return completeFunctionDescriptors[validFunctionIndex];
     }
 
     public long getNativeHandle(String functionName) {
@@ -138,6 +156,14 @@ public class LLVMContext extends ExecutionContext {
 
     public List<RootCallTarget> getStaticInitializers() {
         return staticInitializers;
+    }
+
+    public void setParseOnly(boolean parseOnly) {
+        this.parseOnly = parseOnly;
+    }
+
+    public boolean isParseOnly() {
+        return parseOnly;
     }
 
 }
