@@ -32,8 +32,6 @@ package com.oracle.truffle.llvm.types;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import org.omg.CORBA.portable.BoxedValueHelper;
-
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.Truffle;
