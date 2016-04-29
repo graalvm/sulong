@@ -45,6 +45,11 @@ public class LLVMPropertyOptimizationConfiguration implements LLVMOptimizationCo
     }
 
     @Override
+    public boolean injectBranchProbabilitiesForSelect() {
+        return LLVMOptions.injectBranchProbabilitiesForSelect();
+    }
+
+    @Override
     public boolean intrinsifyCLibraryFunctions() {
         return LLVMOptions.intrinsifyCLibraryFunctions();
     }
