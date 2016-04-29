@@ -50,7 +50,7 @@ public abstract class LLVMBlockNode extends LLVMExpressionNode {
         @Children private final LLVMBasicBlockNode[] bodyNodes;
         @CompilationFinal private final LLVMStackFrameNuller[][] indexToSlotNuller;
         private final FrameSlot returnSlot;
-        private final boolean injectBranchProbabilities = LLVMOptions.injectBranchProbabilities();
+        private final boolean injectBranchProbabilities = LLVMOptions.injectBranchProbabilitiesSuccessors();
 
         public LLVMBlockControlFlowNode(LLVMBasicBlockNode[] bodyNodes, LLVMStackFrameNuller[][] indexToSlotNuller, FrameSlot returnSlot) {
             this.bodyNodes = bodyNodes;
