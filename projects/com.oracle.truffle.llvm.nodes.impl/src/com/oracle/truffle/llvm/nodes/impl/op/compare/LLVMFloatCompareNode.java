@@ -34,6 +34,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.llvm.nodes.impl.base.LLVMNodeAsserts;
 import com.oracle.truffle.llvm.nodes.impl.base.floating.LLVMFloatNode;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI1Node;
 
@@ -54,35 +55,40 @@ public abstract class LLVMFloatCompareNode extends LLVMI1Node {
     public abstract static class LLVMFloatOltNode extends LLVMFloatCompareNode {
         @Specialization
         public boolean executeI1(float val1, float val2) {
-            return areOrdered(val1, val2) && val1 < val2;
+            LLVMNodeAsserts.implies(Float.isNaN(val1), val1 < val2);
+            return areOrdered(val1) && val1 < val2;
         }
     }
 
     public abstract static class LLVMFloatOgtNode extends LLVMFloatCompareNode {
         @Specialization
         public boolean executeI1(float val1, float val2) {
-            return areOrdered(val1, val2) && val1 > val2;
+            LLVMNodeAsserts.implies(Float.isNaN(val2), val1 < val2);
+            return areOrdered(val2) && val1 > val2;
         }
     }
 
     public abstract static class LLVMFloatOgeNode extends LLVMFloatCompareNode {
         @Specialization
         public boolean executeI1(float val1, float val2) {
-            return areOrdered(val1, val2) && val1 >= val2;
+            LLVMNodeAsserts.implies(Float.isNaN(val2), val1 < val2);
+            return areOrdered(val2) && val1 >= val2;
         }
     }
 
     public abstract static class LLVMFloatOleNode extends LLVMFloatCompareNode {
         @Specialization
         public boolean executeI1(float val1, float val2) {
-            return areOrdered(val1, val2) && val1 <= val2;
+            LLVMNodeAsserts.implies(Float.isNaN(val1), val1 < val2);
+            return areOrdered(val1) && val1 <= val2;
         }
     }
 
     public abstract static class LLVMFloatOeqNode extends LLVMFloatCompareNode {
         @Specialization
         public boolean executeI1(float val1, float val2) {
-            return areOrdered(val1, val2) && val1 == val2;
+            LLVMNodeAsserts.implies(Float.isNaN(val1) || Float.isNaN(val2), val1 != val2);
+            return val1 == val2;
         }
     }
 

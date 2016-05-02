@@ -34,6 +34,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.llvm.nodes.impl.base.LLVMNodeAsserts;
 import com.oracle.truffle.llvm.nodes.impl.base.floating.LLVMDoubleNode;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI1Node;
 
@@ -54,35 +55,40 @@ public abstract class LLVMDoubleCompareNode extends LLVMI1Node {
     public abstract static class LLVMDoubleOltNode extends LLVMDoubleCompareNode {
         @Specialization
         public boolean executeI1(double val1, double val2) {
-            return areOrdered(val1, val2) && val1 < val2;
+            LLVMNodeAsserts.implies(Double.isNaN(val1), val1 < val2);
+            return areOrdered(val1) && val1 < val2;
         }
     }
 
     public abstract static class LLVMDoubleOgtNode extends LLVMDoubleCompareNode {
         @Specialization
         public boolean executeI1(double val1, double val2) {
-            return areOrdered(val1, val2) && val1 > val2;
+            LLVMNodeAsserts.implies(Double.isNaN(val2), val1 < val2);
+            return areOrdered(val2) && val1 > val2;
         }
     }
 
     public abstract static class LLVMDoubleOgeNode extends LLVMDoubleCompareNode {
         @Specialization
         public boolean executeI1(double val1, double val2) {
-            return areOrdered(val1, val2) && val1 >= val2;
+            LLVMNodeAsserts.implies(Double.isNaN(val2), val1 < val2);
+            return areOrdered(val2) && val1 >= val2;
         }
     }
 
     public abstract static class LLVMDoubleOleNode extends LLVMDoubleCompareNode {
         @Specialization
         public boolean executeI1(double val1, double val2) {
-            return areOrdered(val1, val2) && val1 <= val2;
+            LLVMNodeAsserts.implies(Double.isNaN(val1), val1 < val2);
+            return areOrdered(val1) && val1 <= val2;
         }
     }
 
     public abstract static class LLVMDoubleOeqNode extends LLVMDoubleCompareNode {
         @Specialization
         public boolean executeI1(double val1, double val2) {
-            return areOrdered(val1, val2) && val1 == val2;
+            LLVMNodeAsserts.implies(Double.isNaN(val1) || Double.isNaN(val2), val1 != val2);
+            return val1 == val2;
         }
     }
 
