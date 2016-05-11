@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.types;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
@@ -228,10 +229,16 @@ public final class LLVMFunctionDescriptor implements TruffleObject, Comparable<L
 
         @Override
         public Object execute(VirtualFrame frame) {
-            assert ForeignAccess.getArguments(frame).isEmpty();
             final LLVMFunctionDescriptor function = (LLVMFunctionDescriptor) ForeignAccess.getReceiver(frame);
             final CallTarget callTarget = getCallTarget(function);
-            return callNode.call(frame, callTarget, new Object[]{stack.getUpperBounds()});
+            List<Object> list = ForeignAccess.getArguments(frame);
+            Object[] args = new Object[list.size() + 1];
+            args[0] = stack.getUpperBounds();
+            int i = 1;
+            for (Object o : list) {
+                args[i++] = o;
+            }
+            return callNode.call(frame, callTarget, args);
         }
 
         // TODO No static access to these classes at the moment
