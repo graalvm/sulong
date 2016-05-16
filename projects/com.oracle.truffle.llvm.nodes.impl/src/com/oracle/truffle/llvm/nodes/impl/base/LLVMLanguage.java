@@ -34,11 +34,14 @@ import java.io.IOException;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.ProvidedTags;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
 
 @TruffleLanguage.Registration(name = "Sulong", version = "0.01", mimeType = {LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.SULONG_LIBRARY_MIME_TYPE})
+@ProvidedTags(value = {StandardTags.StatementTag.class})
 public final class LLVMLanguage extends TruffleLanguage<LLVMContext> {
 
     /*
