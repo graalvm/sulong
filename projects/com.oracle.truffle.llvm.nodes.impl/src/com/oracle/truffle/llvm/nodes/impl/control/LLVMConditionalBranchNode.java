@@ -33,6 +33,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMTerminatorNode;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI1Node;
@@ -46,8 +47,8 @@ public abstract class LLVMConditionalBranchNode extends LLVMTerminatorNode {
     public static final int TRUE_SUCCESSOR = 0;
     public static final int FALSE_SUCCESSOR = 1;
 
-    public LLVMConditionalBranchNode(int trueSuccessor, int falseSuccessor, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
-        super(trueSuccessor, falseSuccessor);
+    public LLVMConditionalBranchNode(SourceSection sourceSection, int trueSuccessor, int falseSuccessor, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
+        super(sourceSection, trueSuccessor, falseSuccessor);
         this.truePhiWriteNodes = truePhiWriteNodes;
         this.falsePhiWriteNodes = falsePhiWriteNodes;
     }
@@ -55,8 +56,8 @@ public abstract class LLVMConditionalBranchNode extends LLVMTerminatorNode {
     // TODO find a better name
     public abstract static class LLVMBrConditionalNode extends LLVMConditionalBranchNode {
 
-        public LLVMBrConditionalNode(int trueSuccessor, int falseSuccessor, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
-            super(trueSuccessor, falseSuccessor, truePhiWriteNodes, falsePhiWriteNodes);
+        public LLVMBrConditionalNode(SourceSection sourceSection, int trueSuccessor, int falseSuccessor, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
+            super(sourceSection, trueSuccessor, falseSuccessor, truePhiWriteNodes, falsePhiWriteNodes);
         }
 
         @ExplodeLoop
