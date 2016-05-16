@@ -568,7 +568,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
         FunctionHeader functionHeader = def.getHeader();
         EList<Parameter> pars = functionHeader.getParameters().getParameters();
         LLVMExpressionNode stackPointerNode = factoryFacade.createFunctionArgNode(0, LLVMBaseType.ADDRESS);
-        formalParamInits.add(factoryFacade.createFrameWrite(LLVMBaseType.ADDRESS, stackPointerNode, getStackPointerSlot()));
+        formalParamInits.add(factoryFacade.createFrameWrite(sourceFile.createSection("test", 1), LLVMBaseType.ADDRESS, stackPointerNode, getStackPointerSlot()));
         int argIndex = factoryFacade.getArgStartIndex().get();
         if (resolve(functionHeader.getRettype()).isStruct()) {
             LLVMExpressionNode functionRetParNode = factoryFacade.createFunctionArgNode(argIndex++, LLVMBaseType.STRUCT);
@@ -916,7 +916,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
         LLVMBaseType baseType = getLLVMType(type);
         FrameSlotKind frameSlotKind = factoryFacade.getFrameSlotKind(resolve(type));
         slot.setKind(frameSlotKind);
-        return factoryFacade.createFrameWrite(baseType, result, slot);
+        return factoryFacade.createFrameWrite(sourceFile.createSection("test", 1), baseType, result, slot);
     }
 
     private LLVMExpressionNode visitIcmpInstruction(Instruction_icmp instr) {
@@ -1342,7 +1342,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
         if (termInstruction instanceof Instruction_ret) {
             return visitRet((Instruction_ret) termInstruction);
         } else if (termInstruction instanceof Instruction_unreachable) {
-            return factoryFacade.createUnreachableNode();
+            return factoryFacade.createUnreachableNode(sourceFile.createSection("test", 1));
         } else if (termInstruction instanceof Instruction_br) {
             return visitBr((Instruction_br) termInstruction);
         } else if (termInstruction instanceof Instruction_switch) {
@@ -1361,7 +1361,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
             labelTargets[i] = getIndexFromBasicBlock(destinations.get(i).getRef());
         }
         LLVMExpressionNode value = visitValueRef(instr.getAddress().getRef(), instr.getAddress().getType());
-        return factoryFacade.createIndirectBranch(value, labelTargets, getUnconditionalPhiWriteNodes());
+        return factoryFacade.createIndirectBranch(sourceFile.createSection("test", 1), value, labelTargets, getUnconditionalPhiWriteNodes());
     }
 
     private LLVMNode visitSwitch(Instruction_switch switchInstr) {
@@ -1379,7 +1379,7 @@ public class LLVMVisitor implements LLVMParserRuntime {
         LLVMParserAsserts.assertNoNullElement(cases);
         LLVMNode[] phiWriteNodes = getUnconditionalPhiWriteNodes();
         LLVMBaseType llvmType = getLLVMType(switchInstr.getComparisonValue().getType());
-        return factoryFacade.createSwitch(cond, defaultLabel, otherLabels, cases, llvmType, phiWriteNodes);
+        return factoryFacade.createSwitch(sourceFile.createSection("test", 1), cond, defaultLabel, otherLabels, cases, llvmType, phiWriteNodes);
     }
 
     private LLVMNode visitBr(Instruction_br brInstruction) {
@@ -1408,12 +1408,12 @@ public class LLVMVisitor implements LLVMParserRuntime {
             }
             LLVMNode[] truePhiWriteNodesArr = trueConditionPhiWriteNodes.toArray(new LLVMNode[trueConditionPhiWriteNodes.size()]);
             LLVMNode[] falsePhiWriteNodesArr = falseConditionPhiWriteNodes.toArray(new LLVMNode[falseConditionPhiWriteNodes.size()]);
-            return factoryFacade.createConditionalBranch(trueIndex, falseIndex, conditionNode, truePhiWriteNodesArr, falsePhiWriteNodesArr);
+            return factoryFacade.createConditionalBranch(sourceFile.createSection("test", 1), trueIndex, falseIndex, conditionNode, truePhiWriteNodesArr, falsePhiWriteNodesArr);
         } else {
             LLVMNode[] unconditionalPhiWriteNodeArr = getUnconditionalPhiWriteNodes();
             BasicBlock unconditional = brInstruction.getUnconditional().getRef();
             int unconditionalIndex = getIndexFromBasicBlock(unconditional);
-            return factoryFacade.createUnconditionalBranch(unconditionalIndex, unconditionalPhiWriteNodeArr);
+            return factoryFacade.createUnconditionalBranch(sourceFile.createSection("test", 1), unconditionalIndex, unconditionalPhiWriteNodeArr);
         }
     }
 
@@ -1443,12 +1443,12 @@ public class LLVMVisitor implements LLVMParserRuntime {
     private LLVMNode visitRet(Instruction_ret ret) {
         TypedValue val = ret.getVal();
         if (val == null) {
-            return factoryFacade.createRetVoid();
+            return factoryFacade.createRetVoid(sourceFile.createSection("test", 1));
         } else {
             LLVMExpressionNode retValue = visitValueRef(val.getRef(), val.getType());
             ResolvedType resolvedType = resolve(val.getType());
             retSlot.setKind(factoryFacade.getFrameSlotKind(resolvedType));
-            return factoryFacade.createNonVoidRet(retValue, resolvedType);
+            return factoryFacade.createNonVoidRet(sourceFile.createSection("test", 1), retValue, resolvedType);
         }
     }
 
