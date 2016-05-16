@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.oracle.truffle.api.source.SourceSection;
 import org.eclipse.emf.ecore.EObject;
 
 import com.intel.llvm.ireditor.lLVM_IR.BitwiseBinaryInstruction;
@@ -165,13 +166,13 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMTerminatorNode createRetVoid() {
-        return LLVMFunctionFactory.createRetVoid(runtime);
+    public LLVMTerminatorNode createRetVoid(SourceSection sourceSection) {
+        return LLVMFunctionFactory.createRetVoid(sourceSection, runtime);
     }
 
     @Override
-    public LLVMTerminatorNode createNonVoidRet(LLVMExpressionNode retValue, ResolvedType resolvedType) {
-        return LLVMFunctionFactory.createNonVoidRet(runtime, retValue, resolvedType);
+    public LLVMTerminatorNode createNonVoidRet(SourceSection sourceSection, LLVMExpressionNode retValue, ResolvedType resolvedType) {
+        return LLVMFunctionFactory.createNonVoidRet(sourceSection, runtime, retValue, resolvedType);
     }
 
     @Override
@@ -190,8 +191,8 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMNode createFrameWrite(LLVMBaseType llvmType, LLVMExpressionNode result, FrameSlot slot) {
-        return LLVMFrameReadWriteFactory.createFrameWrite(llvmType, result, slot);
+    public LLVMNode createFrameWrite(SourceSection sourceSection, LLVMBaseType llvmType, LLVMExpressionNode result, FrameSlot slot) {
+        return LLVMFrameReadWriteFactory.createFrameWrite(sourceSection, llvmType, result, slot);
     }
 
     @Override
@@ -250,29 +251,29 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMNode createUnreachableNode() {
-        return new LLVMUnreachableNode();
+    public LLVMNode createUnreachableNode(SourceSection sourceSection) {
+        return new LLVMUnreachableNode(sourceSection);
     }
 
     @Override
-    public LLVMNode createIndirectBranch(LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites) {
-        return LLVMBranchFactory.createIndirectBranch(value, labelTargets, phiWrites);
+    public LLVMNode createIndirectBranch(SourceSection sourceSection, LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites) {
+        return LLVMBranchFactory.createIndirectBranch(sourceSection, value, labelTargets, phiWrites);
     }
 
     @Override
-    public LLVMTerminatorNode createSwitch(LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases,
+    public LLVMTerminatorNode createSwitch(SourceSection sourceSection, LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases,
                     LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
-        return LLVMSwitchFactory.createSwitch(cond, defaultLabel, otherLabels, cases, llvmType, phiWriteNodes);
+        return LLVMSwitchFactory.createSwitch(sourceSection, cond, defaultLabel, otherLabels, cases, llvmType, phiWriteNodes);
     }
 
     @Override
-    public LLVMTerminatorNode createConditionalBranch(int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
-        return LLVMBranchFactory.createConditionalBranch(trueIndex, falseIndex, conditionNode, truePhiWriteNodes, falsePhiWriteNodes);
+    public LLVMTerminatorNode createConditionalBranch(SourceSection sourceSection, int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
+        return LLVMBranchFactory.createConditionalBranch(sourceSection, trueIndex, falseIndex, conditionNode, truePhiWriteNodes, falsePhiWriteNodes);
     }
 
     @Override
-    public LLVMTerminatorNode createUnconditionalBranch(int unconditionalIndex, LLVMNode[] phiWrites) {
-        return LLVMBranchFactory.createUnconditionalBranch(unconditionalIndex, phiWrites);
+    public LLVMTerminatorNode createUnconditionalBranch(SourceSection sourceSection, int unconditionalIndex, LLVMNode[] phiWrites) {
+        return LLVMBranchFactory.createUnconditionalBranch(sourceSection, unconditionalIndex, phiWrites);
     }
 
     @Override

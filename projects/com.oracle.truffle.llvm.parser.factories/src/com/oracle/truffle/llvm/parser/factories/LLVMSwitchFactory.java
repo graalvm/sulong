@@ -31,6 +31,7 @@ package com.oracle.truffle.llvm.parser.factories;
 
 import java.util.Arrays;
 
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMTerminatorNode;
@@ -48,29 +49,29 @@ import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
 
 public class LLVMSwitchFactory {
 
-    public static LLVMTerminatorNode createSwitch(LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases,
-                    LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
+    public static LLVMTerminatorNode createSwitch(SourceSection sourceSection, LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases,
+                                                  LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
         switch (llvmType) {
             case I8:
                 LLVMI8Node[] i8Cases = Arrays.copyOf(cases, cases.length, LLVMI8Node[].class);
                 if (LLVMBaseOptionFacade.injectBranchProbabilities()) {
-                    return new LLVMI8ProfilingSwitchNode((LLVMI8Node) cond, i8Cases, otherLabels, defaultLabel, phiWriteNodes);
+                    return new LLVMI8ProfilingSwitchNode(sourceSection, (LLVMI8Node) cond, i8Cases, otherLabels, defaultLabel, phiWriteNodes);
                 } else {
-                    return new LLVMI8SwitchNode((LLVMI8Node) cond, i8Cases, otherLabels, defaultLabel, phiWriteNodes);
+                    return new LLVMI8SwitchNode(sourceSection, (LLVMI8Node) cond, i8Cases, otherLabels, defaultLabel, phiWriteNodes);
                 }
             case I32:
                 LLVMI32Node[] i32Cases = Arrays.copyOf(cases, cases.length, LLVMI32Node[].class);
                 if (LLVMBaseOptionFacade.injectBranchProbabilities()) {
-                    return new LLVMI32ProfilingSwitchNode((LLVMI32Node) cond, i32Cases, otherLabels, defaultLabel, phiWriteNodes);
+                    return new LLVMI32ProfilingSwitchNode(sourceSection, (LLVMI32Node) cond, i32Cases, otherLabels, defaultLabel, phiWriteNodes);
                 } else {
-                    return new LLVMI32SwitchNode((LLVMI32Node) cond, i32Cases, otherLabels, defaultLabel, phiWriteNodes);
+                    return new LLVMI32SwitchNode(sourceSection, (LLVMI32Node) cond, i32Cases, otherLabels, defaultLabel, phiWriteNodes);
                 }
             case I64:
                 LLVMI64Node[] i64Cases = Arrays.copyOf(cases, cases.length, LLVMI64Node[].class);
                 if (LLVMBaseOptionFacade.injectBranchProbabilities()) {
-                    return new LLVMI64ProfilingSwitchNode((LLVMI64Node) cond, i64Cases, otherLabels, defaultLabel, phiWriteNodes);
+                    return new LLVMI64ProfilingSwitchNode(sourceSection, (LLVMI64Node) cond, i64Cases, otherLabels, defaultLabel, phiWriteNodes);
                 } else {
-                    return new LLVMI64SwitchNode((LLVMI64Node) cond, i64Cases, otherLabels, defaultLabel, phiWriteNodes);
+                    return new LLVMI64SwitchNode(sourceSection, (LLVMI64Node) cond, i64Cases, otherLabels, defaultLabel, phiWriteNodes);
                 }
             default:
                 throw new AssertionError(llvmType);

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.oracle.truffle.api.source.SourceSection;
 import org.eclipse.emf.ecore.EObject;
 
 import com.intel.llvm.ireditor.lLVM_IR.BitwiseBinaryInstruction;
@@ -127,12 +128,12 @@ public class NodeFactoryFacadeAdapter implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMNode createRetVoid() {
+    public LLVMNode createRetVoid(SourceSection sourceSection) {
         return null;
     }
 
     @Override
-    public LLVMNode createNonVoidRet(LLVMExpressionNode retValue, ResolvedType resolvedType) {
+    public LLVMNode createNonVoidRet(SourceSection sourceSection, LLVMExpressionNode retValue, ResolvedType resolvedType) {
         return null;
     }
 
@@ -152,7 +153,7 @@ public class NodeFactoryFacadeAdapter implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMNode createFrameWrite(LLVMBaseType llvmType, LLVMExpressionNode result, FrameSlot slot) {
+    public LLVMNode createFrameWrite(SourceSection sourceSection, LLVMBaseType llvmType, LLVMExpressionNode result, FrameSlot slot) {
         return null;
     }
 
@@ -207,27 +208,27 @@ public class NodeFactoryFacadeAdapter implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMNode createUnreachableNode() {
+    public LLVMNode createUnreachableNode(SourceSection sourceSection) {
         return null;
     }
 
     @Override
-    public LLVMNode createIndirectBranch(LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites) {
+    public LLVMNode createIndirectBranch(SourceSection sourceSection, LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites) {
         return null;
     }
 
     @Override
-    public LLVMNode createSwitch(LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases, LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
+    public LLVMNode createSwitch(SourceSection sourceSection, LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases, LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
         return null;
     }
 
     @Override
-    public LLVMNode createConditionalBranch(int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
+    public LLVMNode createConditionalBranch(SourceSection sourceSection, int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes) {
         return null;
     }
 
     @Override
-    public LLVMNode createUnconditionalBranch(int unconditionalIndex, LLVMNode[] phiWrites) {
+    public LLVMNode createUnconditionalBranch(SourceSection sourceSection, int unconditionalIndex, LLVMNode[] phiWrites) {
         return null;
     }
 
