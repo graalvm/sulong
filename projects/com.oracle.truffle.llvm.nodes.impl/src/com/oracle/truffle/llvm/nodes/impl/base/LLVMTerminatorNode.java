@@ -29,23 +29,44 @@
  */
 package com.oracle.truffle.llvm.nodes.impl.base;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.llvm.nodes.base.LLVMNode;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.llvm.nodes.base.LLVMStatementNode;
 
 /**
  * This node represents a terminator instruction in LLVM IR. This node decides which basic block is
  * executed next, or terminates execution of a function.
  *
+ * Since this class has an additional field, it can't be simply wrapped by the wrapper node
+ * generated from super class {@link LLVMStatementNode}. Therefore this class is also {@link Instrumentable}.
+ *
  * @see <a href="http://llvm.org/docs/LangRef.html#terminator-instructions">terminator
  *      instructions</a>
  */
-public abstract class LLVMTerminatorNode extends LLVMNode {
+@Instrumentable(factory = LLVMTerminatorNodeWrapper.class)
+public abstract class LLVMTerminatorNode extends LLVMStatementNode {
 
-    @CompilationFinal private final int[] successors;
+    private final int[] successors;
 
-    public LLVMTerminatorNode(int... successors) {
+    /**
+     * Constructor which creates a new terminator node and sets the source section and successors.
+     *
+     * @param sourceSection the source section of this node
+     * @param successors the successors of this node
+     */
+    public LLVMTerminatorNode(SourceSection sourceSection, int... successors) {
+        super(sourceSection);
         this.successors = successors;
+    }
+
+    /**
+     * Copy constructor needed for {@link Instrumentable} nodes which have constructors with more than one parameter.
+     *
+     * @param nodeToCopy the node which should be copied
+     */
+    public LLVMTerminatorNode(LLVMTerminatorNode nodeToCopy) {
+        this(nodeToCopy.getSourceSection(), nodeToCopy.getSuccessors());
     }
 
     public abstract int executeGetSuccessorIndex(VirtualFrame frame);
