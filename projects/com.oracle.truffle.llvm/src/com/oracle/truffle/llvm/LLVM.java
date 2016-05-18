@@ -251,7 +251,6 @@ public class LLVM {
 
             @Override
             protected void on(ExecutionEvent executionEvent) {
-                System.out.println(executionEvent);
                 executionEvent.prepareStepInto();
             }
         });
@@ -259,7 +258,6 @@ public class LLVM {
 
             @Override
             protected void on(SuspendedEvent suspendedEvent) {
-                System.out.println(suspendedEvent);
                 suspendedEvent.prepareStepOver(1);
             }
         });
