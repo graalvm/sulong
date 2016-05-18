@@ -36,8 +36,8 @@ import com.oracle.truffle.api.source.SourceSection;
 /**
  * A statement node is a node which represents a statement or an instruction in the source language.
  *
- * This node is {@link Instrumentable} which means it can be wrapped in the AST by a corresponding wrapper node
- * for special purposes like debugging.
+ * This node is {@link Instrumentable} which means it can be wrapped in the AST by a corresponding
+ * wrapper node for special purposes like debugging.
  *
  * @see LLVMNode
  */

@@ -50,7 +50,7 @@ import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
 public class LLVMSwitchFactory {
 
     public static LLVMTerminatorNode createSwitch(SourceSection sourceSection, LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases,
-                                                  LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
+                    LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
         switch (llvmType) {
             case I8:
                 LLVMI8Node[] i8Cases = Arrays.copyOf(cases, cases.length, LLVMI8Node[].class);

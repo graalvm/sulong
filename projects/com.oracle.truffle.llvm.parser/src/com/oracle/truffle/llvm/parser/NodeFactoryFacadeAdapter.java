@@ -218,7 +218,8 @@ public class NodeFactoryFacadeAdapter implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMNode createSwitch(SourceSection sourceSection, LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases, LLVMBaseType llvmType, LLVMNode[] phiWriteNodes) {
+    public LLVMNode createSwitch(SourceSection sourceSection, LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases, LLVMBaseType llvmType,
+                    LLVMNode[] phiWriteNodes) {
         return null;
     }
 

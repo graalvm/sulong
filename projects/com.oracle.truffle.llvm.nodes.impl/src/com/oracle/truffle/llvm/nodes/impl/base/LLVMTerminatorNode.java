@@ -40,7 +40,8 @@ import com.oracle.truffle.llvm.nodes.base.LLVMStatementNode;
  * executed next, or terminates execution of a function.
  *
  * Since this class has an additional field, it can't be simply wrapped by the wrapper node
- * generated from super class {@link LLVMStatementNode}. Therefore this class is also {@link Instrumentable}.
+ * generated from super class {@link LLVMStatementNode}. Therefore this class is also
+ * {@link Instrumentable}.
  *
  * @see <a href="http://llvm.org/docs/LangRef.html#terminator-instructions">terminator
  *      instructions</a>
@@ -48,8 +49,7 @@ import com.oracle.truffle.llvm.nodes.base.LLVMStatementNode;
 @Instrumentable(factory = LLVMTerminatorNodeWrapper.class)
 public abstract class LLVMTerminatorNode extends LLVMStatementNode {
 
-    @CompilerDirectives.CompilationFinal
-    private final int[] successors;
+    @CompilerDirectives.CompilationFinal private final int[] successors;
 
     /**
      * Constructor which creates a new terminator node and sets the source section and successors.
@@ -63,7 +63,8 @@ public abstract class LLVMTerminatorNode extends LLVMStatementNode {
     }
 
     /**
-     * Copy constructor needed for {@link Instrumentable} nodes which have constructors with more than one parameter.
+     * Copy constructor needed for {@link Instrumentable} nodes which have constructors with more
+     * than one parameter.
      *
      * @param nodeToCopy the node which should be copied
      */
