@@ -29,13 +29,8 @@
  */
 package com.oracle.truffle.llvm.test;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +39,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.test.spec.SpecificationEntry;
 import com.oracle.truffle.llvm.tools.Clang;
 import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
@@ -57,17 +51,10 @@ public class LLVMTestSuite extends RemoteTestSuiteBase {
 
     private static final String LLVM_REFERENCE_OUTPUT_EXTENSION = ".reference_output";
 
-    private final File bitCodeFile;
-    private final File expectedFile;
-    private final File originalFile;
-
     private TestCaseFiles tuple;
 
     public LLVMTestSuite(TestCaseFiles tuple) {
         this.tuple = tuple;
-        this.bitCodeFile = tuple.getBitCodeFile();
-        this.originalFile = tuple.getOriginalFile();
-        this.expectedFile = tuple.getExpectedResult();
     }
 
     @Parameterized.Parameters
@@ -113,29 +100,8 @@ public class LLVMTestSuite extends RemoteTestSuiteBase {
     }
 
     @Test(timeout = TEST_TIMEOUT_TIME)
-    public void test() throws IOException {
-        LLVMLogger.info("current file: " + originalFile);
-        List<String> expectedLines;
-        int expectedReturnValue;
-        try {
-            expectedLines = Files.readAllLines(Paths.get(expectedFile.getAbsolutePath()));
-            expectedReturnValue = parseAndRemoveReturnValue(expectedLines);
-        } catch (Exception e) {
-            expectedLines = new ArrayList<>();
-            expectedReturnValue = 0;
-        }
-        List<String> actualLines = launchRemote(tuple);
-        int actualReturnValue = parseAndRemoveReturnValue(actualLines);
-        boolean pass = expectedLines.equals(actualLines);
-        boolean undefinedReturnCode = tuple.hasFlag(TestCaseFlag.UNDEFINED_RETURN_CODE);
-        if (!undefinedReturnCode) {
-            pass &= expectedReturnValue == actualReturnValue;
-        }
-        recordTestCase(tuple, pass);
-        assertEquals(bitCodeFile.getAbsolutePath(), expectedLines, actualLines);
-        if (!undefinedReturnCode) {
-            assertEquals(bitCodeFile.getAbsolutePath(), expectedReturnValue, actualReturnValue);
-        }
+    public void test() throws Throwable {
+        executeAndCompareRemoteTestCase(tuple);
     }
 
 }
