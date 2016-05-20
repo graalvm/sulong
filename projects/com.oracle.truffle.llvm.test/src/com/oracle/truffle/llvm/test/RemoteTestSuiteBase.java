@@ -118,6 +118,9 @@ public class RemoteTestSuiteBase extends TestSuiteBase {
                     throw new IllegalStateException();
                 }
                 if (RETURN_VALUE_PATTERN.matcher(line).matches()) {
+                    if (lines.get(lines.size() - 1).equals("\n")) {
+                        lines.remove(lines.size() - 1);
+                    }
                     break;
                 } else if (line.matches("<error>")) {
                     readErrorAndFail(tuple.getBitCodeFile());
