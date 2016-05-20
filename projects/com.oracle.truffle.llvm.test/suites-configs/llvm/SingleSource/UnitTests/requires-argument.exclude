@@ -1,0 +1,4 @@
+test-suite-3.2.src/SingleSource/UnitTests/SignlessTypes/ccc.c
+test-suite-3.2.src/SingleSource/UnitTests/Integer/sign.c
+test-suite-3.2.src/SingleSource/UnitTests/Integer/trunc.c
+test-suite-3.2.src/SingleSource/UnitTests/Vector/build.c

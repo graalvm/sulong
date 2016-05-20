@@ -115,3 +115,5 @@ test-suite-3.2.src/SingleSource/UnitTests/Integer/cppfield2.cpp
 test-suite-3.2.src/SingleSource/UnitTests/SignlessTypes/rem.c
 test-suite-3.2.src/SingleSource/UnitTests/2003-05-31-CastToBool.c
 test-suite-3.2.src/SingleSource/UnitTests/2007-03-02-VaCopy.c
+test-suite-3.2.src/SingleSource/UnitTests/byval-alignment.c
+test-suite-3.2.src/SingleSource/UnitTests/SignlessTypes/Large/cast.cpp

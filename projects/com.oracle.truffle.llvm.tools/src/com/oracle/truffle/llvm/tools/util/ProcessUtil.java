@@ -33,6 +33,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class ProcessUtil {
@@ -112,14 +115,12 @@ public class ProcessUtil {
         }
         try {
             Process process = Runtime.getRuntime().exec(command);
-            String inputStream = readStreamAndClose(process.getInputStream());
-            String readError = readStreamAndClose(process.getErrorStream());
-            boolean terminated = process.waitFor(PROCESS_WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
-            if (!terminated) {
-                throw new AssertionError(command + " timed out!");
-            }
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            Future<String> inputStream = executor.submit(() -> readStreamAndClose(process.getInputStream()));
+            Future<String> errorStream = executor.submit(() -> readStreamAndClose(process.getErrorStream()));
+            process.waitFor(PROCESS_WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
             int llvmResult = process.exitValue();
-            return new ProcessResult(command, llvmResult, readError, inputStream);
+            return new ProcessResult(command, llvmResult, errorStream.get(), inputStream.get());
         } catch (Exception e) {
             throw new RuntimeException(command + " ", e);
         }
