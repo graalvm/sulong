@@ -29,7 +29,7 @@
  */
 package com.oracle.truffle.llvm.nodes.impl.base;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
@@ -49,7 +49,7 @@ import com.oracle.truffle.llvm.nodes.base.LLVMStatementNode;
 @Instrumentable(factory = LLVMTerminatorNodeWrapper.class)
 public abstract class LLVMTerminatorNode extends LLVMStatementNode {
 
-    @CompilerDirectives.CompilationFinal private final int[] successors;
+    @CompilationFinal private final int[] successors;
 
     /**
      * Constructor which creates a new terminator node and sets the source section and successors.
