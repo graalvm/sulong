@@ -40,6 +40,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
@@ -167,7 +168,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
 
         LLVMExpressionNode stack = LLVMFunctionFactory.createFunctionArgNode(0, LLVMBaseType.ADDRESS);
         parameterNodes.add(
-                        LLVMFrameReadWriteFactory.createFrameWrite(source.createSection("test", 1), LLVMBaseType.ADDRESS, stack, frame.findFrameSlot(LLVMBitcodeHelper.STACK_ADDRESS_FRAME_SLOT_ID)));
+                        LLVMFrameReadWriteFactory.createFrameWrite(createDummySourceSection(), LLVMBaseType.ADDRESS, stack, frame.findFrameSlot(LLVMBitcodeHelper.STACK_ADDRESS_FRAME_SLOT_ID)));
 
         int argIndex = LLVMCallNode.ARG_START_INDEX;
         // if (resolve(functionHeader.getRettype()).isStruct()) {
@@ -182,7 +183,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
             LLVMBaseType llvmtype = LLVMBitcodeHelper.toBaseType(parameter.getType());
             LLVMExpressionNode parameterNode = LLVMFunctionFactory.createFunctionArgNode(argIndex++, llvmtype);
             FrameSlot slot = frame.findFrameSlot(parameter.getName());
-            parameterNodes.add(LLVMFrameReadWriteFactory.createFrameWrite(source.createSection("test", 1), llvmtype, parameterNode, slot));
+            parameterNodes.add(LLVMFrameReadWriteFactory.createFrameWrite(createDummySourceSection(), llvmtype, parameterNode, slot));
         }
         return parameterNodes;
     }
@@ -215,6 +216,10 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
                 return null;
             }
         }
+    }
+
+    private SourceSection createDummySourceSection() {
+        return source.createSection("test", 1);
     }
 
     public Source getSource() {
