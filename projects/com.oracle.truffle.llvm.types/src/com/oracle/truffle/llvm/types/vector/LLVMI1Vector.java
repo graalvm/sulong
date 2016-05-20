@@ -29,11 +29,10 @@
  */
 package com.oracle.truffle.llvm.types.vector;
 
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.llvm.types.LLVMAddress;
 import com.oracle.truffle.llvm.types.memory.LLVMMemory;
 
-public class LLVMI1Vector extends LLVMVector<Boolean> {
+public final class LLVMI1Vector extends LLVMVector<Boolean> {
 
     private static final int I1_SIZE = 1;
 
@@ -41,7 +40,6 @@ public class LLVMI1Vector extends LLVMVector<Boolean> {
         super(addr, nrElements);
     }
 
-    @ExplodeLoop
     public static LLVMI1Vector fromI1Array(LLVMAddress target, boolean[] vals) {
         LLVMAddress currentTarget = target;
         for (int i = 0; i < vals.length; i++) {

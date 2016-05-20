@@ -70,6 +70,9 @@ def executeGate():
         with Task('TestInterop', tasks) as t:
             if t: runInteropTestCases()
     with VM('server', 'product'):
+        with Task('TestAsm', tasks) as t:
+            if t: runAsmTestCases()
+    with VM('server', 'product'):
         with Task('TestSulong', tasks) as t:
             if t: runTruffleTestCases()
     with VM('server', 'product'):
@@ -112,6 +115,9 @@ def travis1(args=None):
         with Task('TestInterop', tasks) as t:
             if t: runInteropTestCases()
     with VM('server', 'product'):
+        with Task('TestAsm', tasks) as t:
+            if t: runAsmTestCases()
+    with VM('server', 'product'):
         with Task('TestTypes', tasks) as t:
             if t: runTypeTestCases()
     with VM('server', 'product'):
@@ -134,6 +140,14 @@ def travis2(args=None):
     with VM('server', 'product'):
         with Task('TestGCC', tasks) as t:
             if t: runGCCTestCases()
+
+def travisJRuby(args=None):
+    tasks = []
+    with Task('BuildHotSpotGraalServer: product', tasks) as t:
+        if t: buildvms(['-c', '--vms', 'server', '--builds', 'product'])
+    with VM('server', 'product'):
+        with Task('TestJRuby', tasks) as t:
+            if t: runTestJRuby()
 
 def localGate(args=None):
     """executes the gate without downloading the dependencies and without building"""
@@ -452,6 +466,7 @@ def runTests(args=None):
     runTypeTestCases()
     runPolyglotTestCases()
     runInteropTestCases()
+    runAsmTestCases()
     runBenchmarkTestCases()
 
 def runBenchmarkTestCases(args=None):
@@ -507,10 +522,32 @@ def runInteropTestCases(args=None):
     vmArgs, _ = truffle_extract_VM_args(args)
     return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.interop.LLVMInteropTest'])
 
+def runAsmTestCases(args=None):
+    """runs the asm test cases"""
+    vmArgs, _ = truffle_extract_VM_args(args)
+    return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.inlineassembly.LLVMInlineAssemblyTest'])
+
 def runCompileTestCases(args=None):
     """runs the compile (no execution) test cases of the GCC suite"""
     vmArgs, _ = truffle_extract_VM_args(args)
     return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.TestGCCSuiteCompile'])
+
+def runTestJRuby(args=None):
+    """tests that JRuby can use this version of Sulong to compile and run C extensions"""
+    rubyUrl = 'http://github.com/jruby/jruby.git'
+    rubyBranch = 'truffle-head'
+    suitesDir = os.path.abspath(join(_suite.dir, '..'))
+    jrubyDir = join(suitesDir, 'jruby')
+    if os.path.isdir(jrubyDir):
+        mx.run(['git', 'checkout', rubyBranch], cwd=jrubyDir)
+        mx.run(['git', 'pull'], cwd=jrubyDir)
+    else:
+        mx.run(['git', 'clone', rubyUrl], cwd=suitesDir)
+        mx.run(['git', 'checkout', rubyBranch], cwd=jrubyDir)
+    mx.run(['ruby', 'tool/jt.rb', 'build'], cwd=jrubyDir)
+    os.environ['SULONG_DIR'] = _suite.dir
+    os.environ['SULONG_CLASSPATH'] = getClasspathOptions()[1]
+    mx.run(['ruby', 'tool/jt.rb', 'test', 'cexts'], cwd=jrubyDir)
 
 def getCommonOptions(lib_args=None):
     return [
@@ -747,6 +784,7 @@ def clangformatcheck(args=None):
     checkCFile(_suite.dir + '/include/truffle.h')
     checkCFiles(_testDir)
     checkCFiles(_interopTestDir)
+    checkCFiles(_libPath)
 
 def checkCFiles(targetDir):
     error = False
@@ -794,7 +832,9 @@ mx.update_commands(_suite, {
     'su-tests-types' : [runTypeTestCases, ''],
     'su-tests-polyglot' : [runPolyglotTestCases, ''],
     'su-tests-interop' : [runInteropTestCases, ''],
+    'su-tests-asm' : [runAsmTestCases, ''],
     'su-tests-compile' : [runCompileTestCases, ''],
+    'su-tests-jruby' : [runTestJRuby, ''],
     'su-local-gate' : [localGate, ''],
     'su-clang' : [compileWithClang, ''],
     'su-clang++' : [compileWithClangPP, ''],
@@ -805,6 +845,7 @@ mx.update_commands(_suite, {
     'su-g++' : [dragonEggGPP, ''],
     'su-travis1' : [travis1, ''],
     'su-travis2' : [travis2, ''],
+    'su-travis-jruby' : [travisJRuby, ''],
     'su-gitlogcheck' : [logCheck, ''],
     'su-mdlcheck' : [mdlCheck, ''],
     'su-clangformatcheck' : [clangformatcheck, '']
