@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ProcessUtil {
 
-    private static final int PROCESS_WAIT_TIMEOUT = 5000;
+    private static final int PROCESS_WAIT_TIMEOUT = 30000;
 
     public static final class ProcessResult {
 
@@ -112,9 +112,12 @@ public class ProcessUtil {
         }
         try {
             Process process = Runtime.getRuntime().exec(command);
-            process.waitFor(PROCESS_WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
-            String readError = readStreamAndClose(process.getErrorStream());
             String inputStream = readStreamAndClose(process.getInputStream());
+            String readError = readStreamAndClose(process.getErrorStream());
+            boolean terminated = process.waitFor(PROCESS_WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
+            if (!terminated) {
+                throw new AssertionError(command + " timed out!");
+            }
             int llvmResult = process.exitValue();
             return new ProcessResult(command, llvmResult, readError, inputStream);
         } catch (Exception e) {
