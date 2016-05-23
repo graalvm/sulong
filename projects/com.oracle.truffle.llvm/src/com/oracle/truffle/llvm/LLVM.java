@@ -95,6 +95,15 @@ public class LLVM {
                     if (!context.isParseOnly()) {
                         parserResult.getStaticInits().call();
                     }
+                } else if (code.getMimeType().equals(LLVMLanguage.LLVM_BITCODE_MIME_TYPE)) {
+                    LLVMParserResult parserResult = parseBitcodeFile(code, context);
+                    mainFunction = parserResult.getMainFunction();
+                    context.getFunctionRegistry().register(parserResult.getParsedFunctions());
+                    context.registerStaticInitializer(parserResult.getStaticInits());
+                    context.registerStaticDestructor(parserResult.getStaticDestructors());
+                    if (!context.isParseOnly()) {
+                        parserResult.getStaticInits().call();
+                    }
                 } else if (code.getMimeType().equals(LLVMLanguage.SULONG_LIBRARY_MIME_TYPE)) {
                     final List<CallTarget> mainFunctions = new ArrayList<>();
                     final SulongLibrary library = new SulongLibrary(new File(code.getPath()));
