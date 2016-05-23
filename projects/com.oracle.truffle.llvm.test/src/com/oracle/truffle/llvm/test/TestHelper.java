@@ -45,12 +45,20 @@ import com.oracle.truffle.llvm.tools.Clang;
 import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
 import com.oracle.truffle.llvm.tools.GCC;
 import com.oracle.truffle.llvm.tools.LLC;
+import com.oracle.truffle.llvm.tools.LLVMAssembler;
 import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
 import com.oracle.truffle.llvm.tools.util.PathUtil;
 import com.oracle.truffle.llvm.tools.util.ProcessUtil;
 import com.oracle.truffle.llvm.tools.util.ProcessUtil.ProcessResult;
 
 public class TestHelper {
+
+    public static File assembleToBitcodeFile(File irFile) {
+        LLVMAssembler.assembleToBitcodeFile(irFile);
+
+        String path = irFile.getPath();
+        return new File(path.substring(0, path.length() - ".ll".length()) + ".bc");
+    }
 
     /**
      * Recursively collects files of the specified extensions starting from the given root folder.

@@ -115,14 +115,18 @@ public class SulongTestSuite extends TestSuiteBase {
     @Test
     public void test() {
         try {
-            int truffleResult = LLVM.executeMain(byteCodeFile);
             int expectedResult = TestHelper.executeLLVMBinary(byteCodeFile).getReturnValue();
-            boolean pass = expectedResult == truffleResult;
+
+            int truffleIRResult = LLVM.executeMain(byteCodeFile);
+            int truffleBitcodeResult = LLVM.executeMain(TestHelper.assembleToBitcodeFile(byteCodeFile));
+
+            boolean pass = expectedResult == truffleIRResult && expectedResult == truffleBitcodeResult;
             if (pass) {
                 // if the test does not pass assertEquals will throw an AssertionError
                 recordTestCase(tuple, pass);
             }
-            Assert.assertEquals(byteCodeFile.getAbsolutePath(), expectedResult, truffleResult);
+            Assert.assertEquals(byteCodeFile.getAbsolutePath(), expectedResult, truffleIRResult);
+            Assert.assertEquals(byteCodeFile.getAbsolutePath(), expectedResult, truffleBitcodeResult);
         } catch (Throwable e) {
             recordTestCase(tuple, false);
             throw new AssertionError(e);
