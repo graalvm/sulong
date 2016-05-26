@@ -40,6 +40,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
@@ -90,7 +91,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
 
         LLVMLabelList labels = LLVMLabelList.generate(model);
 
-        LLVMBitcodeVisitor module = new LLVMBitcodeVisitor(context, configuration, lifetimes, labels, phis);
+        LLVMBitcodeVisitor module = new LLVMBitcodeVisitor(source, context, configuration, lifetimes, labels, phis);
 
         model.accept(module);
 
@@ -117,6 +118,8 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
         return new LLVMBitcodeParserResult(wrappedCallTarget, staticInitsTarget, staticDestructorsTarget, module.getFunctions());
     }
 
+    private final Source source;
+
     private final LLVMContext context;
 
     private final LLVMOptimizationConfiguration optimizationConfiguration;
@@ -133,7 +136,8 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
 
     private final Map<GlobalValueSymbol, LLVMAddressNode> variables = new HashMap<>();
 
-    public LLVMBitcodeVisitor(LLVMContext context, LLVMOptimizationConfiguration optimizationConfiguration, LLVMFrameDescriptors frames, LLVMLabelList labels, LLVMPhiManager phis) {
+    public LLVMBitcodeVisitor(Source source, LLVMContext context, LLVMOptimizationConfiguration optimizationConfiguration, LLVMFrameDescriptors frames, LLVMLabelList labels, LLVMPhiManager phis) {
+        this.source = source;
         this.context = context;
         this.optimizationConfiguration = optimizationConfiguration;
         this.frames = frames;
@@ -159,11 +163,12 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
                         visitor.getNullers());
     }
 
-    private static List<LLVMNode> createParameters(FrameDescriptor frame, List<FunctionParameter> parameters) {
+    private List<LLVMNode> createParameters(FrameDescriptor frame, List<FunctionParameter> parameters) {
         List<LLVMNode> parameterNodes = new ArrayList<>();
 
         LLVMExpressionNode stack = LLVMFunctionFactory.createFunctionArgNode(0, LLVMBaseType.ADDRESS);
-        parameterNodes.add(LLVMFrameReadWriteFactory.createFrameWrite(LLVMBaseType.ADDRESS, stack, frame.findFrameSlot(LLVMBitcodeHelper.STACK_ADDRESS_FRAME_SLOT_ID)));
+        parameterNodes.add(
+                        LLVMFrameReadWriteFactory.createFrameWrite(createDummySourceSection(), LLVMBaseType.ADDRESS, stack, frame.findFrameSlot(LLVMBitcodeHelper.STACK_ADDRESS_FRAME_SLOT_ID)));
 
         int argIndex = LLVMCallNode.ARG_START_INDEX;
         // if (resolve(functionHeader.getRettype()).isStruct()) {
@@ -178,7 +183,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
             LLVMBaseType llvmtype = LLVMBitcodeHelper.toBaseType(parameter.getType());
             LLVMExpressionNode parameterNode = LLVMFunctionFactory.createFunctionArgNode(argIndex++, llvmtype);
             FrameSlot slot = frame.findFrameSlot(parameter.getName());
-            parameterNodes.add(LLVMFrameReadWriteFactory.createFrameWrite(llvmtype, parameterNode, slot));
+            parameterNodes.add(LLVMFrameReadWriteFactory.createFrameWrite(createDummySourceSection(), llvmtype, parameterNode, slot));
         }
         return parameterNodes;
     }
@@ -211,6 +216,14 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
                 return null;
             }
         }
+    }
+
+    private SourceSection createDummySourceSection() {
+        return source.createSection("test", 1);
+    }
+
+    public Source getSource() {
+        return source;
     }
 
     public LLVMContext getContext() {

@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.factories;
 
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
@@ -40,17 +41,17 @@ import com.oracle.truffle.llvm.nodes.impl.control.LLVMIndirectBranchNode;
 
 public class LLVMBranchFactory {
 
-    public static LLVMTerminatorNode createIndirectBranch(LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites) {
-        return new LLVMIndirectBranchNode((LLVMAddressNode) value, labelTargets, phiWrites);
+    public static LLVMTerminatorNode createIndirectBranch(SourceSection sourceSection, LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites) {
+        return new LLVMIndirectBranchNode(sourceSection, (LLVMAddressNode) value, labelTargets, phiWrites);
     }
 
-    public static LLVMTerminatorNode createConditionalBranch(int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes,
+    public static LLVMTerminatorNode createConditionalBranch(SourceSection sourceSection, int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes,
                     LLVMNode[] falsePhiWriteNodes) {
-        return LLVMConditionalBranchNodeFactory.LLVMBrConditionalNodeGen.create(trueIndex, falseIndex, truePhiWriteNodes, falsePhiWriteNodes, (LLVMI1Node) conditionNode);
+        return LLVMConditionalBranchNodeFactory.LLVMBrConditionalNodeGen.create(sourceSection, trueIndex, falseIndex, truePhiWriteNodes, falsePhiWriteNodes, (LLVMI1Node) conditionNode);
     }
 
-    public static LLVMTerminatorNode createUnconditionalBranch(int unconditionalIndex, LLVMNode[] phiWrites) {
-        return new LLVMBrUnconditionalNode(unconditionalIndex, phiWrites);
+    public static LLVMTerminatorNode createUnconditionalBranch(SourceSection sourceSection, int unconditionalIndex, LLVMNode[] phiWrites) {
+        return new LLVMBrUnconditionalNode(sourceSection, unconditionalIndex, phiWrites);
     }
 
 }

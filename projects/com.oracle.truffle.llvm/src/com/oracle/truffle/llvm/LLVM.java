@@ -37,6 +37,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.debug.ExecutionEvent;
+import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.vm.EventConsumer;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -245,10 +248,25 @@ public class LLVM {
     }
 
     private static int evaluateFromSource(Source fileSource, Object... args) {
-        Builder engineBuilder = PolyglotEngine.newBuilder();
-        engineBuilder.config(LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.MAIN_ARGS_KEY, args);
-        engineBuilder.config(LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.LLVM_SOURCE_FILE_KEY, fileSource);
-        PolyglotEngine vm = engineBuilder.build();
+        Builder builder = PolyglotEngine.newBuilder();
+        builder.config(LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.MAIN_ARGS_KEY, args);
+        builder.config(LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.LLVM_SOURCE_FILE_KEY, fileSource);
+        builder.onEvent(new EventConsumer<ExecutionEvent>(ExecutionEvent.class) {
+
+            @Override
+            protected void on(ExecutionEvent executionEvent) {
+                executionEvent.prepareStepInto();
+            }
+        });
+        builder.onEvent(new EventConsumer<SuspendedEvent>(SuspendedEvent.class) {
+
+            @Override
+            protected void on(SuspendedEvent suspendedEvent) {
+                suspendedEvent.prepareStepOver(1);
+            }
+        });
+        PolyglotEngine vm = builder.build();
+
         try {
             Integer result = vm.eval(fileSource).as(Integer.class);
             return result;

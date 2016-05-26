@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.oracle.truffle.api.source.SourceSection;
 import org.eclipse.emf.ecore.EObject;
 
 import com.intel.llvm.ireditor.lLVM_IR.BitwiseBinaryInstruction;
@@ -99,9 +100,9 @@ public interface NodeFactoryFacade {
      */
     LLVMNode createLLVMIntrinsic(String functionName, Object[] argNodes, FunctionDef functionDef);
 
-    LLVMNode createRetVoid();
+    LLVMNode createRetVoid(SourceSection sourceSection);
 
-    LLVMNode createNonVoidRet(LLVMExpressionNode retValue, ResolvedType resolvedType);
+    LLVMNode createNonVoidRet(SourceSection sourceSection, LLVMExpressionNode retValue, ResolvedType resolvedType);
 
     LLVMExpressionNode createFunctionArgNode(int argIndex, LLVMBaseType paramType);
 
@@ -118,7 +119,7 @@ public interface NodeFactoryFacade {
 
     LLVMExpressionNode createFrameRead(LLVMBaseType llvmType, FrameSlot frameSlot);
 
-    LLVMNode createFrameWrite(LLVMBaseType llvmType, LLVMExpressionNode result, FrameSlot slot);
+    LLVMNode createFrameWrite(SourceSection sourceSection, LLVMBaseType llvmType, LLVMExpressionNode result, FrameSlot slot);
 
     FrameSlotKind getFrameSlotKind(ResolvedType type);
 
@@ -165,16 +166,16 @@ public interface NodeFactoryFacade {
      * @see <a href="http://llvm.org/docs/LangRef.html#unreachable-instruction">Unreachable in the
      *      LLVM Language Reference Manual</a>
      */
-    LLVMNode createUnreachableNode();
+    LLVMNode createUnreachableNode(SourceSection sourceSection);
 
-    LLVMNode createIndirectBranch(LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites);
+    LLVMNode createIndirectBranch(SourceSection sourceSection, LLVMExpressionNode value, int[] labelTargets, LLVMNode[] phiWrites);
 
-    LLVMNode createSwitch(LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases,
+    LLVMNode createSwitch(SourceSection sourceSection, LLVMExpressionNode cond, int defaultLabel, int[] otherLabels, LLVMExpressionNode[] cases,
                     LLVMBaseType llvmType, LLVMNode[] phiWriteNodes);
 
-    LLVMNode createConditionalBranch(int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes);
+    LLVMNode createConditionalBranch(SourceSection sourceSection, int trueIndex, int falseIndex, LLVMExpressionNode conditionNode, LLVMNode[] truePhiWriteNodes, LLVMNode[] falsePhiWriteNodes);
 
-    LLVMNode createUnconditionalBranch(int unconditionalIndex, LLVMNode[] phiWrites);
+    LLVMNode createUnconditionalBranch(SourceSection sourceSection, int unconditionalIndex, LLVMNode[] phiWrites);
 
     LLVMExpressionNode createArrayLiteral(List<LLVMExpressionNode> arrayValues, ResolvedType arrayType);
 

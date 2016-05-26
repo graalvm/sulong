@@ -27,28 +27,48 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.nodes.impl.others;
+package com.oracle.truffle.llvm.nodes.base;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ControlFlowException;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.llvm.nodes.impl.base.LLVMTerminatorNode;
 
-public class LLVMUnreachableNode extends LLVMTerminatorNode {
+/**
+ * A statement node is a node which represents a statement or an instruction in the source language.
+ *
+ * This node is {@link Instrumentable} which means it can be wrapped in the AST by a corresponding
+ * wrapper node for special purposes like debugging.
+ *
+ * @see LLVMNode
+ */
+@Instrumentable(factory = LLVMStatementNodeWrapper.class)
+public abstract class LLVMStatementNode extends LLVMNode {
 
-    public static class LLVMUnreachableException extends ControlFlowException {
+    /**
+     * The source section this statement node represents.
+     */
+    private final SourceSection sourceSection;
 
-        private static final long serialVersionUID = 1L;
-
-    }
-
-    public LLVMUnreachableNode(SourceSection sourceSection) {
-        super(sourceSection, new int[0]);
+    /**
+     * Constructor which creates a new statement node and sets the source section.
+     *
+     * @param sourceSection the source section of this node
+     */
+    public LLVMStatementNode(SourceSection sourceSection) {
+        this.sourceSection = sourceSection;
     }
 
     @Override
-    public int executeGetSuccessorIndex(VirtualFrame frame) {
-        throw new LLVMUnreachableException();
+    protected boolean isTaggedWith(Class<?> tag) {
+        if (tag == StandardTags.StatementTag.class) {
+            return true;
+        } else {
+            return super.isTaggedWith(tag);
+        }
     }
 
+    @Override
+    public SourceSection getSourceSection() {
+        return sourceSection;
+    }
 }

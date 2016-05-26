@@ -35,7 +35,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
-import com.oracle.truffle.llvm.nodes.base.LLVMNode;
+import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.llvm.nodes.base.LLVMStatementNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMFunctionNode;
 import com.oracle.truffle.llvm.nodes.impl.base.floating.LLVM80BitFloatNode;
@@ -54,12 +55,25 @@ import com.oracle.truffle.llvm.types.LLVMTruffleObject;
 import com.oracle.truffle.llvm.types.floating.LLVM80BitFloat;
 
 @NodeField(name = "slot", type = FrameSlot.class)
-public abstract class LLVMWriteNode extends LLVMNode {
+public abstract class LLVMWriteNode extends LLVMStatementNode {
+
+    /**
+     * Constructor which creates a new write node and sets the source section.
+     *
+     * @param sourceSection the source section of this node
+     */
+    public LLVMWriteNode(SourceSection sourceSection) {
+        super(sourceSection);
+    }
 
     protected abstract FrameSlot getSlot();
 
     @NodeChild(value = "valueNode", type = LLVMI1Node.class)
     public abstract static class LLVMWriteI1Node extends LLVMWriteNode {
+
+        public LLVMWriteI1Node(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         protected void writeI1(VirtualFrame frame, boolean value) {
@@ -71,6 +85,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
     @NodeChild(value = "valueNode", type = LLVMI8Node.class)
     public abstract static class LLVMWriteI8Node extends LLVMWriteNode {
 
+        public LLVMWriteI8Node(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         protected void writeI8(VirtualFrame frame, byte value) {
             frame.setByte(getSlot(), value);
@@ -80,6 +98,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
 
     @NodeChild(value = "valueNode", type = LLVMI16Node.class)
     public abstract static class LLVMWriteI16Node extends LLVMWriteNode {
+
+        public LLVMWriteI16Node(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         protected void writeI16(VirtualFrame frame, short value) {
@@ -91,6 +113,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
     @NodeChild(value = "valueNode", type = LLVMI32Node.class)
     public abstract static class LLVMWriteI32Node extends LLVMWriteNode {
 
+        public LLVMWriteI32Node(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         protected void writeI32(VirtualFrame frame, int value) {
             frame.setInt(getSlot(), value);
@@ -100,6 +126,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
 
     @NodeChild(value = "valueNode", type = LLVMI64Node.class)
     public abstract static class LLVMWriteI64Node extends LLVMWriteNode {
+
+        public LLVMWriteI64Node(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         protected void writeI64(VirtualFrame frame, long value) {
@@ -111,6 +141,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
     @NodeChild(value = "valueNode", type = LLVMIVarBitNode.class)
     public abstract static class LLVMWriteIVarBitNode extends LLVMWriteNode {
 
+        public LLVMWriteIVarBitNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         protected void writeIVarBit(VirtualFrame frame, LLVMIVarBit value) {
             frame.setObject(getSlot(), value);
@@ -120,6 +154,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
 
     @NodeChild(value = "valueNode", type = LLVMFloatNode.class)
     public abstract static class LLVMWriteFloatNode extends LLVMWriteNode {
+
+        public LLVMWriteFloatNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         protected void writeDouble(VirtualFrame frame, float value) {
@@ -131,6 +169,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
     @NodeChild(value = "valueNode", type = LLVMDoubleNode.class)
     public abstract static class LLVMWriteDoubleNode extends LLVMWriteNode {
 
+        public LLVMWriteDoubleNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         protected void writeDouble(VirtualFrame frame, double value) {
             frame.setDouble(getSlot(), value);
@@ -141,6 +183,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
     @NodeChild(value = "valueNode", type = LLVM80BitFloatNode.class)
     public abstract static class LLVMWrite80BitFloatingNode extends LLVMWriteNode {
 
+        public LLVMWrite80BitFloatingNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         protected void write80BitFloat(VirtualFrame frame, LLVM80BitFloat value) {
             frame.setObject(getSlot(), value);
@@ -149,6 +195,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
 
     @NodeChild(value = "valueNode", type = LLVMAddressNode.class)
     public abstract static class LLVMWriteAddressNode extends LLVMWriteNode {
+
+        public LLVMWriteAddressNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         protected void writeAddress(VirtualFrame frame, LLVMAddress value) {
@@ -179,6 +229,10 @@ public abstract class LLVMWriteNode extends LLVMNode {
 
     @NodeChild(value = "valueNode", type = LLVMFunctionNode.class)
     public abstract static class LLVMWriteFunctionNode extends LLVMWriteNode {
+
+        public LLVMWriteFunctionNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         protected void writeAddress(VirtualFrame frame, LLVMFunctionDescriptor value) {

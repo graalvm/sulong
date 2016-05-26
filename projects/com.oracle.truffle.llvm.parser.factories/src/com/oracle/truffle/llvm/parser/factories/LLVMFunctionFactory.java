@@ -35,6 +35,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
@@ -115,46 +116,46 @@ public final class LLVMFunctionFactory {
     private LLVMFunctionFactory() {
     }
 
-    public static LLVMTerminatorNode createRetVoid(LLVMParserRuntime runtime) {
-        return LLVMVoidReturnNodeGen.create(runtime.getReturnSlot());
+    public static LLVMTerminatorNode createRetVoid(SourceSection sourceSection, LLVMParserRuntime runtime) {
+        return LLVMVoidReturnNodeGen.create(sourceSection, runtime.getReturnSlot());
     }
 
-    public static LLVMTerminatorNode createNonVoidRet(LLVMParserRuntime runtime, LLVMExpressionNode retValue, ResolvedType resolvedType) {
+    public static LLVMTerminatorNode createNonVoidRet(SourceSection sourceSection, LLVMParserRuntime runtime, LLVMExpressionNode retValue, ResolvedType resolvedType) {
         FrameSlot retSlot = runtime.getReturnSlot();
         if (retValue == null || retSlot == null) {
             throw new AssertionError();
         }
         LLVMBaseType type = LLVMTypeHelper.getLLVMType(resolvedType);
         if (LLVMTypeHelper.isVectorType(type)) {
-            return LLVMVectorRetNodeGen.create((LLVMVectorNode) retValue, retSlot);
+            return LLVMVectorRetNodeGen.create(sourceSection, (LLVMVectorNode) retValue, retSlot);
         } else {
             switch (type) {
                 case I1:
-                    return LLVMI1RetNodeGen.create((LLVMI1Node) retValue, retSlot);
+                    return LLVMI1RetNodeGen.create(sourceSection, (LLVMI1Node) retValue, retSlot);
                 case I8:
-                    return LLVMI8RetNodeGen.create((LLVMI8Node) retValue, retSlot);
+                    return LLVMI8RetNodeGen.create(sourceSection, (LLVMI8Node) retValue, retSlot);
                 case I16:
-                    return LLVMI16RetNodeGen.create((LLVMI16Node) retValue, retSlot);
+                    return LLVMI16RetNodeGen.create(sourceSection, (LLVMI16Node) retValue, retSlot);
                 case I32:
-                    return LLVMI32RetNodeGen.create((LLVMI32Node) retValue, retSlot);
+                    return LLVMI32RetNodeGen.create(sourceSection, (LLVMI32Node) retValue, retSlot);
                 case I64:
-                    return LLVMI64RetNodeGen.create((LLVMI64Node) retValue, retSlot);
+                    return LLVMI64RetNodeGen.create(sourceSection, (LLVMI64Node) retValue, retSlot);
                 case I_VAR_BITWIDTH:
-                    return LLVMIVarBitRetNodeGen.create((LLVMIVarBitNode) retValue, retSlot);
+                    return LLVMIVarBitRetNodeGen.create(sourceSection, (LLVMIVarBitNode) retValue, retSlot);
                 case FLOAT:
-                    return LLVMFloatRetNodeGen.create((LLVMFloatNode) retValue, retSlot);
+                    return LLVMFloatRetNodeGen.create(sourceSection, (LLVMFloatNode) retValue, retSlot);
                 case DOUBLE:
-                    return LLVMDoubleRetNodeGen.create((LLVMDoubleNode) retValue, retSlot);
+                    return LLVMDoubleRetNodeGen.create(sourceSection, (LLVMDoubleNode) retValue, retSlot);
                 case X86_FP80:
-                    return LLVM80BitFloatRetNodeGen.create((LLVM80BitFloatNode) retValue, retSlot);
+                    return LLVM80BitFloatRetNodeGen.create(sourceSection, (LLVM80BitFloatNode) retValue, retSlot);
                 case ADDRESS:
-                    return LLVMAddressRetNodeGen.create((LLVMAddressNode) retValue, retSlot);
+                    return LLVMAddressRetNodeGen.create(sourceSection, (LLVMAddressNode) retValue, retSlot);
                 case FUNCTION_ADDRESS:
-                    return LLVMFunctionRetNodeGen.create((LLVMFunctionNode) retValue, retSlot);
+                    return LLVMFunctionRetNodeGen.create(sourceSection, (LLVMFunctionNode) retValue, retSlot);
                 case STRUCT:
                     ResolvedStructType structType = (ResolvedStructType) resolvedType;
                     int size = LLVMTypeHelper.getByteSize(structType);
-                    return LLVMStructRetNodeGen.create((LLVMAddressNode) retValue, retSlot, size);
+                    return LLVMStructRetNodeGen.create(sourceSection, (LLVMAddressNode) retValue, retSlot, size);
                 default:
                     throw new AssertionError(type);
             }

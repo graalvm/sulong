@@ -36,6 +36,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMBasicBlockNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMFunctionNode;
@@ -63,14 +64,18 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
 
     public static final int RETURN_FROM_FUNCTION = -1;
 
-    public LLVMRetNode() {
-        super(RETURN_FROM_FUNCTION);
+    public LLVMRetNode(SourceSection sourceSection) {
+        super(sourceSection, RETURN_FROM_FUNCTION);
     }
 
     public abstract FrameSlot getRetSlot();
 
     @NodeChild(value = "retResult", type = LLVMI1Node.class)
     public abstract static class LLVMI1RetNode extends LLVMRetNode {
+
+        public LLVMI1RetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, boolean retResult) {
@@ -83,6 +88,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     @NodeChild(value = "retResult", type = LLVMI8Node.class)
     public abstract static class LLVMI8RetNode extends LLVMRetNode {
 
+        public LLVMI8RetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, byte retResult) {
             frame.setByte(getRetSlot(), retResult);
@@ -93,6 +102,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
 
     @NodeChild(value = "retResult", type = LLVMI16Node.class)
     public abstract static class LLVMI16RetNode extends LLVMRetNode {
+
+        public LLVMI16RetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, short retResult) {
@@ -105,6 +118,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     @NodeChild(value = "retResult", type = LLVMI32Node.class)
     public abstract static class LLVMI32RetNode extends LLVMRetNode {
 
+        public LLVMI32RetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, int retResult) {
             frame.setInt(getRetSlot(), retResult);
@@ -115,6 +132,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
 
     @NodeChild(value = "retResult", type = LLVMI64Node.class)
     public abstract static class LLVMI64RetNode extends LLVMRetNode {
+
+        public LLVMI64RetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, long retResult) {
@@ -127,6 +148,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     @NodeChild(value = "retResult", type = LLVMIVarBitNode.class)
     public abstract static class LLVMIVarBitRetNode extends LLVMRetNode {
 
+        public LLVMIVarBitRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, LLVMIVarBit retResult) {
             frame.setObject(getRetSlot(), retResult);
@@ -137,6 +162,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
 
     @NodeChild(value = "retResult", type = LLVMFloatNode.class)
     public abstract static class LLVMFloatRetNode extends LLVMRetNode {
+
+        public LLVMFloatRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, float retResult) {
@@ -149,6 +178,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     @NodeChild(value = "retResult", type = LLVMDoubleNode.class)
     public abstract static class LLVMDoubleRetNode extends LLVMRetNode {
 
+        public LLVMDoubleRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, double retResult) {
             frame.setDouble(getRetSlot(), retResult);
@@ -160,6 +193,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     @NodeChild(value = "retResult", type = LLVM80BitFloatNode.class)
     public abstract static class LLVM80BitFloatRetNode extends LLVMRetNode {
 
+        public LLVM80BitFloatRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, LLVM80BitFloat retResult) {
             frame.setObject(getRetSlot(), retResult);
@@ -170,6 +207,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
 
     @NodeChild(value = "retResult", type = LLVMAddressNode.class)
     public abstract static class LLVMAddressRetNode extends LLVMRetNode {
+
+        public LLVMAddressRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, TruffleObject retResult) {
@@ -200,6 +241,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     @NodeChild(value = "retResult", type = LLVMFunctionNode.class)
     public abstract static class LLVMFunctionRetNode extends LLVMRetNode {
 
+        public LLVMFunctionRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, LLVMFunctionDescriptor retResult) {
             frame.setObject(getRetSlot(), retResult);
@@ -210,6 +255,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
 
     @NodeChild(value = "retResult", type = LLVMVectorNode.class)
     public abstract static class LLVMVectorRetNode extends LLVMRetNode {
+
+        public LLVMVectorRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         public int executeGetSuccessorIndex(VirtualFrame frame, LLVMVector<?> retResult) {
@@ -223,6 +272,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     @NodeField(name = "structSize", type = int.class)
     public abstract static class LLVMStructRetNode extends LLVMRetNode {
 
+        public LLVMStructRetNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
+
         public abstract int getStructSize();
 
         @Specialization
@@ -235,6 +288,10 @@ public abstract class LLVMRetNode extends LLVMTerminatorNode {
     }
 
     public abstract static class LLVMVoidReturnNode extends LLVMRetNode {
+
+        public LLVMVoidReturnNode(SourceSection sourceSection) {
+            super(sourceSection);
+        }
 
         @Specialization
         public int executeGetSuccessorIndex() {
