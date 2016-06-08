@@ -1,0 +1,2 @@
+test-suite-3.2.src/SingleSource/UnitTests/Vector/SSE/sse.expandfft.c
+test-suite-3.2.src/SingleSource/UnitTests/Vector/SSE/sse.stepfft.c
