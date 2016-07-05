@@ -35,12 +35,9 @@ install:
   - export ECLIPSE_EXE=eclipse/eclipse
   - export DEFAULT_VM=server
   - export PATH=`pwd`/mx:$PATH
-  - 'wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.tar.gz'
-  - tar -zxf jdk-8u92-linux-x64.tar.gz
-  - if [ -d graal-jvmci-8/.hg ]; then cd graal-jvmci-8 && hg pull && hg update && cd ..; else hg clone http://hg.openjdk.java.net/graal/graal-jvmci-8; fi;
-  - cd graal-jvmci-8
-  - mx --java-home `pwd`/../jdk1.8.0_92/ build
-  - export JAVA_HOME=$(mx --java-home `pwd`/../jdk1.8.0_92 jdkhome)
+  - 'wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn/utilities_drivers/oracle-labs/labsjdk-8u92-jvmci-0.17-linux-amd64.tar.gz'
+  - tar -zxf labsjdk-8u92-jvmci-0.17-linux-amd64.tar.gz
+  - export JAVA_HOME=$(mx --java-home `pwd`/labsjdk1.8.0_92-jvmci-0.17 jdkhome)
   - cd ..
 script:
   - $TEST_COMMAND
