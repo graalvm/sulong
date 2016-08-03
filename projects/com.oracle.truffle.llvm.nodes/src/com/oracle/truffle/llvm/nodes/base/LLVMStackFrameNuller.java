@@ -31,12 +31,13 @@ package com.oracle.truffle.llvm.nodes.base;
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.llvm.types.LLVMAddress;
 
 public abstract class LLVMStackFrameNuller {
 
     private final FrameSlot frameSlot;
 
-    LLVMStackFrameNuller(FrameSlot slot) {
+    public LLVMStackFrameNuller(FrameSlot slot) {
         this.frameSlot = slot;
     }
 
@@ -44,95 +45,95 @@ public abstract class LLVMStackFrameNuller {
         nullify(frame, frameSlot);
     }
 
-    abstract void nullify(VirtualFrame frame, FrameSlot slot);
+    public abstract void nullify(VirtualFrame frame, FrameSlot slot);
 
-    public static class LLVMBooleanNuller extends LLVMStackFrameNuller {
+    public static final class LLVMBooleanNuller extends LLVMStackFrameNuller {
 
         public LLVMBooleanNuller(FrameSlot slot) {
             super(slot);
         }
 
         @Override
-        void nullify(VirtualFrame frame, FrameSlot slot) {
+        public void nullify(VirtualFrame frame, FrameSlot slot) {
             frame.setBoolean(slot, false);
         }
 
     }
 
-    public static class LLVMByteNuller extends LLVMStackFrameNuller {
+    public static final class LLVMByteNuller extends LLVMStackFrameNuller {
 
         public LLVMByteNuller(FrameSlot slot) {
             super(slot);
         }
 
         @Override
-        void nullify(VirtualFrame frame, FrameSlot slot) {
+        public void nullify(VirtualFrame frame, FrameSlot slot) {
             frame.setByte(slot, (byte) 0);
         }
 
     }
 
-    public static class LLVMIntNuller extends LLVMStackFrameNuller {
+    public static final class LLVMIntNuller extends LLVMStackFrameNuller {
 
         public LLVMIntNuller(FrameSlot slot) {
             super(slot);
         }
 
         @Override
-        void nullify(VirtualFrame frame, FrameSlot slot) {
+        public void nullify(VirtualFrame frame, FrameSlot slot) {
             frame.setInt(slot, 0);
         }
 
     }
 
-    public static class LLVMLongNuller extends LLVMStackFrameNuller {
+    public static final class LLVMLongNuller extends LLVMStackFrameNuller {
 
         public LLVMLongNuller(FrameSlot slot) {
             super(slot);
         }
 
         @Override
-        void nullify(VirtualFrame frame, FrameSlot slot) {
+        public void nullify(VirtualFrame frame, FrameSlot slot) {
             frame.setLong(slot, 0);
         }
 
     }
 
-    public static class LLVMFloatNuller extends LLVMStackFrameNuller {
+    public static final class LLVMFloatNuller extends LLVMStackFrameNuller {
 
         public LLVMFloatNuller(FrameSlot slot) {
             super(slot);
         }
 
         @Override
-        void nullify(VirtualFrame frame, FrameSlot slot) {
+        public void nullify(VirtualFrame frame, FrameSlot slot) {
             frame.setFloat(slot, 0);
         }
 
     }
 
-    public static class LLVMDoubleNull extends LLVMStackFrameNuller {
+    public static final class LLVMDoubleNuller extends LLVMStackFrameNuller {
 
-        public LLVMDoubleNull(FrameSlot slot) {
+        public LLVMDoubleNuller(FrameSlot slot) {
             super(slot);
         }
 
         @Override
-        void nullify(VirtualFrame frame, FrameSlot slot) {
+        public void nullify(VirtualFrame frame, FrameSlot slot) {
             frame.setDouble(slot, 0);
         }
 
     }
 
-    public static class LLVMObjectNuller extends LLVMStackFrameNuller {
+    public static final class LLVMAddressNuller extends LLVMStackFrameNuller {
 
-        public LLVMObjectNuller(FrameSlot slot) {
+        public LLVMAddressNuller(FrameSlot slot) {
             super(slot);
         }
 
         @Override
-        void nullify(VirtualFrame frame, FrameSlot slot) {
-            frame.setObject(slot, null);
+        public void nullify(VirtualFrame frame, FrameSlot slot) {
+            frame.setObject(slot, LLVMAddress.fromLong(0));
         }
 
     }

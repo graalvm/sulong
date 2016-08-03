@@ -48,6 +48,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller;
@@ -239,7 +240,7 @@ public interface NodeFactoryFacade {
      * @param terminatorNode the terminator instruction node that changes control flow
      * @return the basic block node
      */
-    LLVMNode createBasicBlockNode(LLVMNode[] statementNodes, LLVMNode terminatorNode, int blockId);
+    LLVMNode createBasicBlockNode(LLVMNode[] statementNodes, LLVMNode terminatorNode, int blockId, String blockName);
 
     /**
      * Creates a node that groups together several basic blocks in a function and returns the
@@ -248,9 +249,10 @@ public interface NodeFactoryFacade {
      * @param returnSlot the frame slot for the return value
      * @param basicBlockNodes the basic blocks
      * @param indexToSlotNuller nuller node for nulling dead variables
+     * @param slotNullerAfterNodes
      * @return the function block node
      */
-    LLVMExpressionNode createFunctionBlockNode(FrameSlot returnSlot, List<LLVMNode> basicBlockNodes, LLVMStackFrameNuller[][] indexToSlotNuller);
+    LLVMExpressionNode createFunctionBlockNode(FrameSlot returnSlot, List<LLVMNode> basicBlockNodes, LLVMStackFrameNuller[][] indexToSlotNuller, LLVMStackFrameNuller[][] slotNullerAfterNodes);
 
     /**
      * Creates the entry point for a function.
@@ -262,7 +264,8 @@ public interface NodeFactoryFacade {
      * @param functionName
      * @return a function root node
      */
-    RootNode createFunctionStartNode(LLVMExpressionNode functionBodyNode, LLVMNode[] beforeFunction, LLVMNode[] afterFunction, FrameDescriptor frameDescriptor, String functionName);
+    RootNode createFunctionStartNode(LLVMExpressionNode functionBodyNode, LLVMNode[] beforeFunction, LLVMNode[] afterFunction, SourceSection sourceSection, FrameDescriptor frameDescriptor,
+                    String functionName);
 
     /**
      * Returns the index of the first argument of the formal parameter list.

@@ -66,9 +66,9 @@ import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMIVarBit
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMStructRetNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMVectorRetNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.control.LLVMRetNodeFactory.LLVMVoidReturnNodeGen;
-import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNode;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVM80BitFloatArgNodeGen;
+import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMAddressArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMDoubleArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMDoubleVectorArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMFloatArgNodeGen;
@@ -124,7 +124,7 @@ public final class LLVMFunctionFactory {
         if (retValue == null || retSlot == null) {
             throw new AssertionError();
         }
-        LLVMBaseType type = LLVMTypeHelper.getLLVMType(resolvedType);
+        LLVMBaseType type = LLVMTypeHelper.getLLVMType(resolvedType).getType();
         if (LLVMTypeHelper.isVectorType(type)) {
             return LLVMVectorRetNodeGen.create((LLVMVectorNode) retValue, retSlot);
         } else {
@@ -195,7 +195,7 @@ public final class LLVMFunctionFactory {
                 return LLVM80BitFloatArgNodeGen.create(argIndex);
             case ADDRESS:
             case STRUCT:
-                return new LLVMArgNode.LLVMAddressArgNode(argIndex);
+                return LLVMAddressArgNodeGen.create(argIndex);
             case FUNCTION_ADDRESS:
                 return LLVMFunctionArgNodeGen.create(argIndex);
             case I1_VECTOR:
@@ -270,6 +270,8 @@ public final class LLVMFunctionFactory {
                 return new LLVMMainFunctionReturnValueRootNode.LLVMMainFunctionReturnNumberRootNode(mainCallTarget);
             case I_VAR_BITWIDTH:
                 return new LLVMMainFunctionReturnValueRootNode.LLVMMainFunctionReturnIVarBitRootNode(mainCallTarget);
+            case VOID:
+                return new LLVMMainFunctionReturnValueRootNode.LLVMMainFunctionReturnVoidRootNode(mainCallTarget);
             default:
                 throw new AssertionError(returnType);
         }
@@ -287,13 +289,15 @@ public final class LLVMFunctionFactory {
         } else if (clazz.equals(LLVMDoubleNode.class)) {
             argNode = LLVMArgNodeFactory.LLVMDoubleArgNodeGen.create(realIndex);
         } else if (clazz.equals(LLVMAddressNode.class)) {
-            argNode = new LLVMArgNode.LLVMAddressArgNode(realIndex);
+            argNode = LLVMArgNodeFactory.LLVMAddressArgNodeGen.create(realIndex);
         } else if (clazz.equals(LLVMFunctionNode.class)) {
             argNode = LLVMArgNodeFactory.LLVMFunctionArgNodeGen.create(realIndex);
         } else if (clazz.equals(LLVMI8Node.class)) {
             argNode = LLVMArgNodeFactory.LLVMI8ArgNodeGen.create(realIndex);
         } else if (clazz.equals(LLVMI1Node.class)) {
             argNode = LLVMArgNodeFactory.LLVMI1ArgNodeGen.create(realIndex);
+        } else if (clazz.equals(LLVMExpressionNode.class)) {
+            argNode = LLVMArgNodeFactory.LLVMAddressArgNodeGen.create(realIndex);
         } else {
             throw new AssertionError(clazz);
         }

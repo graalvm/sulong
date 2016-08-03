@@ -32,13 +32,23 @@ package com.oracle.truffle.llvm.parser.factories;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.oracle.graal.replacements.StandardGraphBuilderPlugins;
 import com.oracle.graal.replacements.amd64.AMD64MathSubstitutions;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMAbortFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMAbsFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMCeilFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMExpFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMFAbsFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMFloorFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMLAbsFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMLog10Factory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMLogFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMPowFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMRintFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMCMathsIntrinsicsFactory.LLVMSqrtFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMExitFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.c.LLVMTruffleReadBytesFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleAddressToFunctionFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleBinaryFactory.LLVMTruffleHasSizeFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleBinaryFactory.LLVMTruffleIsBoxedFactory;
@@ -61,6 +71,7 @@ import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleInvokeFa
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleInvokeFactory.LLVMTruffleInvokeIFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleInvokeFactory.LLVMTruffleInvokeLFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleInvokeFactory.LLVMTruffleInvokePFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleIsTruffleObjectFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadFactory.LLVMTruffleReadBFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadFactory.LLVMTruffleReadCFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadFactory.LLVMTruffleReadDFactory;
@@ -75,6 +86,8 @@ import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadFact
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadFactory.LLVMTruffleReadIdxPFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadFactory.LLVMTruffleReadLFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadFactory.LLVMTruffleReadPFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadNBytesFactory;
+import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadNStringFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleReadStringFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleUnboxFactory.LLVMTruffleUnboxBFactory;
 import com.oracle.truffle.llvm.nodes.impl.intrinsics.interop.LLVMTruffleUnboxFactory.LLVMTruffleUnboxCFactory;
@@ -182,6 +195,11 @@ public class LLVMRuntimeIntrinsicFactory {
         intrinsics.put("@truffle_get_size", LLVMTruffleGetSizeFactory.getInstance());
 
         intrinsics.put("@truffle_read_string", LLVMTruffleReadStringFactory.getInstance());
+        intrinsics.put("@truffle_read_n_string", LLVMTruffleReadNStringFactory.getInstance());
+        intrinsics.put("@truffle_read_bytes", LLVMTruffleReadBytesFactory.getInstance());
+        intrinsics.put("@truffle_read_n_bytes", LLVMTruffleReadNBytesFactory.getInstance());
+
+        intrinsics.put("@truffle_is_truffle_object", LLVMTruffleIsTruffleObjectFactory.getInstance());
 
         return intrinsics;
     }
@@ -191,12 +209,20 @@ public class LLVMRuntimeIntrinsicFactory {
      * when Graal intrinsifies the corresponding Java method calls, e.g.
      * {@link java.lang.Math#sin(double)}. Currently, the Graal intrinsifications for some
      * trigonometric functions in {@link AMD64MathSubstitutions} are still twice as slow as their C
-     * counterparts. Hence, only the C standard library <code>sqrt</code> is intrinsified, since its
-     * Graal intrinsification in {@link StandardGraphBuilderPlugins} is implemented as efficient as
-     * the C function.
+     * counterparts.
      */
     private static void intrinsifyCFunctions(Map<String, NodeFactory<? extends LLVMNode>> intrinsics) {
         intrinsics.put("@sqrt", LLVMSqrtFactory.getInstance());
+        intrinsics.put("@log", LLVMLogFactory.getInstance());
+        intrinsics.put("@log10", LLVMLog10Factory.getInstance());
+        intrinsics.put("@rint", LLVMRintFactory.getInstance());
+        intrinsics.put("@ceil", LLVMCeilFactory.getInstance());
+        intrinsics.put("@floor", LLVMFloorFactory.getInstance());
+        intrinsics.put("@abs", LLVMAbsFactory.getInstance());
+        intrinsics.put("@labs", LLVMLAbsFactory.getInstance());
+        intrinsics.put("@fabs", LLVMFAbsFactory.getInstance());
+        intrinsics.put("@pow", LLVMPowFactory.getInstance());
+        intrinsics.put("@exp", LLVMExpFactory.getInstance());
     }
 
 }

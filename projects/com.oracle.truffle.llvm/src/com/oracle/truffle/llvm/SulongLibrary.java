@@ -85,9 +85,8 @@ public class SulongLibrary {
                         }
                     }
                 } else {
-                    handleSource.accept(Source.fromText(string, file.getPath() + "@" + zipEntry.getName()));
+                    handleSource.accept(Source.newBuilder(string).name(file.getPath() + "@" + zipEntry.getName()).mimeType(LLVMLanguage.LLVM_IR_MIME_TYPE).build());
                 }
-
                 zipEntry = zipStream.getNextEntry();
             }
         }

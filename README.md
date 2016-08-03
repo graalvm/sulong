@@ -50,22 +50,30 @@ How to get started?
 First create a new directory, which will contain the needed GraalVM
 projects:
 
-    mkdir graalvm
-    cd graalvm
+    mkdir sulong-dev && cd sulong-dev
 
 Then, download mx, which is the build tool used by Sulong:
 
     git clone https://github.com/graalvm/mx
     export PATH=$PWD/mx:$PATH
 
-Afterwards, use git to clone the Sulong project and its dependencies:
+Next, use git to clone the Sulong project and its dependencies:
 
     git clone https://github.com/graalvm/sulong
 
-Next, build the project:
+Next, you need to download a recent
+[labsjdk](http://www.oracle.com/technetwork/oracle-labs/program-languages/downloads/index.html).
+Extract it inside the `sulong-dev` directory:
 
-    cd sulong
-    mx build
+    tar -zxf labsjdk-8u92-jvmci-0.17-linux-amd64.tar.gz
+
+Set `JAVA_HOME` to point to the extracted labsjdk from above:
+
+    echo JAVA_HOME=`pwd`/labsjdk1.8.0_92-jvmci-0.17 > sulong/mx.sulong/env
+
+Finally, build the project:
+
+    cd sulong && mx build
 
 The mx tool will ask you to choose between its server and jvmci
 configuration. For now, just select server. You can read the differences

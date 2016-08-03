@@ -39,11 +39,11 @@ import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMBooleanNuller;
-import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMDoubleNull;
+import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMDoubleNuller;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMFloatNuller;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMIntNuller;
 import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMLongNuller;
-import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMObjectNuller;
+import com.oracle.truffle.llvm.nodes.base.LLVMStackFrameNuller.LLVMAddressNuller;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMBasicBlockNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMContext;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMTerminatorNode;
@@ -85,8 +85,8 @@ public class LLVMBitcodeFunctionVisitor implements FunctionVisitor {
         instructions.add(node);
     }
 
-    public void addTerminatingInstruction(LLVMTerminatorNode node, int blockId) {
-        blocks.add(new LLVMBasicBlockNode(getBlock(), node, blockId));
+    public void addTerminatingInstruction(LLVMTerminatorNode node, int blockId, String blockName) {
+        blocks.add(new LLVMBasicBlockNode(getBlock(), node, blockId, blockName));
         instructions.add(node);
     }
 
@@ -170,10 +170,10 @@ public class LLVMBitcodeFunctionVisitor implements FunctionVisitor {
                     nodes[i++] = new LLVMFloatNuller(slot);
                     break;
                 case Double:
-                    nodes[i++] = new LLVMDoubleNull(slot);
+                    nodes[i++] = new LLVMDoubleNuller(slot);
                     break;
                 case Object:
-                    nodes[i++] = new LLVMObjectNuller(slot);
+                    nodes[i++] = new LLVMAddressNuller(slot);
                     break;
                 case Illegal:
                     throw new AssertionError("illegal");

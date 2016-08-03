@@ -63,6 +63,7 @@ public enum LLVMBaseOption implements LLVMOption {
                     null,
                     LLVMOptions::parseString,
                     PropertyCategory.TESTS),
+    STACK_SIZE_KB("StackSizeKB", "The stack size in KB.", 81920L, LLVMOptions::parseLong, PropertyCategory.GENERAL),
     DYN_LIBRARY_PATHS(
                     "DynamicNativeLibraryPath",
                     "The native library search paths delimited by " + LLVMOptions.getPathDelimiter(),
@@ -95,7 +96,7 @@ public enum LLVMBaseOption implements LLVMOption {
                     LLVMOptions::parseBoolean,
                     PropertyCategory.PERFORMANCE),
     NATIVE_CALL_STATS("PrintNativeCallStats", "Outputs stats about native call site frequencies", false, LLVMOptions::parseBoolean, PropertyCategory.DEBUG),
-    LIFE_TIME_ANALYSIS_STATS("PrintNativeAnalysisStats", "Outputs the results of the lifetime analysis (if enabled)", false, LLVMOptions::parseBoolean, PropertyCategory.DEBUG);
+    LIFE_TIME_ANALYSIS_STATS("PrintLifetimeAnalysisStats", "Outputs the results of the lifetime analysis (if enabled)", false, LLVMOptions::parseBoolean, PropertyCategory.DEBUG);
 
     LLVMBaseOption(String key, String description, Object defaultValue, OptionParser parser, PropertyCategory category) {
         this.key = LLVMOptions.getOptionPrefix() + key;

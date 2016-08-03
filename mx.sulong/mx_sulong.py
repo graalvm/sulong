@@ -2,7 +2,6 @@ import tarfile
 import os
 from os.path import join
 import shutil
-import zipfile
 import subprocess
 
 import mx
@@ -10,7 +9,6 @@ import mx_findbugs
 
 from mx_unittest import unittest
 from mx_gate import Task, add_gate_runner, gate_clean
-from mx_jvmci import VM, buildvms
 from mx_gitlogcheck import logCheck
 
 _suite = mx.suite('sulong')
@@ -51,42 +49,31 @@ add_gate_runner(_suite, _graal_llvm_gate_runner)
 def executeGate():
     """executes the TruffleLLVM gate tasks"""
     tasks = []
-    with Task('BuildHotSpotGraalServer: product', tasks) as t:
-        if t: buildvms(['-c', '--vms', 'server', '--builds', 'product'])
-    with VM('server', 'product'):
-        with Task('Findbugs', tasks) as t:
-            if t and mx_findbugs.findbugs([]) != 0:
-                t.abort('FindBugs warnings were found')
-    with VM('server', 'product'):
-        with Task('TestBenchmarks', tasks) as t:
-            if t: runBenchmarkTestCases()
-    with VM('server', 'product'):
-        with Task('TestTypes', tasks) as t:
-            if t: runTypeTestCases()
-    with VM('server', 'product'):
-        with Task('TestPolglot', tasks) as t:
-            if t: runPolyglotTestCases()
-    with VM('server', 'product'):
-        with Task('TestInterop', tasks) as t:
-            if t: runInteropTestCases()
-    with VM('server', 'product'):
-        with Task('TestAsm', tasks) as t:
-            if t: runAsmTestCases()
-    with VM('server', 'product'):
-        with Task('TestSulong', tasks) as t:
-            if t: runTruffleTestCases()
-    with VM('server', 'product'):
-        with Task('TestGCC', tasks) as t:
-            if t: runGCCTestCases()
-    with VM('server', 'product'):
-        with Task('TestLLVM', tasks) as t:
-            if t: runLLVMTestCases()
-    with VM('server', 'product'):
-        with Task('TestNWCC', tasks) as t:
-            if t: runNWCCTestCases()
-    with VM('server', 'product'):
-        with Task('TestGCCSuiteCompile', tasks) as t:
-            if t: runCompileTestCases()
+    with Task('Findbugs', tasks) as t:
+        if t and mx_findbugs.findbugs([]) != 0:
+            t.abort('FindBugs warnings were found')
+    with Task('TestBenchmarks', tasks) as t:
+        if t: runBenchmarkTestCases()
+    with Task('TestTypes', tasks) as t:
+        if t: runTypeTestCases()
+    with Task('TestPolglot', tasks) as t:
+        if t: runPolyglotTestCases()
+    with Task('TestInterop', tasks) as t:
+        if t: runInteropTestCases()
+    with Task('TestTck', tasks) as t:
+        if t: runTckTestCases()
+    with Task('TestAsm', tasks) as t:
+        if t: runAsmTestCases()
+    with Task('TestSulong', tasks) as t:
+        if t: runTruffleTestCases()
+    with Task('TestGCC', tasks) as t:
+        if t: runGCCTestCases()
+    with Task('TestLLVM', tasks) as t:
+        if t: runLLVMTestCases()
+    with Task('TestNWCC', tasks) as t:
+        if t: runNWCCTestCases()
+    with Task('TestGCCSuiteCompile', tasks) as t:
+        if t: runCompileTestCases()
 
 def travis1(args=None):
     tasks = []
@@ -99,55 +86,48 @@ def travis1(args=None):
                 mx._warn_or_abort('JDT environment variable not set. Cannot execute BuildJavaWithEcj task.', args.strict_mode)
     with Task('BuildJavaWithJavac', tasks) as t:
         if t: mx.command_function('build')(['-p', '--warning-as-error', '--no-native', '--force-javac'])
-    with Task('BuildHotSpotGraalServer: product', tasks) as t:
-        if t: buildvms(['-c', '--vms', 'server', '--builds', 'product'])
-    with VM('server', 'product'):
-        with Task('Findbugs', tasks) as t:
-            if t and mx_findbugs.findbugs([]) != 0:
-                t.abort('FindBugs warnings were found')
-    with VM('server', 'product'):
-        with Task('TestBenchmarks', tasks) as t:
-            if t: runBenchmarkTestCases()
-    with VM('server', 'product'):
-        with Task('TestPolglot', tasks) as t:
-            if t: runPolyglotTestCases()
-    with VM('server', 'product'):
-        with Task('TestInterop', tasks) as t:
-            if t: runInteropTestCases()
-    with VM('server', 'product'):
-        with Task('TestAsm', tasks) as t:
-            if t: runAsmTestCases()
-    with VM('server', 'product'):
-        with Task('TestTypes', tasks) as t:
-            if t: runTypeTestCases()
-    with VM('server', 'product'):
-        with Task('TestSulong', tasks) as t:
-            if t: runTruffleTestCases()
-    with VM('server', 'product'):
-        with Task('TestLLVM', tasks) as t:
-            if t: runLLVMTestCases()
-    with VM('server', 'product'):
-        with Task('TestNWCC', tasks) as t:
-            if t: runNWCCTestCases()
-    with VM('server', 'product'):
-        with Task('TestGCCSuiteCompile', tasks) as t:
-            if t: runCompileTestCases()
+    with Task('Findbugs', tasks) as t:
+        if t and mx_findbugs.findbugs([]) != 0:
+            t.abort('FindBugs warnings were found')
+    with Task('TestBenchmarks', tasks) as t:
+        if t: runBenchmarkTestCases()
+    with Task('TestPolglot', tasks) as t:
+        if t: runPolyglotTestCases()
+    with Task('TestInterop', tasks) as t:
+        if t: runInteropTestCases()
+    with Task('TestTck', tasks) as t:
+        if t: runTckTestCases()
+    with Task('TestAsm', tasks) as t:
+        if t: runAsmTestCases()
+    with Task('TestTypes', tasks) as t:
+        if t: runTypeTestCases()
+    with Task('TestSulong', tasks) as t:
+        if t: runTruffleTestCases()
+    with Task('TestLLVM', tasks) as t:
+        if t: runLLVMTestCases()
 
 def travis2(args=None):
     tasks = []
-    with Task('BuildHotSpotGraalServer: product', tasks) as t:
-        if t: buildvms(['-c', '--vms', 'server', '--builds', 'product'])
-    with VM('server', 'product'):
-        with Task('TestGCC', tasks) as t:
-            if t: runGCCTestCases()
+    with Task('BuildJavaWithJavac', tasks) as t:
+        if t: mx.command_function('build')(['-p', '--warning-as-error', '--no-native', '--force-javac'])
+    with Task('TestGCC', tasks) as t:
+        if t: runGCCTestCases()
+
+def travis3(args=None):
+    tasks = []
+    with Task('BuildJavaWithJavac', tasks) as t:
+        if t: mx.command_function('build')(['-p', '--warning-as-error', '--no-native', '--force-javac'])
+    with Task('TestNWCC', tasks) as t:
+        if t: runNWCCTestCases()
+    with Task('TestGCCSuiteCompile', tasks) as t:
+        if t: runCompileTestCases()
 
 def travisJRuby(args=None):
     tasks = []
-    with Task('BuildHotSpotGraalServer: product', tasks) as t:
-        if t: buildvms(['-c', '--vms', 'server', '--builds', 'product'])
-    with VM('server', 'product'):
-        with Task('TestJRuby', tasks) as t:
-            if t: runTestJRuby()
+    with Task('BuildJavaWithJavac', tasks) as t:
+        if t: mx.command_function('build')(['-p', '--warning-as-error', '--no-native', '--force-javac'])
+    with Task('TestJRuby', tasks) as t:
+        if t: runTestJRuby()
 
 def localGate(args=None):
     """executes the gate without downloading the dependencies and without building"""
@@ -466,6 +446,7 @@ def runTests(args=None):
     runTypeTestCases()
     runPolyglotTestCases()
     runInteropTestCases()
+    runTckTestCases()
     runAsmTestCases()
     runBenchmarkTestCases()
 
@@ -484,7 +465,7 @@ def runGCCTestCases(args=None):
     ensureGCCSuiteExists()
     ensureDragonEggExists()
     vmArgs, _ = truffle_extract_VM_args(args)
-    return unittest(getCommonUnitTestOptions() + vmArgs + ["com.oracle.truffle.llvm.test.TestGCCSuite"])
+    return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.TestGCCSuite'])
 
 def runNWCCTestCases(args=None):
     """runs the NWCC (Nils Weller's C Compiler) test cases"""
@@ -522,6 +503,11 @@ def runInteropTestCases(args=None):
     vmArgs, _ = truffle_extract_VM_args(args)
     return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.interop.LLVMInteropTest'])
 
+def runTckTestCases(args=None):
+    """runs the TCK test cases"""
+    vmArgs, _ = truffle_extract_VM_args(args)
+    return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.interop.LLVMTckTest'])
+
 def runAsmTestCases(args=None):
     """runs the asm test cases"""
     vmArgs, _ = truffle_extract_VM_args(args)
@@ -529,8 +515,9 @@ def runAsmTestCases(args=None):
 
 def runCompileTestCases(args=None):
     """runs the compile (no execution) test cases of the GCC suite"""
+    ensureGCCSuiteExists()
     vmArgs, _ = truffle_extract_VM_args(args)
-    return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.TestGCCSuiteCompile'])
+    return unittest(getCommonUnitTestOptions() + vmArgs + ['com.oracle.truffle.llvm.test.TestGCCCompileSuite'])
 
 def runTestJRuby(args=None):
     """tests that JRuby can use this version of Sulong to compile and run C extensions"""
@@ -544,9 +531,18 @@ def runTestJRuby(args=None):
     else:
         mx.run(['git', 'clone', rubyUrl], cwd=suitesDir)
         mx.run(['git', 'checkout', rubyBranch], cwd=jrubyDir)
+    rubyGemsUrl = 'https://github.com/jruby/jruby-truffle-gem-test-pack.git'
+    jrubyGemsDir = join(suitesDir, 'jruby-truffle-gem-test-pack')
+    if os.path.isdir(jrubyGemsDir):
+        mx.run(['git', 'pull'], cwd=jrubyGemsDir)
+    else:
+        mx.run(['git', 'clone', rubyGemsUrl], cwd=suitesDir)
+    os.environ['GRAAL_HOME'] = _suite.dir
+    os.environ['SULONG_HOME'] = _suite.dir
+    os.environ['GEM_HOME'] = jrubyGemsDir + '/gems'
     mx.run(['ruby', 'tool/jt.rb', 'build'], cwd=jrubyDir)
-    os.environ['SULONG_DIR'] = _suite.dir
-    os.environ['SULONG_CLASSPATH'] = getClasspathOptions()[1]
+    mx.run(['ruby', 'tool/jt.rb', 'build', 'cexts', '--no-openssl'], cwd=jrubyDir)
+    mx.run(['ruby', 'tool/jt.rb', 'test', 'specs', '--graal', ':capi'], cwd=jrubyDir)
     mx.run(['ruby', 'tool/jt.rb', 'test', 'cexts'], cwd=jrubyDir)
 
 def getCommonOptions(lib_args=None):
@@ -558,7 +554,7 @@ def getCommonOptions(lib_args=None):
 
 def getSearchPathOption(lib_args=None):
     if lib_args is None:
-        lib_args = ['-lgmp', '-lgfortran']
+        lib_args = ['-lgmp', '-lgfortran', '-lpcre']
 
     lib_names = []
 
@@ -566,9 +562,9 @@ def getSearchPathOption(lib_args=None):
         '-lc': ['libc.so.6', 'libc.dylib'],
         '-lstdc++': ['libstdc++.so.6', 'libstdc++.6.dylib'],
         '-lgmp': ['libgmp.so.10', 'libgmp.10.dylib'],
-        '-lgfortran': ['libgfortran.so.3', 'libgfortran.3.dylib']
+        '-lgfortran': ['libgfortran.so.3', 'libgfortran.3.dylib'],
+        '-lpcre': ['libpcre.so.3', 'libpcre.dylib']
     }
-
     osStr = mx.get_os()
     index = {'linux': 0, 'darwin': 1}[mx.get_os()]
     if index is None:
@@ -584,7 +580,7 @@ def getSearchPathOption(lib_args=None):
     return '-Dsulong.DynamicNativeLibraryPath=' + ':'.join(lib_names)
 
 def getCommonUnitTestOptions():
-    return getCommonOptions() + ['-Xss56m', getLLVMRootOption(), '-ea', '-esa']
+    return getCommonOptions() + ['-Xss56m', '-Xms2g', '-Xmx2g', getLLVMRootOption(), '-ea', '-esa']
 
 # PE does not work yet for all test cases
 def compilationSucceedsOption():
@@ -634,29 +630,7 @@ def opt(args=None):
 
 def link(args=None):
     """Links LLVM bitcode into an su file."""
-    modules = []
-    libraries = []
-    n = 0
-    while n < len(args):
-        arg = args[n]
-        if arg == '-o':
-            out = args[n + 1]
-            n += 1
-        elif arg.startswith('-l'):
-            libraries += [arg[2:]]
-        else:
-            modules += [arg]
-        n += 1
-    if out is None:
-        out = 'out.su'
-    if len(modules) == 1:
-        prefix = os.path.dirname(modules[0])
-    else:
-        prefix = os.path.commonprefix(modules)
-    with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
-        for module in modules:
-            z.write(module, module[len(prefix):])
-        z.writestr('libs', '\n'.join(libraries))
+    return mx.run_java(getClasspathOptions() + ["com.oracle.truffle.llvm.tools.Linker"] + args)
 
 def compileWithClangPP(args=None):
     """runs Clang++"""
@@ -666,7 +640,7 @@ def compileWithClangPP(args=None):
 
 def getClasspathOptions():
     """gets the classpath of the Sulong distributions"""
-    return ['-cp', ':'.join([mx.classpath(mx.distribution(distr)) for distr in sulongDistributions])]
+    return ['-cp', ':'.join([mx.classpath(mx.distribution(distr), jdk=mx.get_jdk(tag='jvmci')) for distr in sulongDistributions])]
 
 def printOptions(args=None):
     """prints the Sulong Java property options"""
@@ -756,7 +730,7 @@ def gccBench(args=None):
     return mx.run(['./a.out'])
 
 def standardLinkerCommands(args=None):
-    return ['-lm', '-lgmp']
+    return ['-lm', '-lgmp', '-lpcre']
 
 def mdlCheck(args=None):
     """runs mdl on all .md files in the projects and root directory"""
@@ -764,19 +738,20 @@ def mdlCheck(args=None):
         for f in files:
             if f.endswith('.md') and (path.startswith('./projects') or path is '.'):
                 absPath = path + '/' + f
-                subprocess.check_output(['mdl', '-r~MD026,~MD002,~MD029,~MD032', absPath])
+                subprocess.check_output(['mdl', '-r~MD026,~MD002,~MD029,~MD032,~MD033', absPath])
 
 def getBitcodeLibrariesOption():
     libraries = []
-    for path, _, files in os.walk(_libPath):
-        for f in files:
-            # TODO: also allow other extensions, best introduce a command "compile" that compiles C, C++, Fortran and other files
-            if f.endswith('.c'):
-                bitcodeFile = f.rsplit(".", 1)[0] + '.ll'
-                absBitcodeFile = path + '/' + bitcodeFile
-                if not os.path.isfile(absBitcodeFile):
-                    compileWithClangOpt(path + '/' + f, absBitcodeFile)
-                libraries.append(absBitcodeFile)
+    if 'SULONG_NO_LIBRARY' not in os.environ:
+        for path, _, files in os.walk(_libPath):
+            for f in files:
+                # TODO: also allow other extensions, best introduce a command "compile" that compiles C, C++, Fortran and other files
+                if f.endswith('.c'):
+                    bitcodeFile = f.rsplit(".", 1)[0] + '.ll'
+                    absBitcodeFile = path + '/' + bitcodeFile
+                    if not os.path.isfile(absBitcodeFile):
+                        compileWithClangOpt(path + '/' + f, absBitcodeFile)
+                    libraries.append(absBitcodeFile)
     return ['-Dsulong.DynamicBitcodeLibraries=' + ':'.join(libraries)] if libraries else []
 
 def clangformatcheck(args=None):
@@ -832,6 +807,7 @@ mx.update_commands(_suite, {
     'su-tests-types' : [runTypeTestCases, ''],
     'su-tests-polyglot' : [runPolyglotTestCases, ''],
     'su-tests-interop' : [runInteropTestCases, ''],
+    'su-tests-tck' : [runTckTestCases, ''],
     'su-tests-asm' : [runAsmTestCases, ''],
     'su-tests-compile' : [runCompileTestCases, ''],
     'su-tests-jruby' : [runTestJRuby, ''],
@@ -845,6 +821,7 @@ mx.update_commands(_suite, {
     'su-g++' : [dragonEggGPP, ''],
     'su-travis1' : [travis1, ''],
     'su-travis2' : [travis2, ''],
+    'su-travis3' : [travis3, ''],
     'su-travis-jruby' : [travisJRuby, ''],
     'su-gitlogcheck' : [logCheck, ''],
     'su-mdlcheck' : [mdlCheck, ''],

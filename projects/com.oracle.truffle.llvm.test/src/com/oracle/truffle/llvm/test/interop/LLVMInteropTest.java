@@ -31,8 +31,12 @@ package com.oracle.truffle.llvm.test.interop;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -49,9 +53,6 @@ import com.oracle.truffle.llvm.tools.Opt.OptOptions.Pass;
 
 @SuppressWarnings({"static-method"})
 public final class LLVMInteropTest {
-
-    private static final String PATH = LLVMPaths.LOCAL_TESTS + "/../interoptests";
-
     @Test
     public void test001() {
         Runner runner = new Runner("interop001");
@@ -315,6 +316,212 @@ public final class LLVMInteropTest {
         Assert.assertEquals("bar", result[0]);
     }
 
+    @Test
+    public void test027() {
+        Runner runner = new Runner("interop027");
+        final Object[] result = new Object[]{null};
+        runner.export(JavaInterop.asTruffleFunction(FuncEInterface.class, x -> result[0] = x), "foo");
+        Assert.assertEquals(14, runner.run());
+        Assert.assertEquals("\u0080\u0081\u0082\u0083\u0084\u0085\u0086\u0087\u0088\u0089\u008a\u008b\u008c\u008d\u008e\u008f" +
+                        "\u0090\u0091\u0092\u0093\u0094\u0095\u0096\u0097\u0098\u0099\u009a\u009b\u009c\u009d\u009e\u009f" +
+                        "\u00a0\u00a1\u00a2\u00a3\u00a4\u00a5\u00a6\u00a7\u00a8\u00a9\u00aa\u00ab\u00ac\u00ad\u00ae\u00af" +
+                        "\u00b0\u00b1\u00b2\u00b3\u00b4\u00b5\u00b6\u00b7\u00b8\u00b9\u00ba\u00bb\u00bc\u00bd\u00be\u00bf" +
+                        "\u00c0\u00c1\u00c2\u00c3\u00c4\u00c5\u00c6\u00c7\u00c8\u00c9\u00ca\u00cb\u00cc\u00cd\u00ce\u00cf" +
+                        "\u00d0\u00d1\u00d2\u00d3\u00d4\u00d5\u00d6\u00d7\u00d8\u00d9\u00da\u00db\u00dc\u00dd\u00de\u00df" +
+                        "\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5\u00e6\u00e7\u00e8\u00e9\u00ea\u00eb\u00ec\u00ed\u00ee\u00ef" +
+                        "\u00f0\u00f1\u00f2\u00f3\u00f4\u00f5\u00f6\u00f7\u00f8\u00f9\u00fa\u00fb\u00fc\u00fd\u00fe\u00ff",
+                        result[0]);
+    }
+
+    @Test
+    public void test028() {
+        Runner runner = new Runner("interop028");
+        final Object[] result = new Object[]{null};
+        runner.export(JavaInterop.asTruffleFunction(FuncEInterface.class, x -> result[0] = x), "foo");
+        Assert.assertEquals(72, runner.run());
+        Assert.assertEquals("foo\u0000 bar\u0080 ", result[0]);
+    }
+
+    @Test
+    public void test029() {
+        Runner runner = new Runner("interop029");
+        final Object[] result = new Object[]{null};
+        runner.export(JavaInterop.asTruffleFunction(FuncEInterface.class, x -> result[0] = x), "foo");
+        Assert.assertEquals(36, runner.run());
+        Assert.assertArrayEquals(new byte[]{102, 111, 111, 0, 32, 98, 97, 114, -128, 32}, (byte[]) result[0]);
+    }
+
+    // implicit interop
+    // structs not yet implemented
+    @Test
+    @Ignore
+    public void test030() throws Exception {
+        Runner runner = new Runner("interop030");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("getValueI");
+            ClassA a = new ClassA();
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a)).get();
+            Assert.assertEquals(42, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    @Ignore
+    public void test031() throws Exception {
+        Runner runner = new Runner("interop031");
+        try {
+            PolyglotEngine.Value apply = runner.findGlobalSymbol("complexAdd");
+
+            ComplexNumber a = new ComplexNumber(32, 10);
+            ComplexNumber b = new ComplexNumber(10, 32);
+
+            apply.execute(JavaInterop.asTruffleObject(a), JavaInterop.asTruffleObject(b));
+
+            Assert.assertEquals(42.0, a.real, 0.1);
+            Assert.assertEquals(42.0, a.imaginary, 0.1);
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    // arrays: foreign array to llvm
+    @Test
+    public void test032() throws Exception {
+        Runner runner = new Runner("interop032");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            int[] a = new int[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    public void test033() throws Exception {
+        Runner runner = new Runner("interop033");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            short[] a = new short[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    public void test034() throws Exception {
+        Runner runner = new Runner("interop034");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            byte[] a = new byte[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    public void test035() throws Exception {
+        Runner runner = new Runner("interop035");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            long[] a = new long[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    public void test036() throws Exception {
+        Runner runner = new Runner("interop036");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            float[] a = new float[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    public void test037() throws Exception {
+        Runner runner = new Runner("interop037");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            double[] a = new double[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    // foreign array with different type
+    @Test
+    public void test038() throws Exception {
+        Runner runner = new Runner("interop038");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            long[] a = new long[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    public void test039() throws Exception {
+        Runner runner = new Runner("interop039");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            byte[] a = new byte[]{1, 2, 3, 4, 5};
+            Number result = (Number) get.execute(JavaInterop.asTruffleObject(a), 2).get();
+            Assert.assertEquals(3, result.intValue());
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    @Test
+    public void test040() throws Exception {
+        Runner runner = new Runner("interop040");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            TruffleObject result = get.execute().as(TruffleObject.class);
+            List<Integer> array = TruffleList.create(Integer.class, result);
+            Assert.assertEquals(16, (int) array.get(4));
+        } finally {
+            runner.dispose();
+        }
+    }
+
+    // llvm array to foreign language
+    @Test
+    public void test041() throws Exception {
+        Runner runner = new Runner("interop041");
+        try {
+            PolyglotEngine.Value get = runner.findGlobalSymbol("get");
+            PolyglotEngine.Value getval = runner.findGlobalSymbol("getval");
+            TruffleObject result = get.execute().as(TruffleObject.class);
+            List<Integer> array = TruffleList.create(Integer.class, result);
+            array.set(3, 9);
+            int value = (int) getval.execute(3).get();
+            Assert.assertEquals(9, value);
+        } finally {
+            runner.dispose();
+        }
+    }
+
     public static final class ClassA {
         public boolean valueBool = true;
         public byte valueB = 40;
@@ -380,6 +587,16 @@ public final class LLVMInteropTest {
         }
     }
 
+    class ComplexNumber {
+        public double real;
+        public double imaginary;
+
+        ComplexNumber(double real, double imaginary) {
+            this.real = real;
+            this.imaginary = imaginary;
+        }
+    }
+
     @FunctionalInterface
     public interface FuncIInterface {
         int eval(int a, int b);
@@ -425,17 +642,64 @@ public final class LLVMInteropTest {
         int run() {
             final PolyglotEngine engine = builder.build();
             try {
-                File cFile = new File(PATH, fileName + ".c");
-                File bcFile = File.createTempFile(PATH + "/" + "bc_" + fileName, ".ll");
-                File bcOptFile = File.createTempFile(PATH + "/" + "bcopt_" + fileName, ".ll");
+                File cFile = new File(LLVMPaths.INTEROP_TESTS, fileName + ".c");
+                File bcFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bc_" + fileName, ".ll");
+                File bcOptFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bcopt_" + fileName, ".ll");
                 Clang.compileToLLVMIR(cFile, bcFile, ClangOptions.builder());
                 Opt.optimizeBitcodeFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
-                return engine.eval(Source.fromFileName(bcOptFile.getPath())).as(Integer.class);
+                return engine.eval(Source.newBuilder(bcOptFile).build()).as(Integer.class);
             } catch (IOException e) {
                 throw new AssertionError(e);
             } finally {
                 engine.dispose();
             }
+        }
+
+        protected PolyglotEngine prepareVM() throws Exception {
+            PolyglotEngine engine = builder.build();
+            try {
+                File cFile = new File(LLVMPaths.INTEROP_TESTS, fileName + ".c");
+                File bcFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bc_" + fileName, ".ll");
+                File bcOptFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bcopt_" + fileName, ".ll");
+                Clang.compileToLLVMIR(cFile, bcFile, ClangOptions.builder());
+                Opt.optimizeBitcodeFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
+                engine.eval(Source.newBuilder(bcOptFile).build()).as(Integer.class);
+            } catch (IOException e) {
+                throw new AssertionError(e);
+            }
+            return engine;
+        }
+
+        private PolyglotEngine vm = null;
+        private static Reference<PolyglotEngine> previousVMReference = new WeakReference<>(null);
+
+        PolyglotEngine vm() throws Exception {
+            if (vm == null) {
+                vm = prepareVM();
+                replacePreviousVM(vm);
+            }
+            return vm;
+        }
+
+        private static void replacePreviousVM(PolyglotEngine newVM) {
+            PolyglotEngine vm = previousVMReference.get();
+            if (vm == newVM) {
+                return;
+            }
+            if (vm != null) {
+                vm.dispose();
+            }
+            previousVMReference = new WeakReference<>(newVM);
+        }
+
+        PolyglotEngine.Value findGlobalSymbol(String name) throws Exception {
+            PolyglotEngine.Value s = vm().findGlobalSymbol(name);
+            assert s != null : "Symbol " + name + " is not found!";
+            return s;
+        }
+
+        void dispose() {
+            replacePreviousVM(null);
         }
     }
 }

@@ -44,11 +44,11 @@ import com.oracle.truffle.llvm.nodes.impl.base.LLVMLanguage;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 
 @RunWith(Parameterized.class)
-public class TestGCCSuiteCompile extends TestSuiteBase {
+public class TestGCCCompileSuite extends TestSuiteBase {
 
     private TestCaseFiles tuple;
 
-    public TestGCCSuiteCompile(TestCaseFiles tuple) {
+    public TestGCCCompileSuite(TestCaseFiles tuple) {
         this.tuple = tuple;
     }
 
@@ -69,7 +69,7 @@ public class TestGCCSuiteCompile extends TestSuiteBase {
             Builder engineBuilder = PolyglotEngine.newBuilder();
             engineBuilder.config(LLVMLanguage.LLVM_IR_MIME_TYPE, LLVMLanguage.PARSE_ONLY_KEY, true);
             PolyglotEngine build = engineBuilder.build();
-            build.eval(Source.fromFileName(tuple.getBitCodeFile().getAbsolutePath()));
+            build.eval(Source.newBuilder(tuple.getBitCodeFile()).build());
             recordTestCase(tuple, true);
         } catch (Throwable e) {
             recordError(tuple, e);

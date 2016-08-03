@@ -39,12 +39,13 @@ import com.oracle.truffle.llvm.nodes.impl.others.LLVMBlockNode.LLVMBlockControlF
 
 public class LLVMBlockFactory {
 
-    public static LLVMNode createBasicBlock(LLVMNode[] statementNodes, LLVMTerminatorNode terminatorNode, int blockId) {
-        return new LLVMBasicBlockNode(statementNodes, terminatorNode, blockId);
+    public static LLVMNode createBasicBlock(LLVMNode[] statementNodes, LLVMTerminatorNode terminatorNode, int blockId, String blockName) {
+        return new LLVMBasicBlockNode(statementNodes, terminatorNode, blockId, blockName);
     }
 
-    public static LLVMExpressionNode createFunctionBlock(FrameSlot returnSlot, LLVMBasicBlockNode[] bbs, LLVMStackFrameNuller[][] indexToSlotNuller) {
-        return new LLVMBlockControlFlowNode(bbs, indexToSlotNuller, returnSlot);
+    public static LLVMExpressionNode createFunctionBlock(FrameSlot returnSlot, LLVMBasicBlockNode[] bbs, LLVMStackFrameNuller[][] beforeSlotNullerNodes,
+                    LLVMStackFrameNuller[][] afterSlotNullerNodes) {
+        return new LLVMBlockControlFlowNode(bbs, beforeSlotNullerNodes, afterSlotNullerNodes, returnSlot);
     }
 
 }

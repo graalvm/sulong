@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.oracle.nfi.api.NativeFunctionHandle;
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.ExecutionContext;
 import com.oracle.truffle.api.RootCallTarget;
@@ -59,14 +58,13 @@ public class LLVMContext extends ExecutionContext {
 
     private Object[] mainArguments;
 
-    private Source sourceFile;
+    private Source mainSourceFile;
 
     private boolean parseOnly;
 
     public LLVMContext(NodeFactoryFacade facade, LLVMOptimizationConfiguration optimizationConfig) {
         nativeLookup = new NativeLookup(facade);
         this.registry = new LLVMFunctionRegistry(optimizationConfig, facade);
-        setLastContext(this);
     }
 
     public RootCallTarget getFunction(LLVMFunctionDescriptor function) {
@@ -98,6 +96,10 @@ public class LLVMContext extends ExecutionContext {
         return completeFunctionDescriptors[validFunctionIndex];
     }
 
+    public void addLibraryToNativeLookup(String library) {
+        nativeLookup.addLibraryToNativeLookup(library);
+    }
+
     public long getNativeHandle(String functionName) {
         return nativeLookup.getNativeHandle(functionName);
     }
@@ -118,28 +120,12 @@ public class LLVMContext extends ExecutionContext {
         return mainArguments;
     }
 
-    public void setSourceFile(Source sourceFile) {
-        this.sourceFile = sourceFile;
+    public void setMainSourceFile(Source mainSourceFile) {
+        this.mainSourceFile = mainSourceFile;
     }
 
-    public Source getSourceFile() {
-        return sourceFile;
-    }
-
-    // TODO No static access to this class from LLVMFunction at the moment
-
-    private static LLVMContext lastContext;
-
-    public static CallTarget getCallTarget(LLVMFunctionDescriptor function) {
-        return lastContext.registry.lookup(function);
-    }
-
-    private static void setLastContext(LLVMContext context) {
-        lastContext = context;
-    }
-
-    public static LLVMStack getStaticStack() {
-        return lastContext.stack;
+    public Source getMainSourceFile() {
+        return mainSourceFile;
     }
 
     public void registerStaticDestructor(RootCallTarget staticDestructor) {

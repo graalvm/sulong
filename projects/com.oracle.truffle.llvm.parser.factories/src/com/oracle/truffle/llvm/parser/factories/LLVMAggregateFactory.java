@@ -105,9 +105,9 @@ public final class LLVMAggregateFactory {
                     LLVMBaseType llvmType) {
         switch (llvmType) {
             case FLOAT:
-                return new LLVMInsertFloatValueNode(resultAggregate, sourceAggregate, size, offset, (LLVMFloatNode) valueToInsert);
+                return new LLVMInsertFloatValueNode(sourceAggregate, resultAggregate, size, offset, (LLVMFloatNode) valueToInsert);
             case DOUBLE:
-                return new LLVMInsertDoubleValueNode(resultAggregate, sourceAggregate, size, offset, (LLVMDoubleNode) valueToInsert);
+                return new LLVMInsertDoubleValueNode(sourceAggregate, resultAggregate, size, offset, (LLVMDoubleNode) valueToInsert);
             default:
                 throw new AssertionError(llvmType);
         }
@@ -135,7 +135,7 @@ public final class LLVMAggregateFactory {
 
     private static LLVMStructWriteNode createStructWriteNode(LLVMExpressionNode parsedConstant, ResolvedType resolvedType) {
         int byteSize = LLVMTypeHelper.getByteSize(resolvedType);
-        LLVMBaseType llvmType = LLVMTypeHelper.getLLVMType(resolvedType);
+        LLVMBaseType llvmType = LLVMTypeHelper.getLLVMType(resolvedType).getType();
         switch (llvmType) {
             case I1:
                 return new LLVMI1StructWriteNode((LLVMI1Node) parsedConstant);

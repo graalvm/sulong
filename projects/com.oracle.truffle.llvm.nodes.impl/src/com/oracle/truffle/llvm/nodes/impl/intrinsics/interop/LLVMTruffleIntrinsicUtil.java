@@ -41,8 +41,8 @@ public final class LLVMTruffleIntrinsicUtil {
         LLVMAddress adr = value;
         StringBuilder sb = new StringBuilder();
         while ((c = LLVMMemory.getI8(adr)) != 0) {
-            sb.append((char) c);
-            adr = adr.increment(1);
+            sb.append((char) Byte.toUnsignedInt(c));
+            adr = adr.increment(Byte.BYTES);
         }
         return sb.toString();
     }

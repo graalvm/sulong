@@ -1,12 +1,12 @@
 suite = {
-  "mxversion" : "5.23.2",
+  "mxversion" : "5.35.2",
   "name" : "sulong",
 
   "imports" : {
     "suites" : [
         {
            "name" : "graal-core",
-           "version" : "9b8abee4f4074e79be5cb656b3540ecda4bc5df3",
+           "version" : "e8656a2a6674f662ba2568e10327c55153d61f12",
            "urls" : [
                 {"url" : "https://github.com/graalvm/graal-core", "kind" : "git"},
                 {"url" : "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind" : "binary"},
@@ -219,6 +219,7 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.llvm",
         "com.oracle.truffle.llvm.tools",
+        "truffle:TRUFFLE_TCK",
         "mx:JUNIT",
       ],
       "checkstyle" : "com.oracle.truffle.llvm.test",
@@ -257,6 +258,7 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.llvm.runtime",
         "truffle:TRUFFLE_API",
+        "graal-core:GRAAL_TRUFFLE_HOTSPOT",
       ],
       "checkstyle" : "com.oracle.truffle.llvm.nodes",
       "javaCompliance" : "1.8",
@@ -294,6 +296,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "truffle:TRUFFLE_API",
+        "com.oracle.truffle.llvm.types"
       ],
       "checkstyle" : "com.oracle.truffle.llvm.nodes",
       "javaCompliance" : "1.8",
@@ -331,7 +334,6 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.truffle.llvm.nodes",
-        "com.oracle.truffle.llvm.types",
         "LLVM_IR_PARSER",
         "EMF_COMMON", "ECORE", "INJECT", "XTEXT", "XTEXT_XBASE", "XTEXT_XBASE_LIB", "EMF_ECORE_XMI", "XTEXT_TYPES", "XTEXT_JAVAX_INJECT", "XTEXT_LOG4J", "XTEXT_GOOGLE_GUAVA", "XTEXT_ANTLR_RUNTIME", "XTEXT_UTIL", "ECLIPSE_EQUINOX"
        ],
@@ -481,6 +483,7 @@ suite = {
       ],
       "distDependencies" : [
         "truffle:TRUFFLE_API",
+        "truffle:TRUFFLE_TCK",
         "graal-core:GRAAL_API",
         "graal-core:GRAAL_COMPILER",
         "graal-core:GRAAL_HOTSPOT",
