@@ -3,10 +3,17 @@ cache:
   - projects/com.oracle.truffle.llvm.tools/tools
 sudo: required
 language: java
+os:
+  - linux
+  - osx
 python:
   - "2.7"
-jdk:
-  - oraclejdk8
+matrix:
+  include:
+    - os: linux
+      jdk: oraclejdk8
+    - os: osx
+      osx_image: xcode8
 addons:
   apt:
     sources:
@@ -22,9 +29,9 @@ addons:
     - gobjc++-4.6
     - gcc-4.6-plugin-dev
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libxml2-dev
-  - sudo apt-get install -y libssl-dev
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -qq update; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -y libxml2-dev; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -y libssl-dev; fi
 install:
   - export MX_BINARY_SUITES="jvmci"
   - gem install mdl
