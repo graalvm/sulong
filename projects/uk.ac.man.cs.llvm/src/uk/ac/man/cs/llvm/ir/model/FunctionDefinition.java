@@ -221,7 +221,7 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
 
     @Override
     public void createFromValues(Type type, int[] values) {
-        symbols.addSymbol(Constant.createFromValues(type, symbols.getConstants(values)));
+        symbols.addSymbol(Constant.createFromValues(type, symbols, values));
     }
 
     @Override
