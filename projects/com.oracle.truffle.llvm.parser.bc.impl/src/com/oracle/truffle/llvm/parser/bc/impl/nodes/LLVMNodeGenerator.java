@@ -55,8 +55,8 @@ import com.oracle.truffle.llvm.nodes.impl.memory.LLVMStoreNodeFactory;
 import com.oracle.truffle.llvm.nodes.impl.others.LLVMUnsupportedInlineAssemblerNode;
 import com.oracle.truffle.llvm.nodes.impl.vars.StructLiteralNode;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
+import com.oracle.truffle.llvm.parser.base.util.LLVMBitcodeTypeHelperImpl;
 import com.oracle.truffle.llvm.parser.bc.impl.LLVMBitcodeFunctionVisitor;
-import com.oracle.truffle.llvm.parser.bc.impl.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.parser.factories.LLVMArithmeticFactory;
 import com.oracle.truffle.llvm.parser.factories.LLVMCastsFactory;
 import com.oracle.truffle.llvm.parser.factories.LLVMComparisonFactory;
@@ -69,6 +69,7 @@ import com.oracle.truffle.llvm.parser.instructions.LLVMConversionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMFloatComparisonType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMIntegerComparisonType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMLogicalInstructionType;
+import com.oracle.truffle.llvm.parser.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.types.LLVMAddress;
@@ -138,12 +139,12 @@ public final class LLVMNodeGenerator {
     }
 
     public static LLVMExpressionNode generateBinaryOperatorNode(BinaryOperator operator, LLVMBaseType type, LLVMExpressionNode lhs, LLVMExpressionNode rhs) {
-        final LLVMArithmeticInstructionType arithmeticOperationType = LLVMBitcodeTypeHelper.toArithmeticInstructionType(operator);
+        final LLVMArithmeticInstructionType arithmeticOperationType = LLVMBitcodeTypeHelperImpl.toArithmeticInstructionType(operator);
         if (arithmeticOperationType != null) {
             return LLVMArithmeticFactory.createArithmeticOperation(lhs, rhs, arithmeticOperationType, type, null);
         }
 
-        final LLVMLogicalInstructionType logicalOperationType = LLVMBitcodeTypeHelper.toLogicalInstructionType(operator);
+        final LLVMLogicalInstructionType logicalOperationType = LLVMBitcodeTypeHelperImpl.toLogicalInstructionType(operator);
         if (logicalOperationType != null) {
             return LLVMLogicalFactory.createLogicalOperation(lhs, rhs, logicalOperationType, type, null);
         }
@@ -226,7 +227,7 @@ public final class LLVMNodeGenerator {
     }
 
     public static LLVMExpressionNode toCompareVectorNode(CompareOperator operator, Type type, LLVMAddressNode target, LLVMExpressionNode lhs, LLVMExpressionNode rhs) {
-        final LLVMBaseType llvmtype = LLVMBitcodeTypeHelper.getLLVMBaseType(type);
+        final LLVMBaseType llvmtype = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(type);
 
         switch (operator) {
             case FP_FALSE:
@@ -320,16 +321,16 @@ public final class LLVMNodeGenerator {
             final Integer constantIndex = LLVMNodeGenerator.evaluateIntegerConstant(symbol);
             if (constantIndex == null) {
                 final int indexedTypeLength = typeHelper.goIntoTypeGetLength(currentType, 1);
-                currentType = LLVMBitcodeTypeHelper.goIntoType(currentType, 1);
+                currentType = LLVMBitcodeTypeHelperImpl.goIntoType(currentType, 1);
                 final LLVMExpressionNode valueref = resolve(symbol);
-                currentAddress = LLVMGetElementPtrFactory.create(LLVMBitcodeTypeHelper.getLLVMBaseType(type), (LLVMAddressNode) currentAddress, valueref, indexedTypeLength);
+                currentAddress = LLVMGetElementPtrFactory.create(LLVMBitcodeTypeHelperImpl.getLLVMBaseType(type), (LLVMAddressNode) currentAddress, valueref, indexedTypeLength);
 
             } else {
                 final int indexedTypeLength = typeHelper.goIntoTypeGetLength(currentType, constantIndex);
-                currentType = LLVMBitcodeTypeHelper.goIntoType(currentType, constantIndex);
+                currentType = LLVMBitcodeTypeHelperImpl.goIntoType(currentType, constantIndex);
                 if (indexedTypeLength != 0) {
                     final LLVMExpressionNode constantNode;
-                    switch (LLVMBitcodeTypeHelper.getLLVMBaseType(type)) {
+                    switch (LLVMBitcodeTypeHelperImpl.getLLVMBaseType(type)) {
                         case I32:
                             constantNode = new LLVMSimpleLiteralNode.LLVMI32LiteralNode(1);
                             break;
@@ -339,7 +340,7 @@ public final class LLVMNodeGenerator {
                         default:
                             throw new AssertionError();
                     }
-                    currentAddress = LLVMGetElementPtrFactory.create(LLVMBitcodeTypeHelper.getLLVMBaseType(type), (LLVMAddressNode) currentAddress, constantNode, indexedTypeLength);
+                    currentAddress = LLVMGetElementPtrFactory.create(LLVMBitcodeTypeHelperImpl.getLLVMBaseType(type), (LLVMAddressNode) currentAddress, constantNode, indexedTypeLength);
                 }
             }
         }
@@ -350,7 +351,7 @@ public final class LLVMNodeGenerator {
     public LLVMExpressionNode resolve(Symbol symbol) {
         if (symbol instanceof ValueInstruction || symbol instanceof FunctionParameter) {
             final FrameSlot slot = method.getFrame().findFrameSlot(((ValueSymbol) symbol).getName());
-            return LLVMFrameReadWriteFactory.createFrameRead(LLVMBitcodeTypeHelper.getLLVMBaseType(symbol.getType()), slot);
+            return LLVMFrameReadWriteFactory.createFrameRead(LLVMBitcodeTypeHelperImpl.getLLVMBaseType(symbol.getType()), slot);
 
         } else if (symbol instanceof GlobalValueSymbol) {
             return method.global((GlobalValueSymbol) symbol);
@@ -413,7 +414,7 @@ public final class LLVMNodeGenerator {
             arrayValues.add(resolve(constant.getElement(i)));
         }
 
-        switch (LLVMBitcodeTypeHelper.getLLVMBaseType(constant.getType().getElementType())) {
+        switch (LLVMBitcodeTypeHelperImpl.getLLVMBaseType(constant.getType().getElementType())) {
             case I8:
                 return LLVMStoreNodeFactory.LLVMI8ArrayLiteralNodeGen.create(arrayValues.toArray(new LLVMI8Node[constant.getElementCount()]), baseTypeSize, arrayAlloc);
             case I16:
@@ -464,7 +465,7 @@ public final class LLVMNodeGenerator {
     }
 
     private LLVMStructWriteNode createStructWriteNode(LLVMExpressionNode parsedConstant, Type type) {
-        final LLVMBaseType llvmType = LLVMBitcodeTypeHelper.getLLVMBaseType(type);
+        final LLVMBaseType llvmType = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(type);
         switch (llvmType) {
             case I1:
                 return new StructLiteralNode.LLVMI1StructWriteNode((LLVMI1Node) parsedConstant);
@@ -502,7 +503,7 @@ public final class LLVMNodeGenerator {
     private LLVMExpressionNode resolveBinaryOperationConstant(BinaryOperationConstant constant) {
         final LLVMExpressionNode lhs = resolve(constant.getLHS());
         final LLVMExpressionNode rhs = resolve(constant.getRHS());
-        final LLVMBaseType type = LLVMBitcodeTypeHelper.getLLVMBaseType(constant.getType());
+        final LLVMBaseType type = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(constant.getType());
         return generateBinaryOperatorNode(constant.getOperator(), type, lhs, rhs);
     }
 
@@ -512,10 +513,10 @@ public final class LLVMNodeGenerator {
     }
 
     private LLVMExpressionNode resolveCastConstant(CastConstant constant) {
-        final LLVMConversionType type = LLVMBitcodeTypeHelper.toConversionType(constant.getOperator());
+        final LLVMConversionType type = LLVMBitcodeTypeHelperImpl.toConversionType(constant.getOperator());
         final LLVMExpressionNode fromNode = resolve(constant.getValue());
-        final LLVMBaseType from = LLVMBitcodeTypeHelper.getLLVMBaseType(constant.getValue().getType());
-        final LLVMBaseType to = LLVMBitcodeTypeHelper.getLLVMBaseType(constant.getType());
+        final LLVMBaseType from = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(constant.getValue().getType());
+        final LLVMBaseType to = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(constant.getType());
         return LLVMCastsFactory.cast(fromNode, to, from, type);
     }
 
@@ -526,8 +527,8 @@ public final class LLVMNodeGenerator {
     }
 
     private LLVMExpressionNode resolveFunction(String name, FunctionType type) {
-        final LLVMFunctionDescriptor.LLVMRuntimeType returnType = LLVMBitcodeTypeHelper.toRuntimeType(type.getReturnType());
-        final LLVMFunctionDescriptor.LLVMRuntimeType[] argTypes = LLVMBitcodeTypeHelper.toRuntimeTypes(type.getArgumentTypes());
+        final LLVMFunctionDescriptor.LLVMRuntimeType returnType = LLVMBitcodeTypeHelperImpl.toRuntimeType(type.getReturnType());
+        final LLVMFunctionDescriptor.LLVMRuntimeType[] argTypes = LLVMBitcodeTypeHelperImpl.toRuntimeTypes(type.getArgumentTypes());
         return LLVMFunctionLiteralNodeGen.create(method.getContext().getFunctionRegistry().createFunctionDescriptor(name, returnType, argTypes, type.isVarArg()));
     }
 
@@ -548,7 +549,7 @@ public final class LLVMNodeGenerator {
 
             currentOffset += typeHelper.goIntoTypeGetLength(currentType, indexVal);
             parentType = currentType;
-            currentType = LLVMBitcodeTypeHelper.goIntoType(currentType, indexVal);
+            currentType = LLVMBitcodeTypeHelperImpl.goIntoType(currentType, indexVal);
         }
 
         if (currentType != null && !((parentType instanceof StructureType) && (((StructureType) parentType).isPacked()))) {
@@ -572,6 +573,6 @@ public final class LLVMNodeGenerator {
                         method.getContext(),
                         method.getStackSlot());
 
-        return LLVMLiteralFactory.createVectorLiteralNode(values, target, LLVMBitcodeTypeHelper.getLLVMBaseType(constant.getType()));
+        return LLVMLiteralFactory.createVectorLiteralNode(values, target, LLVMBitcodeTypeHelperImpl.getLLVMBaseType(constant.getType()));
     }
 }

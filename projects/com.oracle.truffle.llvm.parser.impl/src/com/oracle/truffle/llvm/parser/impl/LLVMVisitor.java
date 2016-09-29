@@ -139,7 +139,10 @@ import com.oracle.truffle.llvm.parser.LLVMParserResult;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.LLVMType;
 import com.oracle.truffle.llvm.parser.NodeFactoryFacade;
+import com.oracle.truffle.llvm.parser.adapters.LLVMToBitcodeAdapter;
 import com.oracle.truffle.llvm.parser.base.datalayout.DataLayoutConverter;
+import com.oracle.truffle.llvm.parser.base.datalayout.DataLayoutConverter.DataSpecConverter;
+import com.oracle.truffle.llvm.parser.base.util.LLVMBitcodeTypeHelperImpl;
 import com.oracle.truffle.llvm.parser.impl.LLVMPhiVisitor.Phi;
 import com.oracle.truffle.llvm.parser.impl.lifetime.LLVMLifeTimeAnalysisResult;
 import com.oracle.truffle.llvm.parser.impl.lifetime.LLVMLifeTimeAnalysisVisitor;
@@ -148,6 +151,7 @@ import com.oracle.truffle.llvm.parser.instructions.LLVMConversionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMFloatComparisonType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMIntegerComparisonType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMLogicalInstructionType;
+import com.oracle.truffle.llvm.parser.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.LLVMParserException;
@@ -193,6 +197,7 @@ public final class LLVMVisitor implements LLVMParserRuntime {
     private Source mainSourceFile;
 
     private LLVMTypeHelper typeHelper;
+    private LLVMBitcodeTypeHelper typeBitcodeHelper;
 
     public LLVMVisitor(Object[] mainArgs, Source sourceFile, Source mainSourceFile) {
         this.mainArgs = mainArgs;
@@ -375,10 +380,10 @@ public final class LLVMVisitor implements LLVMParserRuntime {
         } while (!resolvedAllAliases);
     }
 
-    private static void setTargetInfo(List<EObject> objects) {
+    private void setTargetInfo(List<EObject> objects) {
         for (EObject object : objects) {
             if (object instanceof TargetInfo) {
-                LLVMVisitor.visitTargetInfo((TargetInfo) object);
+                visitTargetInfo((TargetInfo) object);
             }
         }
     }
@@ -436,7 +441,7 @@ public final class LLVMVisitor implements LLVMParserRuntime {
         return globalVarNodes;
     }
 
-    private static void visitTargetInfo(TargetInfo object) {
+    private void visitTargetInfo(TargetInfo object) {
         String infoType = object.getInfoType();
         switch (infoType) {
             case "triple":
@@ -448,6 +453,9 @@ public final class LLVMVisitor implements LLVMParserRuntime {
                     // remove enclosing quotes
                     layout = layout.substring(1, layout.length() - 2);
                     layoutConverter = DataLayoutConverter.getConverter(layout);
+
+                    DataSpecConverter targetDataLayout = DataLayoutConverter.getConverter(layout);
+                    typeBitcodeHelper = new LLVMBitcodeTypeHelperImpl(targetDataLayout);
                 } else {
                     throw new AssertionError("Invalid Layout!");
                 }
@@ -1548,6 +1556,11 @@ public final class LLVMVisitor implements LLVMParserRuntime {
     }
 
     @Override
+    public LLVMExpressionNode allocateFunctionLifetime(uk.ac.man.cs.llvm.ir.types.Type type, int size, int alignment) {
+        return allocateFunctionLifetime(LLVMToBitcodeAdapter.unresolveType(type), size, alignment);
+    }
+
+    @Override
     public FrameSlot getReturnSlot() {
         return retSlot;
     }
@@ -1585,6 +1598,11 @@ public final class LLVMVisitor implements LLVMParserRuntime {
     @Override
     public LLVMTypeHelper getTypeHelper() {
         return typeHelper;
+    }
+
+    @Override
+    public LLVMBitcodeTypeHelper getBitcodeTypeHelper() {
+        return typeBitcodeHelper;
     }
 
 }

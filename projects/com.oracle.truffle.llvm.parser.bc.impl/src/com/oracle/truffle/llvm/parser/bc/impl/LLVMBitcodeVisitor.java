@@ -63,8 +63,8 @@ import com.oracle.truffle.llvm.nodes.impl.others.LLVMStaticInitsBlockNode;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.LLVMParserResult;
 import com.oracle.truffle.llvm.parser.base.datalayout.DataLayoutConverter;
+import com.oracle.truffle.llvm.parser.base.util.LLVMBitcodeTypeHelperImpl;
 import com.oracle.truffle.llvm.parser.bc.impl.nodes.LLVMConstantGenerator;
-import com.oracle.truffle.llvm.parser.bc.impl.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.parser.bc.impl.util.LLVMFrameIDs;
 import com.oracle.truffle.llvm.parser.factories.LLVMBlockFactory;
 import com.oracle.truffle.llvm.parser.factories.LLVMFrameReadWriteFactory;
@@ -73,6 +73,7 @@ import com.oracle.truffle.llvm.parser.factories.LLVMGetElementPtrFactory;
 import com.oracle.truffle.llvm.parser.factories.LLVMLiteralFactory;
 import com.oracle.truffle.llvm.parser.factories.LLVMMemoryReadWriteFactory;
 import com.oracle.truffle.llvm.parser.factories.LLVMRootNodeFactory;
+import com.oracle.truffle.llvm.parser.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
 import com.oracle.truffle.llvm.types.LLVMAddress;
 import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
@@ -181,7 +182,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
         } else {
             this.targetDataLayout = null;
         }
-        this.typeHelper = new LLVMBitcodeTypeHelper(targetDataLayout);
+        this.typeHelper = new LLVMBitcodeTypeHelperImpl(targetDataLayout);
     }
 
     private LLVMExpressionNode createFunction(FunctionDefinition method) {
@@ -216,12 +217,12 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
         if (method.getReturnType() instanceof StructureType) {
             final LLVMExpressionNode functionReturnParameterNode = LLVMFunctionFactory.createFunctionArgNode(argIndex++, LLVMBaseType.STRUCT);
             final FrameSlot returnSlot = frame.findOrAddFrameSlot(LLVMFrameIDs.FUNCTION_RETURN_VALUE_FRAME_SLOT_ID);
-            final LLVMBaseType baseType = LLVMBitcodeTypeHelper.getLLVMBaseType(method.getReturnType());
+            final LLVMBaseType baseType = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(method.getReturnType());
             final LLVMNode returnValue = LLVMFrameReadWriteFactory.createFrameWrite(baseType, functionReturnParameterNode, returnSlot);
             formalParamInits.add(returnValue);
         }
         for (final FunctionParameter parameter : parameters) {
-            final LLVMBaseType paramType = LLVMBitcodeTypeHelper.getLLVMBaseType(parameter.getType());
+            final LLVMBaseType paramType = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(parameter.getType());
             final LLVMExpressionNode parameterNode = LLVMFunctionFactory.createFunctionArgNode(argIndex++, paramType);
             final FrameSlot slot = frame.findFrameSlot(parameter.getName());
             formalParamInits.add(LLVMFrameReadWriteFactory.createFrameWrite(paramType, parameterNode, slot));
@@ -237,7 +238,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
         LLVMExpressionNode constant = LLVMConstantGenerator.toConstantNode(global.getValue(), global.getAlign(), this::getGlobalVariable, context, stack, labels, typeHelper);
         if (constant != null) {
             final Type type = ((PointerType) global.getType()).getPointeeType();
-            final LLVMBaseType baseType = LLVMBitcodeTypeHelper.getLLVMBaseType(type);
+            final LLVMBaseType baseType = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(type);
             final int size = typeHelper.getByteSize(type);
 
             final LLVMAddressNode globalVarAddress = (LLVMAddressNode) getGlobalVariable(global);
@@ -248,7 +249,7 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
                     store = LLVMMemI32CopyFactory.create(globalVarAddress, (LLVMAddressNode) constant, new LLVMI32LiteralNode(size), new LLVMI32LiteralNode(0), new LLVMI1LiteralNode(false));
                 } else {
                     final Type t = global.getValue().getType();
-                    store = LLVMMemoryReadWriteFactory.createStore(globalVarAddress, constant, LLVMBitcodeTypeHelper.getLLVMBaseType(t),
+                    store = LLVMMemoryReadWriteFactory.createStore(globalVarAddress, constant, LLVMBitcodeTypeHelperImpl.getLLVMBaseType(t),
                                     typeHelper.getByteSize(t));
                 }
                 return store;
@@ -336,11 +337,11 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
             final LLVMExpressionNode globalVarAddress = LLVMLiteralFactory.createLiteral(globalVariableDescriptor, LLVMBaseType.ADDRESS);
             final LLVMExpressionNode iNode = LLVMLiteralFactory.createLiteral(i, LLVMBaseType.I32);
             final LLVMAddressNode structPointer = LLVMGetElementPtrFactory.create(LLVMBaseType.I32, (LLVMAddressNode) globalVarAddress, iNode, structSize);
-            final LLVMExpressionNode loadedStruct = LLVMMemoryReadWriteFactory.createLoad(LLVMBitcodeTypeHelper.getLLVMBaseType(elementType), structPointer, 0);
+            final LLVMExpressionNode loadedStruct = LLVMMemoryReadWriteFactory.createLoad(LLVMBitcodeTypeHelperImpl.getLLVMBaseType(elementType), structPointer, 0);
 
             final LLVMExpressionNode oneLiteralNode = LLVMLiteralFactory.createLiteral(1, LLVMBaseType.I32);
             final LLVMExpressionNode functionLoadTarget = LLVMGetElementPtrFactory.create(LLVMBaseType.I32, (LLVMAddressNode) loadedStruct, oneLiteralNode, indexedTypeLength);
-            final LLVMExpressionNode loadedFunction = LLVMMemoryReadWriteFactory.createLoad(LLVMBitcodeTypeHelper.getLLVMBaseType(functionType), (LLVMAddressNode) functionLoadTarget, 0);
+            final LLVMExpressionNode loadedFunction = LLVMMemoryReadWriteFactory.createLoad(LLVMBitcodeTypeHelperImpl.getLLVMBaseType(functionType), (LLVMAddressNode) functionLoadTarget, 0);
             final LLVMExpressionNode[] argNodes = new LLVMExpressionNode[]{LLVMFrameReadWriteFactory.createFrameRead(LLVMBaseType.ADDRESS, stack)};
             final LLVMNode functionCall = LLVMFunctionFactory.createFunctionCall((LLVMFunctionNode) loadedFunction, argNodes, LLVMBaseType.VOID);
             structors[i] = functionCall;
@@ -431,8 +432,8 @@ public class LLVMBitcodeVisitor implements ModelVisitor {
             System.out.flush();
         }
 
-        LLVMRuntimeType llvmReturnType = LLVMBitcodeTypeHelper.toRuntimeType(method.getReturnType());
-        LLVMRuntimeType[] llvmParamTypes = LLVMBitcodeTypeHelper.toRuntimeTypes(method.getArgumentTypes());
+        LLVMRuntimeType llvmReturnType = LLVMBitcodeTypeHelperImpl.toRuntimeType(method.getReturnType());
+        LLVMRuntimeType[] llvmParamTypes = LLVMBitcodeTypeHelperImpl.toRuntimeTypes(method.getArgumentTypes());
         LLVMFunctionDescriptor function = context.getFunctionRegistry().createFunctionDescriptor(method.getName(), llvmReturnType, llvmParamTypes, method.isVarArg());
         RootCallTarget callTarget = Truffle.getRuntime().createCallTarget(rootNode);
         functions.put(function, callTarget);

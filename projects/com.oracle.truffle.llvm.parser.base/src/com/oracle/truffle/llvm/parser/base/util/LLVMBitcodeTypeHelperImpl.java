@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.bc.impl.util;
+package com.oracle.truffle.llvm.parser.base.util;
 
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
@@ -35,11 +35,13 @@ import com.oracle.truffle.llvm.parser.LLVMType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMArithmeticInstructionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMConversionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMLogicalInstructionType;
+import com.oracle.truffle.llvm.parser.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMUnsupportedException;
 import com.oracle.truffle.llvm.types.LLVMAddress;
 import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.types.memory.LLVMHeap;
 import com.oracle.truffle.llvm.parser.base.datalayout.DataLayoutConverter;
+
 import uk.ac.man.cs.llvm.ir.model.enums.BinaryOperator;
 import uk.ac.man.cs.llvm.ir.model.enums.CastOperator;
 import uk.ac.man.cs.llvm.ir.types.AggregateType;
@@ -56,11 +58,11 @@ import uk.ac.man.cs.llvm.ir.types.VectorType;
 
 import java.util.List;
 
-public class LLVMBitcodeTypeHelper {
+public class LLVMBitcodeTypeHelperImpl implements LLVMBitcodeTypeHelper {
 
     private final DataLayoutConverter.DataSpecConverter targetDataLayout;
 
-    public LLVMBitcodeTypeHelper(DataLayoutConverter.DataSpecConverter targetDataLayout) {
+    public LLVMBitcodeTypeHelperImpl(DataLayoutConverter.DataSpecConverter targetDataLayout) {
         this.targetDataLayout = targetDataLayout;
     }
 
@@ -380,6 +382,7 @@ public class LLVMBitcodeTypeHelper {
         return llvmtypes;
     }
 
+    @Override
     public int getPadding(int offset, int alignment) {
         if (alignment == 0) {
             throw new AssertionError();
@@ -387,11 +390,13 @@ public class LLVMBitcodeTypeHelper {
         return (alignment - (offset % alignment)) % alignment;
     }
 
+    @Override
     public int getPadding(int offset, Type type) {
         final int alignment = getAlignment(type);
         return alignment == 0 ? 0 : getPadding(offset, alignment);
     }
 
+    @Override
     public int getByteSize(Type type) {
         if (type instanceof IntegerType) {
             return Math.max(1, ((IntegerType) type).getBitCount() / Byte.SIZE);
@@ -473,6 +478,7 @@ public class LLVMBitcodeTypeHelper {
         }
     }
 
+    @Override
     public int getAlignment(Type type) {
         if (type instanceof StructureType) {
             return getLargestAlignment((StructureType) type);
@@ -503,6 +509,7 @@ public class LLVMBitcodeTypeHelper {
         return toBaseType(type).getType();
     }
 
+    @Override
     public int goIntoTypeGetLength(Type type, int index) {
         if (type == null) {
             throw new IllegalStateException("Cannot go into null!");

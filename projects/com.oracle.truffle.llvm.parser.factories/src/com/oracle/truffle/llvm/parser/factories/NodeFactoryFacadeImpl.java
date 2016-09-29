@@ -89,6 +89,7 @@ import com.oracle.truffle.llvm.nodes.impl.others.LLVMUnsupportedInlineAssemblerN
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.NodeFactoryFacade;
+import com.oracle.truffle.llvm.parser.adapters.LLVMToBitcodeAdapter;
 import com.oracle.truffle.llvm.parser.instructions.LLVMArithmeticInstructionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMConversionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMFloatComparisonType;
@@ -159,7 +160,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
 
     @Override
     public LLVMExpressionNode createSimpleConstantNoArray(String stringValue, LLVMBaseType instructionType, ResolvedType type) {
-        return LLVMLiteralFactory.createSimpleConstantNoArray(stringValue, instructionType, type);
+        return LLVMLiteralFactory.createSimpleConstantNoArray(stringValue, instructionType, LLVMToBitcodeAdapter.resolveType(type));
     }
 
     @Override
@@ -290,7 +291,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
 
     @Override
     public LLVMAddressNode createArrayLiteral(List<LLVMExpressionNode> arrayValues, ResolvedType arrayType) {
-        return LLVMLiteralFactory.createArrayLiteral(runtime, arrayValues, arrayType);
+        return LLVMLiteralFactory.createArrayLiteral(runtime, arrayValues, LLVMToBitcodeAdapter.resolveType(arrayType));
     }
 
     @Override
