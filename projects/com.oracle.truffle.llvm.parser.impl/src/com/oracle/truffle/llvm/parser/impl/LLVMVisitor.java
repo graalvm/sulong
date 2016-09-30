@@ -167,6 +167,7 @@ import com.oracle.truffle.llvm.types.memory.LLVMStack;
  * This class traverses the LLVM IR AST as provided by the <code>com.intel.llvm.ireditor</code>
  * project and returns an executable AST.
  */
+@SuppressWarnings("deprecation") // TODO: remove when new Type is used
 public final class LLVMVisitor implements LLVMParserRuntime {
 
     private static final int HEX_BASE = 16;
@@ -518,7 +519,7 @@ public final class LLVMVisitor implements LLVMParserRuntime {
         return factoryFacade.createArrayLiteral(arrayValues, arrayType);
     }
 
-    @SuppressWarnings("deprecation")
+    // @SuppressWarnings("deprecation")
     private LLVMFunctionDescriptor visitFunction(FunctionDef def) {
         this.containingFunctionDef = def;
         isGlobalScope = false;

@@ -225,7 +225,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
 
     @Override
     public LLVMExpressionNode createCast(LLVMExpressionNode fromNode, ResolvedType targetType, ResolvedType fromType, LLVMConversionType type) {
-        return LLVMCastsFactory.cast(fromNode, targetType, fromType, type);
+        return LLVMCastsFactory.cast(fromNode, LLVMToBitcodeAdapter.resolveType(targetType), LLVMToBitcodeAdapter.resolveType(fromType), type);
     }
 
     @Override
@@ -411,6 +411,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public LLVMGlobalVariableDescriptor allocateGlobalVariable(GlobalVariable globalVariable) {
         String linkage = globalVariable.getLinkage();
         boolean isStatic = "internal".equals(linkage) || "private".equals(linkage);

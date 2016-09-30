@@ -12,6 +12,7 @@ import com.intel.llvm.ireditor.types.ResolvedFunctionType;
 import com.intel.llvm.ireditor.types.ResolvedIntegerType;
 import com.intel.llvm.ireditor.types.ResolvedMetadataType;
 import com.intel.llvm.ireditor.types.ResolvedNamedType;
+import com.intel.llvm.ireditor.types.ResolvedOpaqueType;
 import com.intel.llvm.ireditor.types.ResolvedPointerType;
 import com.intel.llvm.ireditor.types.ResolvedStructType;
 import com.intel.llvm.ireditor.types.ResolvedType;
@@ -60,6 +61,8 @@ public class LLVMToBitcodeAdapter {
             return resolveType((ResolvedUnknownType) type);
         } else if (type instanceof ResolvedArrayType) {
             return resolveType((ResolvedArrayType) type);
+        } else if (type instanceof ResolvedOpaqueType) {
+            return resolveType((ResolvedOpaqueType) type);
         }
 
         throw new AssertionError("Unknown type: " + type + " - " + type.getClass().getTypeName());
@@ -169,6 +172,10 @@ public class LLVMToBitcodeAdapter {
     public static Type resolveType(ResolvedArrayType type) {
         Type elementType = resolveType(type.getContainedType(-1));
         return new ArrayType(elementType, type.getSize());
+    }
+
+    public static Type resolveType(@SuppressWarnings("unused") ResolvedOpaqueType type) {
+        return MetaType.OPAQUE;
     }
 
     // temporary solution to convert the new type back to the old one

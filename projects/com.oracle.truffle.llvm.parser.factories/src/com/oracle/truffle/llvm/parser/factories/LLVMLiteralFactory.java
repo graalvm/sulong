@@ -100,6 +100,7 @@ public final class LLVMLiteralFactory {
     private LLVMLiteralFactory() {
     }
 
+    @SuppressWarnings("deprecation")
     public static LLVMExpressionNode createUndefinedValue(LLVMParserRuntime runtime, EObject t) {
         ResolvedType resolvedType = runtime.resolve(t);
         LLVMBaseType type = LLVMTypeHelper.getLLVMType(resolvedType).getType();
