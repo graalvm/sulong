@@ -185,7 +185,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
 
     @Override
     public LLVMTerminatorNode createNonVoidRet(LLVMExpressionNode retValue, ResolvedType resolvedType) {
-        return LLVMFunctionFactory.createNonVoidRet(runtime, retValue, resolvedType);
+        return LLVMFunctionFactory.createNonVoidRet(runtime, retValue, LLVMToBitcodeAdapter.resolveType(resolvedType));
     }
 
     @Override

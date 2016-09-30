@@ -107,9 +107,14 @@ import com.oracle.truffle.llvm.parser.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.LLVMType;
 import com.oracle.truffle.llvm.parser.NodeFactoryFacade;
+import com.oracle.truffle.llvm.parser.base.util.LLVMBitcodeTypeHelperImpl;
+import com.oracle.truffle.llvm.parser.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
 import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor.LLVMRuntimeType;
+
+import uk.ac.man.cs.llvm.ir.types.StructureType;
+import uk.ac.man.cs.llvm.ir.types.Type;
 
 public final class LLVMFunctionFactory {
 
@@ -120,12 +125,12 @@ public final class LLVMFunctionFactory {
         return LLVMVoidReturnNodeGen.create(runtime.getReturnSlot());
     }
 
-    public static LLVMTerminatorNode createNonVoidRet(LLVMParserRuntime runtime, LLVMExpressionNode retValue, ResolvedType resolvedType) {
+    public static LLVMTerminatorNode createNonVoidRet(LLVMParserRuntime runtime, LLVMExpressionNode retValue, Type type2) {
         FrameSlot retSlot = runtime.getReturnSlot();
         if (retValue == null || retSlot == null) {
             throw new AssertionError();
         }
-        LLVMBaseType type = LLVMTypeHelper.getLLVMType(resolvedType).getType();
+        LLVMBaseType type = LLVMBitcodeTypeHelperImpl.getLLVMBaseType(type2);
         if (LLVMTypeHelper.isVectorType(type)) {
             return LLVMVectorRetNodeGen.create((LLVMVectorNode) retValue, retSlot);
         } else {
@@ -153,8 +158,8 @@ public final class LLVMFunctionFactory {
                 case FUNCTION_ADDRESS:
                     return LLVMFunctionRetNodeGen.create((LLVMFunctionNode) retValue, retSlot);
                 case STRUCT:
-                    ResolvedStructType structType = (ResolvedStructType) resolvedType;
-                    int size = runtime.getTypeHelper().getByteSize(structType);
+                    StructureType structType = (StructureType) type2;
+                    int size = structType.sizeof();
                     return LLVMStructRetNodeGen.create((LLVMAddressNode) retValue, retSlot, size);
                 default:
                     throw new AssertionError(type);
