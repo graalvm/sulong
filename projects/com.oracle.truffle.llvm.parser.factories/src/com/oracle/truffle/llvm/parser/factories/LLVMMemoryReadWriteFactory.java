@@ -98,6 +98,7 @@ public final class LLVMMemoryReadWriteFactory {
     private LLVMMemoryReadWriteFactory() {
     }
 
+    @SuppressWarnings("deprecation")
     public static LLVMExpressionNode createLoad(ResolvedType resolvedResultType, LLVMAddressNode loadTarget) {
         LLVMBaseType resultType = LLVMTypeHelper.getLLVMType(resolvedResultType).getType();
 
@@ -192,6 +193,7 @@ public final class LLVMMemoryReadWriteFactory {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static LLVMNode createStore(LLVMParserRuntime runtime, LLVMAddressNode pointerNode, LLVMExpressionNode valueNode, ResolvedType type) {
         return createStore(pointerNode, valueNode, LLVMTypeHelper.getLLVMType(type).getType(), runtime.getTypeHelper().getByteSize(type));
     }

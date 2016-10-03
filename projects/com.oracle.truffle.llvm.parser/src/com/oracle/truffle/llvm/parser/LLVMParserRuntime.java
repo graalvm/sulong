@@ -37,7 +37,10 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.base.LLVMNode;
+import com.oracle.truffle.llvm.parser.util.LLVMBitcodeTypeHelper;
 import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
+
+import uk.ac.man.cs.llvm.ir.types.Type;
 
 public interface LLVMParserRuntime {
 
@@ -55,6 +58,8 @@ public interface LLVMParserRuntime {
      * @return a node that allocates the requested memory.
      */
     LLVMExpressionNode allocateFunctionLifetime(ResolvedType type, int size, int alignment);
+
+    LLVMExpressionNode allocateFunctionLifetime(Type type, int size, int alignment);
 
     /**
      * Gets the return slot where the function return value is stored.
@@ -84,4 +89,5 @@ public interface LLVMParserRuntime {
 
     LLVMTypeHelper getTypeHelper();
 
+    LLVMBitcodeTypeHelper getBitcodeTypeHelper();
 }

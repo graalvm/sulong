@@ -113,6 +113,7 @@ public final class LLVMAggregateFactory {
         }
     }
 
+    @SuppressWarnings("deprecation") // TODO: remove when new Type is used
     public static LLVMExpressionNode createStructConstantNode(LLVMParserRuntime runtime, ResolvedType structType, boolean packed, ResolvedType[] types, LLVMExpressionNode[] constants) {
         int[] offsets = new int[types.length];
         LLVMStructWriteNode[] nodes = new LLVMStructWriteNode[types.length];
@@ -133,6 +134,7 @@ public final class LLVMAggregateFactory {
         return new StructLiteralNode(offsets, nodes, (LLVMAddressNode) alloc);
     }
 
+    @SuppressWarnings("deprecation") // TODO: remove when new Type is used
     private static LLVMStructWriteNode createStructWriteNode(LLVMParserRuntime runtime, LLVMExpressionNode parsedConstant, ResolvedType resolvedType) {
         int byteSize = runtime.getTypeHelper().getByteSize(resolvedType);
         LLVMBaseType llvmType = LLVMTypeHelper.getLLVMType(resolvedType).getType();
