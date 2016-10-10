@@ -442,15 +442,15 @@ public final class LLVMConstantGenerator {
         if (type instanceof IntegerType) {
             final int vbr = ((IntegerType) type).getBits();
             switch (vbr) {
-                case 1:
+                case IntegerType.BOOLEAN_BITS:
                     return new LLVMSimpleLiteralNode.LLVMI1LiteralNode(false);
-                case Byte.SIZE:
+                case IntegerType.BYTE_BITS:
                     return new LLVMSimpleLiteralNode.LLVMI8LiteralNode((byte) 0);
-                case Short.SIZE:
+                case IntegerType.SHORT_BITS:
                     return new LLVMSimpleLiteralNode.LLVMI16LiteralNode((short) 0);
-                case Integer.SIZE:
+                case IntegerType.INTEGER_BITS:
                     return new LLVMSimpleLiteralNode.LLVMI32LiteralNode(0);
-                case Long.SIZE:
+                case IntegerType.LONG_BITS:
                     return new LLVMSimpleLiteralNode.LLVMI64LiteralNode(0L);
                 default:
                     return new LLVMSimpleLiteralNode.LLVMIVarBitLiteralNode(LLVMIVarBit.fromLong(vbr, 0L));
@@ -458,12 +458,12 @@ public final class LLVMConstantGenerator {
 
         } else if (type instanceof FloatingPointType) {
             FloatingPointType floatingPointType = (FloatingPointType) type;
-            switch (floatingPointType) {
-                case FLOAT:
+            switch (floatingPointType.getBits()) {
+                case FloatingPointType.FLOAT_BITS:
                     return new LLVMSimpleLiteralNode.LLVMFloatLiteralNode(0.0f);
-                case DOUBLE:
+                case FloatingPointType.DOUBLE_BITS:
                     return new LLVMSimpleLiteralNode.LLVMDoubleLiteralNode(0.0);
-                case X86_FP80:
+                case FloatingPointType.X86_FP80_BITS:
                     return new LLVMSimpleLiteralNode.LLVM80BitFloatLiteralNode(LLVM80BitFloat.fromInt(0));
                 default:
                     throw new UnsupportedOperationException("Unsupported Floating Point Type: " + floatingPointType);

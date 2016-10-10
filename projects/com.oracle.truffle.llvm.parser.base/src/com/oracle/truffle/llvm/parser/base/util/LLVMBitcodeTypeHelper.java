@@ -143,10 +143,10 @@ public class LLVMBitcodeTypeHelper {
             }
 
         } else if (type instanceof FloatingPointType) {
-            switch (((FloatingPointType) type)) {
-                case FLOAT:
+            switch (((FloatingPointType) type).getBits()) {
+                case FloatingPointType.FLOAT_BITS:
                     return FrameSlotKind.Float;
-                case DOUBLE:
+                case FloatingPointType.DOUBLE_BITS:
                     return FrameSlotKind.Double;
                 default:
                     break;
@@ -196,14 +196,14 @@ public class LLVMBitcodeTypeHelper {
             }
 
         } else if (type instanceof FloatingPointType) {
-            switch (((FloatingPointType) type)) {
-                case HALF:
+            switch (((FloatingPointType) type).getBits()) {
+                case FloatingPointType.HALF_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.HALF;
-                case FLOAT:
+                case FloatingPointType.FLOAT_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.FLOAT;
-                case DOUBLE:
+                case FloatingPointType.DOUBLE_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.DOUBLE;
-                case X86_FP80:
+                case FloatingPointType.X86_FP80_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.X86_FP80;
                 default:
                     throw new RuntimeException("Unsupported type " + type);
@@ -231,14 +231,14 @@ public class LLVMBitcodeTypeHelper {
                 }
 
             } else if (pointee instanceof FloatingPointType) {
-                switch (((FloatingPointType) pointee)) {
-                    case HALF:
+                switch (((FloatingPointType) pointee).getBits()) {
+                    case FloatingPointType.HALF_BITS:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.HALF_POINTER;
-                    case FLOAT:
+                    case FloatingPointType.FLOAT_BITS:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.FLOAT_POINTER;
-                    case DOUBLE:
+                    case FloatingPointType.DOUBLE_BITS:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.DOUBLE_POINTER;
-                    case X86_FP80:
+                    case FloatingPointType.X86_FP80_BITS:
                     default:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.ADDRESS;
                 }

@@ -33,11 +33,11 @@ import com.oracle.truffle.llvm.parser.LLVMBaseType;
 
 public final class IntegerType implements Type {
 
-    private static final int BOOLEAN_BITS = 1;
-    private static final int BYTE_BITS = 8;
-    private static final int SHORT_BITS = 16;
-    private static final int INTEGER_BITS = 32;
-    private static final int LONG_BITS = 64;
+    public static final int BOOLEAN_BITS = 1;
+    public static final int BYTE_BITS = 8;
+    public static final int SHORT_BITS = 16;
+    public static final int INTEGER_BITS = 32;
+    public static final int LONG_BITS = 64;
 
     public static final IntegerType BOOLEAN = new IntegerType(BOOLEAN_BITS);
 

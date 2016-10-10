@@ -140,26 +140,22 @@ public final class LLVMToBitcodeAdapter {
         return new FunctionDeclaration(fType);
     }
 
-    private static final int HALF_SIZE = 16;
-    private static final int X86_FP80_SIZE = 80;
-    private static final int FP128_SIZE = 128;
-
     public static Type resolveType(ResolvedFloatingType type) {
         switch (type.getBits().intValue()) {
 
-            case HALF_SIZE:
+            case FloatingPointType.HALF_BITS:
                 return FloatingPointType.HALF;
 
-            case Float.SIZE:
+            case FloatingPointType.FLOAT_BITS:
                 return FloatingPointType.FLOAT;
 
-            case Double.SIZE:
+            case FloatingPointType.DOUBLE_BITS:
                 return FloatingPointType.DOUBLE;
 
-            case X86_FP80_SIZE:
+            case FloatingPointType.X86_FP80_BITS:
                 return FloatingPointType.X86_FP80;
 
-            case FP128_SIZE:
+            case FloatingPointType.FP128_BITS: // same as FloatingPointType.PPC_FP128_BITS
                 return FloatingPointType.FP128;
 
             default:
@@ -169,19 +165,19 @@ public final class LLVMToBitcodeAdapter {
 
     public static Type resolveType(ResolvedIntegerType type) {
         switch (type.getBits().intValue()) {
-            case 1:
+            case IntegerType.BOOLEAN_BITS:
                 return IntegerType.BOOLEAN;
 
-            case Byte.SIZE:
+            case IntegerType.BYTE_BITS:
                 return IntegerType.BYTE;
 
-            case Short.SIZE:
+            case IntegerType.SHORT_BITS:
                 return IntegerType.SHORT;
 
-            case Integer.SIZE:
+            case IntegerType.INTEGER_BITS:
                 return IntegerType.INTEGER;
 
-            case Long.SIZE:
+            case IntegerType.LONG_BITS:
                 return IntegerType.LONG;
 
             default:
@@ -268,7 +264,7 @@ public final class LLVMToBitcodeAdapter {
     }
 
     public static ResolvedType unresolveType(FloatingPointType type) {
-        return new ResolvedFloatingType(type.name(), type.width());
+        return new ResolvedFloatingType(type.toString(), type.width());
     }
 
     public static ResolvedType unresolveType(IntegerType type) {
