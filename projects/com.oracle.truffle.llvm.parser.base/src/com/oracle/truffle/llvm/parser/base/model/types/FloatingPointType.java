@@ -31,14 +31,26 @@ package com.oracle.truffle.llvm.parser.base.model.types;
 
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
 
-public enum FloatingPointType implements Type {
+public final class FloatingPointType implements Type {
 
-    HALF(16, 2, LLVMBaseType.HALF),
-    FLOAT(32, 4, LLVMBaseType.FLOAT),
-    DOUBLE(64, 8, LLVMBaseType.DOUBLE),
-    X86_FP80(80, 16, LLVMBaseType.X86_FP80),
-    FP128(128, 16, LLVMBaseType.F128),
-    PPC_FP128(128, 16, LLVMBaseType.PPC_FP128);
+    public static final int HALF_BITS = 16;
+    public static final int FLOAT_BITS = 32;
+    public static final int DOUBLE_BITS = 64;
+    public static final int X86_FP80_BITS = 80;
+    public static final int FP128_BITS = 128;
+    public static final int PPC_FP128_BITS = 128;
+
+    public static final FloatingPointType HALF = new FloatingPointType(HALF_BITS, 2, LLVMBaseType.HALF);
+
+    public static final FloatingPointType FLOAT = new FloatingPointType(FLOAT_BITS, 4, LLVMBaseType.FLOAT);
+
+    public static final FloatingPointType DOUBLE = new FloatingPointType(DOUBLE_BITS, 8, LLVMBaseType.DOUBLE);
+
+    public static final FloatingPointType X86_FP80 = new FloatingPointType(X86_FP80_BITS, 16, LLVMBaseType.X86_FP80);
+
+    public static final FloatingPointType FP128 = new FloatingPointType(FP128_BITS, 16, LLVMBaseType.F128);
+
+    public static final FloatingPointType PPC_FP128 = new FloatingPointType(PPC_FP128_BITS, 16, LLVMBaseType.PPC_FP128);
 
     private final int alignment;
 
@@ -63,6 +75,11 @@ public enum FloatingPointType implements Type {
     }
 
     @Override
+    public int getBits() {
+        return width;
+    }
+
+    @Override
     public int sizeof() {
         return width / Byte.SIZE;
     }
@@ -73,6 +90,6 @@ public enum FloatingPointType implements Type {
 
     @Override
     public String toString() {
-        return name().toLowerCase();
+        return String.format("f%d", width);
     }
 }

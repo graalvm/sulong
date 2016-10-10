@@ -29,7 +29,6 @@
  */
 package com.oracle.truffle.llvm.parser.factories;
 
-import com.intel.llvm.ireditor.types.ResolvedType;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
 import com.oracle.truffle.llvm.nodes.impl.base.LLVMFunctionNode;
@@ -68,7 +67,9 @@ import com.oracle.truffle.llvm.nodes.impl.vector.LLVMExtractValueNodeFactory.LLV
 import com.oracle.truffle.llvm.nodes.impl.vector.LLVMExtractValueNodeFactory.LLVMExtractI8ValueNodeGen;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
-import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
+import com.oracle.truffle.llvm.parser.base.model.LLVMToBitcodeAdapter;
+import com.oracle.truffle.llvm.parser.base.model.types.Type;
+import com.oracle.truffle.llvm.parser.base.util.LLVMTypeHelper;
 
 public final class LLVMAggregateFactory {
 
@@ -113,15 +114,15 @@ public final class LLVMAggregateFactory {
         }
     }
 
-    public static LLVMExpressionNode createStructConstantNode(LLVMParserRuntime runtime, ResolvedType structType, boolean packed, ResolvedType[] types, LLVMExpressionNode[] constants) {
+    public static LLVMExpressionNode createStructConstantNode(LLVMParserRuntime runtime, Type structType, boolean packed, Type[] types, LLVMExpressionNode[] constants) {
         int[] offsets = new int[types.length];
         LLVMStructWriteNode[] nodes = new LLVMStructWriteNode[types.length];
         int currentOffset = 0;
         int structSize = runtime.getTypeHelper().getByteSize(structType);
         int structAlignment = runtime.getTypeHelper().getAlignmentByte(structType);
-        LLVMExpressionNode alloc = runtime.allocateFunctionLifetime(structType, structSize, structAlignment);
+        LLVMExpressionNode alloc = runtime.allocateFunctionLifetime(LLVMToBitcodeAdapter.unresolveType(structType), structSize, structAlignment);
         for (int i = 0; i < types.length; i++) {
-            ResolvedType resolvedType = types[i];
+            Type resolvedType = types[i];
             if (!packed) {
                 currentOffset += runtime.getTypeHelper().computePaddingByte(currentOffset, resolvedType);
             }
@@ -133,7 +134,7 @@ public final class LLVMAggregateFactory {
         return new StructLiteralNode(offsets, nodes, (LLVMAddressNode) alloc);
     }
 
-    private static LLVMStructWriteNode createStructWriteNode(LLVMParserRuntime runtime, LLVMExpressionNode parsedConstant, ResolvedType resolvedType) {
+    private static LLVMStructWriteNode createStructWriteNode(LLVMParserRuntime runtime, LLVMExpressionNode parsedConstant, Type resolvedType) {
         int byteSize = runtime.getTypeHelper().getByteSize(resolvedType);
         LLVMBaseType llvmType = LLVMTypeHelper.getLLVMType(resolvedType).getType();
         switch (llvmType) {

@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.util;
+package com.oracle.truffle.llvm.parser.base.util;
 
 import com.intel.llvm.ireditor.lLVM_IR.StructureConstant;
 import com.intel.llvm.ireditor.lLVM_IR.TypedConstant;
@@ -46,6 +46,8 @@ import com.intel.llvm.ireditor.types.TypeResolver;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.LLVMType;
+import com.oracle.truffle.llvm.parser.base.model.LLVMToBitcodeAdapter;
+import com.oracle.truffle.llvm.parser.base.model.types.Type;
 import com.oracle.truffle.llvm.runtime.LLVMUnsupportedException;
 import com.oracle.truffle.llvm.runtime.LLVMUnsupportedException.UnsupportedReason;
 import com.oracle.truffle.llvm.types.LLVMAddress;
@@ -58,6 +60,10 @@ public class LLVMTypeHelper {
 
     public LLVMTypeHelper(LLVMParserRuntime runtime) {
         this.runtime = runtime;
+    }
+
+    public int getByteSize(Type type) {
+        return getByteSize(LLVMToBitcodeAdapter.unresolveType(type));
     }
 
     public int getByteSize(ResolvedType type) {
@@ -146,6 +152,10 @@ public class LLVMTypeHelper {
         return largestAlignment;
     }
 
+    public static LLVMType getLLVMType(Type type) {
+        return new LLVMType(type.getLLVMBaseType());
+    }
+
     // Checkstyle: stop magic number name check
     public static LLVMType getLLVMType(ResolvedType elementType) {
         if (elementType instanceof ResolvedIntegerType) {
@@ -221,6 +231,10 @@ public class LLVMTypeHelper {
         }
     }// Checkstyle: resume magic number name check
 
+    public int goIntoTypeGetLengthByte(Type type, int index) {
+        return goIntoTypeGetLengthByte(LLVMToBitcodeAdapter.unresolveType(type), index);
+    }
+
     public int goIntoTypeGetLengthByte(ResolvedType currentType, int index) {
         if (currentType == null) {
             return 0; // TODO: better throw an exception
@@ -264,6 +278,10 @@ public class LLVMTypeHelper {
         return ((ResolvedStructType) currentType).isPacked();
     }
 
+    public int computePaddingByte(int currentOffset, Type type) {
+        return computePaddingByte(currentOffset, LLVMToBitcodeAdapter.unresolveType(type));
+    }
+
     public int computePaddingByte(int currentOffset, ResolvedType type) {
         int alignmentByte = getAlignmentByte(type);
         if (alignmentByte == 0) {
@@ -275,6 +293,10 @@ public class LLVMTypeHelper {
 
     interface LayoutConverter {
         int getBitAlignment(LLVMBaseType type);
+    }
+
+    public int getAlignmentByte(Type field) {
+        return getAlignmentByte(LLVMToBitcodeAdapter.unresolveType(field));
     }
 
     public int getAlignmentByte(ResolvedType field) {

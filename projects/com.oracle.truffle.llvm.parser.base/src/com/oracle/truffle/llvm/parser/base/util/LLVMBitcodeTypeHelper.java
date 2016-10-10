@@ -128,7 +128,7 @@ public class LLVMBitcodeTypeHelper {
             throw new LLVMUnsupportedException(LLVMUnsupportedException.UnsupportedReason.PARSER_ERROR_VOID_SLOT);
 
         } else if (type instanceof IntegerType) {
-            switch (((IntegerType) type).getBitCount()) {
+            switch (((IntegerType) type).getBits()) {
                 case 1:
                     return FrameSlotKind.Boolean;
                 case Byte.SIZE:
@@ -143,10 +143,10 @@ public class LLVMBitcodeTypeHelper {
             }
 
         } else if (type instanceof FloatingPointType) {
-            switch (((FloatingPointType) type)) {
-                case FLOAT:
+            switch (((FloatingPointType) type).getBits()) {
+                case FloatingPointType.FLOAT_BITS:
                     return FrameSlotKind.Float;
-                case DOUBLE:
+                case FloatingPointType.DOUBLE_BITS:
                     return FrameSlotKind.Double;
                 default:
                     break;
@@ -180,7 +180,7 @@ public class LLVMBitcodeTypeHelper {
             return LLVMFunctionDescriptor.LLVMRuntimeType.VOID;
 
         } else if (type instanceof IntegerType) {
-            switch (((IntegerType) type).getBitCount()) {
+            switch (((IntegerType) type).getBits()) {
                 case 1:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.I1;
                 case Byte.SIZE:
@@ -196,14 +196,14 @@ public class LLVMBitcodeTypeHelper {
             }
 
         } else if (type instanceof FloatingPointType) {
-            switch (((FloatingPointType) type)) {
-                case HALF:
+            switch (((FloatingPointType) type).getBits()) {
+                case FloatingPointType.HALF_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.HALF;
-                case FLOAT:
+                case FloatingPointType.FLOAT_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.FLOAT;
-                case DOUBLE:
+                case FloatingPointType.DOUBLE_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.DOUBLE;
-                case X86_FP80:
+                case FloatingPointType.X86_FP80_BITS:
                     return LLVMFunctionDescriptor.LLVMRuntimeType.X86_FP80;
                 default:
                     throw new RuntimeException("Unsupported type " + type);
@@ -215,7 +215,7 @@ public class LLVMBitcodeTypeHelper {
                 return LLVMFunctionDescriptor.LLVMRuntimeType.FUNCTION_ADDRESS;
 
             } else if (pointee instanceof IntegerType) {
-                switch (((IntegerType) pointee).getBitCount()) {
+                switch (((IntegerType) pointee).getBits()) {
                     case 1:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.I1_POINTER;
                     case Byte.SIZE:
@@ -231,14 +231,14 @@ public class LLVMBitcodeTypeHelper {
                 }
 
             } else if (pointee instanceof FloatingPointType) {
-                switch (((FloatingPointType) pointee)) {
-                    case HALF:
+                switch (((FloatingPointType) pointee).getBits()) {
+                    case FloatingPointType.HALF_BITS:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.HALF_POINTER;
-                    case FLOAT:
+                    case FloatingPointType.FLOAT_BITS:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.FLOAT_POINTER;
-                    case DOUBLE:
+                    case FloatingPointType.DOUBLE_BITS:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.DOUBLE_POINTER;
-                    case X86_FP80:
+                    case FloatingPointType.X86_FP80_BITS:
                     default:
                         return LLVMFunctionDescriptor.LLVMRuntimeType.ADDRESS;
                 }
@@ -312,7 +312,7 @@ public class LLVMBitcodeTypeHelper {
 
     public int getByteSize(Type type) {
         if (type instanceof IntegerType) {
-            return Math.max(1, ((IntegerType) type).getBitCount() / Byte.SIZE);
+            return Math.max(1, ((IntegerType) type).getBits() / Byte.SIZE);
 
         } else if (type instanceof FloatingPointType) {
             return Math.max(1, ((FloatingPointType) type).width() / Byte.SIZE);

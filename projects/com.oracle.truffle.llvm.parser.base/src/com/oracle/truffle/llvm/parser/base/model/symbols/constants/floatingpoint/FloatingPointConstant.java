@@ -41,14 +41,14 @@ public abstract class FloatingPointConstant extends AbstractConstant {
     }
 
     public static FloatingPointConstant create(FloatingPointType type, long[] bits) {
-        switch (type) {
-            case FLOAT:
+        switch (type.getBits()) {
+            case FloatingPointType.FLOAT_BITS:
                 return FloatConstant.create(Float.intBitsToFloat((int) bits[0]));
 
-            case DOUBLE:
+            case FloatingPointType.DOUBLE_BITS:
                 return DoubleConstant.create(Double.longBitsToDouble(bits[0]));
 
-            case X86_FP80:
+            case FloatingPointType.X86_FP80_BITS:
                 return X86FP80Constant.create(ByteBuffer.allocate(type.sizeof()).putLong(bits[0]).putShort((short) bits[1]).array());
 
             default:

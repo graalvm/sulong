@@ -29,7 +29,6 @@
  */
 package com.oracle.truffle.llvm.parser.factories;
 
-import com.intel.llvm.ireditor.types.ResolvedType;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.llvm.nodes.base.LLVMExpressionNode;
@@ -76,7 +75,8 @@ import com.oracle.truffle.llvm.nodes.impl.vars.LLVMWriteNodeFactory.LLVMWriteI8N
 import com.oracle.truffle.llvm.nodes.impl.vars.LLVMWriteNodeFactory.LLVMWriteIVarBitNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.vars.LLVMWriteVectorNodeGen;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
-import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
+import com.oracle.truffle.llvm.parser.base.model.types.Type;
+import com.oracle.truffle.llvm.parser.base.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMUnsupportedException;
 import com.oracle.truffle.llvm.runtime.LLVMUnsupportedException.UnsupportedReason;
 
@@ -168,8 +168,8 @@ public final class LLVMFrameReadWriteFactory {
         }
     }
 
-    public static FrameSlotKind getFrameSlotKind(ResolvedType type) {
-        LLVMBaseType llvmType = LLVMTypeHelper.getLLVMType(type).getType();
+    public static FrameSlotKind getFrameSlotKind(Type type) {
+        LLVMBaseType llvmType = type.getLLVMBaseType();
         return LLVMFrameReadWriteFactory.getFrameSlotKind(llvmType);
     }
 

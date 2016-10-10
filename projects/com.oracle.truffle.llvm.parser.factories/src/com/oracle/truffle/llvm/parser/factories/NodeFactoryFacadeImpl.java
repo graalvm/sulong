@@ -35,12 +35,9 @@ import java.util.Optional;
 
 import org.eclipse.emf.ecore.EObject;
 
-import com.intel.llvm.ireditor.lLVM_IR.BitwiseBinaryInstruction;
 import com.intel.llvm.ireditor.lLVM_IR.FunctionDef;
 import com.intel.llvm.ireditor.lLVM_IR.FunctionHeader;
 import com.intel.llvm.ireditor.lLVM_IR.GlobalVariable;
-import com.intel.llvm.ireditor.lLVM_IR.Type;
-import com.intel.llvm.ireditor.types.ResolvedType;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -98,12 +95,15 @@ import com.oracle.truffle.llvm.parser.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.LLVMType;
 import com.oracle.truffle.llvm.parser.NodeFactoryFacade;
+import com.oracle.truffle.llvm.parser.base.model.LLVMToBitcodeAdapter;
+import com.oracle.truffle.llvm.parser.base.model.types.ArrayType;
+import com.oracle.truffle.llvm.parser.base.model.types.Type;
+import com.oracle.truffle.llvm.parser.base.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.parser.instructions.LLVMArithmeticInstructionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMConversionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMFloatComparisonType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMIntegerComparisonType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMLogicalInstructionType;
-import com.oracle.truffle.llvm.parser.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
 import com.oracle.truffle.llvm.types.LLVMAddress;
@@ -131,7 +131,8 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMVectorNode createInsertElement(LLVMBaseType resultType, LLVMExpressionNode vector, Type vectorType, LLVMExpressionNode element, LLVMExpressionNode index) {
+    public LLVMVectorNode createInsertElement(LLVMBaseType resultType, LLVMExpressionNode vector, com.intel.llvm.ireditor.lLVM_IR.Type vectorType, LLVMExpressionNode element,
+                    LLVMExpressionNode index) {
         return LLVMVectorFactory.createInsertElement(runtime, resultType, vector, vectorType, element, (LLVMI32Node) index);
     }
 
@@ -146,12 +147,12 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMExpressionNode createLoad(ResolvedType resolvedResultType, LLVMExpressionNode loadTarget) {
+    public LLVMExpressionNode createLoad(Type resolvedResultType, LLVMExpressionNode loadTarget) {
         return LLVMMemoryReadWriteFactory.createLoad(resolvedResultType, (LLVMAddressNode) loadTarget);
     }
 
     @Override
-    public LLVMNode createStore(LLVMExpressionNode pointerNode, LLVMExpressionNode valueNode, ResolvedType type) {
+    public LLVMNode createStore(LLVMExpressionNode pointerNode, LLVMExpressionNode valueNode, Type type) {
         return LLVMMemoryReadWriteFactory.createStore(runtime, (LLVMAddressNode) pointerNode, valueNode, type);
     }
 
@@ -161,17 +162,12 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMExpressionNode createLogicalOperation(LLVMExpressionNode left, LLVMExpressionNode right, BitwiseBinaryInstruction type, LLVMBaseType llvmType, LLVMExpressionNode target) {
-        return LLVMLogicalFactory.createLogicalOperation(left, right, type, llvmType, (LLVMAddressNode) target);
-    }
-
-    @Override
     public LLVMExpressionNode createUndefinedValue(EObject t) {
         return LLVMLiteralFactory.createUndefinedValue(runtime, t);
     }
 
     @Override
-    public LLVMExpressionNode createSimpleConstantNoArray(String stringValue, LLVMBaseType instructionType, ResolvedType type) {
+    public LLVMExpressionNode createSimpleConstantNoArray(String stringValue, LLVMBaseType instructionType, Type type) {
         return LLVMLiteralFactory.createSimpleConstantNoArray(stringValue, instructionType, type);
     }
 
@@ -196,7 +192,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMTerminatorNode createNonVoidRet(LLVMExpressionNode retValue, ResolvedType resolvedType) {
+    public LLVMTerminatorNode createNonVoidRet(LLVMExpressionNode retValue, Type resolvedType) {
         return LLVMFunctionFactory.createNonVoidRet(runtime, retValue, resolvedType);
     }
 
@@ -221,7 +217,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public FrameSlotKind getFrameSlotKind(ResolvedType type) {
+    public FrameSlotKind getFrameSlotKind(Type type) {
         return LLVMFrameReadWriteFactory.getFrameSlotKind(type);
     }
 
@@ -236,7 +232,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMExpressionNode createCast(LLVMExpressionNode fromNode, ResolvedType targetType, ResolvedType fromType, LLVMConversionType type) {
+    public LLVMExpressionNode createCast(LLVMExpressionNode fromNode, Type targetType, Type fromType, LLVMConversionType type) {
         return LLVMCastsFactory.cast(fromNode, targetType, fromType, type);
     }
 
@@ -302,12 +298,12 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMAddressNode createArrayLiteral(List<LLVMExpressionNode> arrayValues, ResolvedType arrayType) {
-        return LLVMLiteralFactory.createArrayLiteral(runtime, arrayValues, arrayType);
+    public LLVMAddressNode createArrayLiteral(List<LLVMExpressionNode> arrayValues, Type arrayType) {
+        return LLVMLiteralFactory.createArrayLiteral(runtime, arrayValues, (ArrayType) arrayType);
     }
 
     @Override
-    public LLVMExpressionNode createAlloc(ResolvedType type, int byteSize, int alignment, LLVMBaseType llvmType, LLVMExpressionNode numElements) {
+    public LLVMExpressionNode createAlloc(Type type, int byteSize, int alignment, LLVMBaseType llvmType, LLVMExpressionNode numElements) {
         if (numElements == null) {
             assert llvmType == null;
             return LLVMAllocFactory.createAlloc(runtime, byteSize, alignment);
@@ -343,7 +339,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMExpressionNode createStructureConstantNode(ResolvedType structType, boolean packed, ResolvedType[] types, LLVMExpressionNode[] constants) {
+    public LLVMExpressionNode createStructureConstantNode(Type structType, boolean packed, Type[] types, LLVMExpressionNode[] constants) {
         return LLVMAggregateFactory.createStructConstantNode(runtime, structType, packed, types, constants);
     }
 
@@ -365,7 +361,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
         int i = 0;
         for (FrameSlot slot : frameDescriptor.getSlots()) {
             String identifier = (String) slot.getIdentifier();
-            ResolvedType slotType = runtime.getVariableNameTypesMapping().get(identifier);
+            Type slotType = LLVMToBitcodeAdapter.resolveType(runtime.getVariableNameTypesMapping().get(identifier));
             if (slot.equals(runtime.getReturnSlot())) {
                 nullers[i] = runtime.getNodeFactoryFacade().createFrameNuller(identifier, LLVMTypeHelper.getLLVMType(runtime.resolve(functionHeader.getRettype())), slot);
             } else if (slot.equals(runtime.getStackPointerSlot())) {
@@ -459,7 +455,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
         }
 
         if (!isExtern && !descriptor.isDeclared()) {
-            ResolvedType resolvedType = runtime.resolve(globalVariable.getType());
+            Type resolvedType = LLVMToBitcodeAdapter.resolveType(runtime.resolve(globalVariable.getType()));
             int byteSize = runtime.getTypeHelper().getByteSize(resolvedType);
             LLVMAddress nativeStorage = LLVMHeap.allocateMemory(byteSize);
             LLVMAddressNode addressLiteralNode = (LLVMAddressNode) createLiteral(nativeStorage, LLVMBaseType.ADDRESS);
