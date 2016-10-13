@@ -41,8 +41,7 @@ import org.junit.runners.Parameterized;
 
 import com.oracle.truffle.llvm.test.AbstractMainArgsTestBase.ProgramWithMainArgs;
 import com.oracle.truffle.llvm.test.LLVMMainArgTestSuite.MainArgsTests;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions.OptimizationLevel;
+import com.oracle.truffle.llvm.tools.LLVMTools;
 
 @RunWith(Parameterized.class)
 public class LLVMMainArgTestSuite extends AbstractMainArgsTestBase<MainArgsTests> {
@@ -97,7 +96,7 @@ public class LLVMMainArgTestSuite extends AbstractMainArgsTestBase<MainArgsTests
     protected TestCaseFiles getTestCaseFiles(MainArgsTests prog) {
         return TestHelper.compileToLLVMIRWithClang(prog.getFile(),
                         TestHelper.getTempLLFile(prog.getFile(), "_main"), prog.getFlags(),
-                        ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE));
+                        LLVMTools.Clang.OptimizationLevel.NONE);
     }
 
     @Test

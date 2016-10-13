@@ -46,11 +46,10 @@ import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 import com.oracle.truffle.llvm.test.LLVMPaths;
-import com.oracle.truffle.llvm.tools.Clang;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
-import com.oracle.truffle.llvm.tools.Opt;
-import com.oracle.truffle.llvm.tools.Opt.OptOptions;
-import com.oracle.truffle.llvm.tools.Opt.OptOptions.Pass;
+import com.oracle.truffle.llvm.tools.LLVMTools;
+import com.oracle.truffle.llvm.tools.LLVMTools.Clang;
+import com.oracle.truffle.llvm.tools.LLVMTools.Opt;
+import com.oracle.truffle.llvm.tools.LLVMTools.Opt.Pass;
 
 @SuppressWarnings({"static-method"})
 public final class LLVMInteropTest {
@@ -727,8 +726,8 @@ public final class LLVMInteropTest {
                 File cFile = new File(LLVMPaths.INTEROP_TESTS, fileName + ".c");
                 File bcFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bc_" + fileName, ".ll");
                 File bcOptFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bcopt_" + fileName, ".ll");
-                Clang.compileToLLVMIR(cFile, bcFile, ClangOptions.builder());
-                Opt.optimizeBitcodeFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
+                Clang.compileToLLVMIR(cFile, bcFile);
+                Opt.optimizeBitcodeFile(bcFile, bcOptFile, Pass.MEM_TO_REG);
                 return engine.eval(Source.newBuilder(bcOptFile).build()).as(Integer.class);
             } catch (IOException e) {
                 throw new AssertionError(e);
@@ -743,8 +742,8 @@ public final class LLVMInteropTest {
                 File cFile = new File(LLVMPaths.INTEROP_TESTS, fileName + ".c");
                 File bcFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bc_" + fileName, ".ll");
                 File bcOptFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bcopt_" + fileName, ".ll");
-                Clang.compileToLLVMIR(cFile, bcFile, ClangOptions.builder());
-                Opt.optimizeBitcodeFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
+                LLVMTools.Clang.compileToLLVMIR(cFile, bcFile);
+                Opt.optimizeBitcodeFile(bcFile, bcOptFile, Pass.MEM_TO_REG);
                 engine.eval(Source.newBuilder(bcOptFile).build()).as(Integer.class);
             } catch (IOException e) {
                 throw new AssertionError(e);

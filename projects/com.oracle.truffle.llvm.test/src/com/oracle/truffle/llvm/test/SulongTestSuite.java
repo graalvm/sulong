@@ -31,11 +31,9 @@ package com.oracle.truffle.llvm.test;
 
 import com.oracle.truffle.llvm.LLVM;
 import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
-import com.oracle.truffle.llvm.tools.Clang;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions.OptimizationLevel;
-import com.oracle.truffle.llvm.tools.Opt.OptOptions;
-import com.oracle.truffle.llvm.tools.Opt.OptOptions.Pass;
+import com.oracle.truffle.llvm.tools.LLVMTools.Clang;
+import com.oracle.truffle.llvm.tools.LLVMTools.Clang.OptimizationLevel;
+import com.oracle.truffle.llvm.tools.LLVMTools.Opt.Pass;
 import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,10 +49,11 @@ import java.util.stream.Collectors;
 
 @RunWith(Parameterized.class)
 /**
- * This class executes LLVM bitcode files (with file extension .ll) in the "test" case directory. If
- * other files that can be compiled to LLVM bitcode are encountered, they are compiled to bitcode
- * and then executed. Folders with the name of "ignore" are not executed. This test case class only
- * checks the program's return value.
+ * This class executes LLVM bitcode files (with file extension .ll) in the
+ * "test" case directory. If other files that can be compiled to LLVM bitcode
+ * are encountered, they are compiled to bitcode and then executed. Folders with
+ * the name of "ignore" are not executed. This test case class only checks the
+ * program's return value.
  */
 public class SulongTestSuite extends TestSuiteBase {
 
@@ -85,12 +84,20 @@ public class SulongTestSuite extends TestSuiteBase {
         List<File> cFiles = TestHelper.collectFilesWithExtension(currentFolder, Clang.getSupportedLanguages());
         allBitcodeFiles.addAll(getClangCompiledFiles(cFiles, OptimizationLevel.NONE, false));
         List<TestCaseFiles> optimizedFiles = new ArrayList<>();
-        OptOptions optionBuilder = OptOptions.builder();
-        OptOptions passes1 = optionBuilder.pass(Pass.FUNC_ATTRS).pass(Pass.INST_COMBINE).pass(Pass.ALWAYS_INLINE);
-        OptOptions passes2 = passes1.pass(Pass.JUMP_THREADING).pass(Pass.SIMPLIFY_CFG).pass(Pass.MEM_TO_REG);
-        OptOptions vectorizationPass = passes2.pass(Pass.SCALAR_REPLACEMENT_AGGREGATES).pass(Pass.BASIC_BLOCK_VECTORIZE);
+
+        List<Pass> optimizationPasses = new ArrayList<>();
+        optimizationPasses.add(Pass.FUNC_ATTRS);
+        optimizationPasses.add(Pass.INST_COMBINE);
+        optimizationPasses.add(Pass.ALWAYS_INLINE);
+
+        optimizationPasses.add(Pass.JUMP_THREADING);
+        optimizationPasses.add(Pass.SIMPLIFY_CFG);
+        optimizationPasses.add(Pass.MEM_TO_REG);
+        optimizationPasses.add(Pass.SCALAR_REPLACEMENT_AGGREGATES);
+        optimizationPasses.add(Pass.BASIC_BLOCK_VECTORIZE);
+
         allBitcodeFiles.addAll(getGCCCompiledFiles(cFiles));
-        optimizedFiles.addAll(applyOpt(allBitcodeFiles, vectorizationPass, "-bb-vectorize"));
+        optimizedFiles.addAll(applyOpt(allBitcodeFiles, optimizationPasses, "-bb-vectorize"));
         allBitcodeFiles.addAll(getClangCompiledFiles(cFiles, OptimizationLevel.O1, true));
         allBitcodeFiles.addAll(getClangCompiledFiles(cFiles, OptimizationLevel.O2, true));
         allBitcodeFiles.addAll(getClangCompiledFiles(cFiles, OptimizationLevel.O3, true));
@@ -113,8 +120,7 @@ public class SulongTestSuite extends TestSuiteBase {
 
     private static List<TestCaseFiles> getClangCompiledFiles(List<File> cFiles, OptimizationLevel level, boolean filter) {
         List<TestCaseFiles> compiledFiles = cFiles.parallelStream().map(file -> {
-            ClangOptions optimizationLevel = ClangOptions.builder().optimizationLevel(level);
-            return TestHelper.compileToLLVMIRWithClang(file, TestHelper.getTempLLFile(file, level.toString()), Collections.emptySet(), optimizationLevel);
+            return TestHelper.compileToLLVMIRWithClang(file, TestHelper.getTempLLFile(file, level.toString()), Collections.emptySet(), level);
         }).collect(Collectors.toList());
         if (filter) {
             return getFilteredOptStream(compiledFiles).collect(Collectors.toList());

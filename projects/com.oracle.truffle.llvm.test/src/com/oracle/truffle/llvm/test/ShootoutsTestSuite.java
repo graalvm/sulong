@@ -41,8 +41,7 @@ import org.junit.runners.Parameterized;
 
 import com.oracle.truffle.llvm.test.AbstractMainArgsTestBase.ProgramWithMainArgs;
 import com.oracle.truffle.llvm.test.ShootoutsTestSuite.Benchmark;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions.OptimizationLevel;
+import com.oracle.truffle.llvm.tools.LLVMTools;
 
 @RunWith(Parameterized.class)
 public class ShootoutsTestSuite extends AbstractMainArgsTestBase<Benchmark> {
@@ -119,7 +118,7 @@ public class ShootoutsTestSuite extends AbstractMainArgsTestBase<Benchmark> {
     protected TestCaseFiles getTestCaseFiles(Benchmark prog) {
         return TestHelper.compileToLLVMIRWithClang(prog.getFile(),
                         TestHelper.getTempLLFile(prog.getFile(), "_main"), prog.getFlags(),
-                        ClangOptions.builder().optimizationLevel(OptimizationLevel.O1));
+                        LLVMTools.Clang.OptimizationLevel.O1);
     }
 
     @Override

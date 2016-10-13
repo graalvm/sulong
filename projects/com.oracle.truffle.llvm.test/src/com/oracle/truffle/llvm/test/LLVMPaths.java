@@ -38,13 +38,17 @@ public final class LLVMPaths {
     private LLVMPaths() {
     }
 
+    static final File PROJECT_ROOT = new File(LLVMBaseOptionFacade.getProjectRoot() + File.separator + LLVMPaths.class.getPackage().getName());
+
+    //mg
+    public static final File SIMPLE_TESTS = new File(PROJECT_ROOT, "simpletests/");
+    // end mg
+
     static final String IGNORE_FOLDER_NAME = "ignore";
     static final String TEMPORARY_BITFILE_FOLDER = "compiled-llvm-tests";
     static final File TEMP_DIRECTORY = new File(System.getProperty("java.io.tmpdir"), TEMPORARY_BITFILE_FOLDER);
 
     static final String NO_OPTIMIZATIONS_FOLDER_NAME = "noopt";
-
-    static final File PROJECT_ROOT = new File(LLVMBaseOptionFacade.getProjectRoot() + File.separator + LLVMPaths.class.getPackage().getName());
 
     public static final File LOCAL_TESTS = new File(PROJECT_ROOT, "tests/");
     static final File LIFETIME_ANALYSIS_REFERENCE_FILES = new File(PROJECT_ROOT, "lifetime/");

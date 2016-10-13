@@ -41,11 +41,10 @@ import java.util.stream.Collectors;
 
 import com.oracle.truffle.llvm.runtime.options.LLVMBaseOption;
 import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
-import com.oracle.truffle.llvm.tools.Clang;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
 import com.oracle.truffle.llvm.tools.GCC;
-import com.oracle.truffle.llvm.tools.LLC;
-import com.oracle.truffle.llvm.tools.LLVMAssembler;
+import com.oracle.truffle.llvm.tools.LLVMTools;
+import com.oracle.truffle.llvm.tools.LLVMTools.Clang;
+import com.oracle.truffle.llvm.tools.LLVMTools.LLC;
 import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
 import com.oracle.truffle.llvm.tools.util.PathUtil;
 import com.oracle.truffle.llvm.tools.util.ProcessUtil;
@@ -98,21 +97,21 @@ public class TestHelper {
     }
 
     public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, File expectedFile, Set<TestCaseFlag> flags) {
-        return compileToLLVMIRWithClang(toBeCompiled, destinationFile, expectedFile, flags, ClangOptions.builder());
+        return compileToLLVMIRWithClang(toBeCompiled, destinationFile, expectedFile, flags, Clang.OptimizationLevel.NONE);
     }
 
-    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, File expectedFile, Set<TestCaseFlag> flags, ClangOptions builder) {
-        Clang.compileToLLVMIR(toBeCompiled, destinationFile, builder);
+    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, File expectedFile, Set<TestCaseFlag> flags, Clang.OptimizationLevel level) {
+        Clang.compileToLLVMIR(toBeCompiled, destinationFile, level);
         return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, expectedFile, flags);
     }
 
     public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile) {
-        Clang.compileToLLVMIR(toBeCompiled, destinationFile, ClangOptions.builder());
+        Clang.compileToLLVMIR(toBeCompiled, destinationFile);
         return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, Collections.emptySet());
     }
 
-    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, Set<TestCaseFlag> flags, ClangOptions builder) {
-        Clang.compileToLLVMIR(toBeCompiled, destinationFile, builder);
+    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, Set<TestCaseFlag> flags, Clang.OptimizationLevel level) {
+        Clang.compileToLLVMIR(toBeCompiled, destinationFile, level);
         return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, flags);
     }
 
@@ -128,7 +127,7 @@ public class TestHelper {
 
     public static TestCaseFiles compileLLVMIRToLLVMBC(TestCaseFiles caseFile) {
         File llvmBinaryCodeFile = TestHelper.getTempBCFile(caseFile.getBitCodeFile());
-        LLVMAssembler.assembleToBitcodeFile(caseFile.getBitCodeFile(), llvmBinaryCodeFile);
+        LLVMTools.Assembler.assembleToBitcodeFile(caseFile.getBitCodeFile(), llvmBinaryCodeFile);
         return TestCaseFiles.createFromCompiledFile(caseFile.getBitCodeFile(), llvmBinaryCodeFile, caseFile.getExpectedResult(), caseFile.getFlags());
     }
 
@@ -258,7 +257,7 @@ public class TestHelper {
     }
 
     public static ProcessResult executeSourceAsBinary(TestCaseFiles tuple) {
-        File exe = Clang.compileToExecutable(tuple.getOriginalFile(), ClangOptions.builder());
+        File exe = Clang.compileToExecutable(tuple.getOriginalFile(), Clang.OptimizationLevel.NONE);
         return ProcessUtil.executeNativeCommand(exe.getAbsolutePath());
     }
 

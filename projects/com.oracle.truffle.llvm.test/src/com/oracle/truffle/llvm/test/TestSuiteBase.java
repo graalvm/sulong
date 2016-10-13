@@ -54,12 +54,10 @@ import com.oracle.truffle.llvm.runtime.options.LLVMBaseOptionFacade;
 import com.oracle.truffle.llvm.test.spec.SpecificationEntry;
 import com.oracle.truffle.llvm.test.spec.SpecificationFileReader;
 import com.oracle.truffle.llvm.test.spec.TestSpecification;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions;
-import com.oracle.truffle.llvm.tools.Clang.ClangOptions.OptimizationLevel;
 import com.oracle.truffle.llvm.tools.GCC;
-import com.oracle.truffle.llvm.tools.Opt;
-import com.oracle.truffle.llvm.tools.Opt.OptOptions;
-import com.oracle.truffle.llvm.tools.Opt.OptOptions.Pass;
+import com.oracle.truffle.llvm.tools.LLVMTools;
+import com.oracle.truffle.llvm.tools.LLVMTools.Clang.OptimizationLevel;
+import com.oracle.truffle.llvm.tools.LLVMTools.Opt.Pass;
 import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
 
 public abstract class TestSuiteBase {
@@ -209,14 +207,15 @@ public abstract class TestSuiteBase {
                     TestCaseFiles gccCompiledTestCase = TestHelper.compileToLLVMIRWithGCC(toBeCompiledFile, dest, toBeCompiled.getFlags());
                     files.add(gccCompiledTestCase);
                 } else if (ProgrammingLanguage.C_PLUS_PLUS.isFile(toBeCompiledFile)) {
-                    ClangOptions builder = ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE);
-                    OptOptions options = OptOptions.builder().pass(Pass.LOWER_INVOKE).pass(Pass.PRUNE_EH).pass(Pass.SIMPLIFY_CFG);
-                    TestCaseFiles compiledFiles = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, toBeCompiled.getFlags(), builder);
-                    files.add(optimize(compiledFiles, options, "opt"));
+                    List<Pass> passes = new ArrayList<>();
+                    passes.add(Pass.LOWER_INVOKE);
+                    passes.add(Pass.PRUNE_EH);
+                    passes.add(Pass.SIMPLIFY_CFG);
+                    TestCaseFiles compiledFiles = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, toBeCompiled.getFlags(), OptimizationLevel.NONE);
+                    files.add(optimize(compiledFiles, passes, "opt"));
                 } else {
-                    ClangOptions builder = ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE);
                     try {
-                        TestCaseFiles compiledFiles = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, toBeCompiled.getFlags(), builder);
+                        TestCaseFiles compiledFiles = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, toBeCompiled.getFlags(), OptimizationLevel.NONE);
                         files.add(compiledFiles);
                         if (withOptimizations) {
                             TestCaseFiles optimized = getOptimizedTestCase(compiledFiles);
@@ -233,8 +232,12 @@ public abstract class TestSuiteBase {
         }
 
         private static TestCaseFiles getOptimizedTestCase(TestCaseFiles compiledFiles) {
-            OptOptions options = OptOptions.builder().pass(Pass.MEM_TO_REG).pass(Pass.ALWAYS_INLINE).pass(Pass.JUMP_THREADING).pass(Pass.SIMPLIFY_CFG);
-            TestCaseFiles optimize = optimize(compiledFiles, options, "opt");
+            List<Pass> passes = new ArrayList<>();
+            passes.add(Pass.MEM_TO_REG);
+            passes.add(Pass.ALWAYS_INLINE);
+            passes.add(Pass.JUMP_THREADING);
+            passes.add(Pass.SIMPLIFY_CFG);
+            TestCaseFiles optimize = optimize(compiledFiles, passes, "opt");
             return optimize;
         }
 
@@ -325,17 +328,17 @@ public abstract class TestSuiteBase {
         return allBitcodeFiles;
     }
 
-    protected static List<TestCaseFiles> applyOpt(List<TestCaseFiles> allBitcodeFiles, OptOptions pass, String name) {
-        return getFilteredOptStream(allBitcodeFiles).map(f -> optimize(f, pass, name)).collect(Collectors.toList());
+    protected static List<TestCaseFiles> applyOpt(List<TestCaseFiles> allBitcodeFiles, List<Pass> optimizationPasses, String name) {
+        return getFilteredOptStream(allBitcodeFiles).map(f -> optimize(f, optimizationPasses, name)).collect(Collectors.toList());
     }
 
     protected static Stream<TestCaseFiles> getFilteredOptStream(List<TestCaseFiles> allBitcodeFiles) {
         return allBitcodeFiles.parallelStream().filter(f -> !f.getOriginalFile().getParent().endsWith(LLVMPaths.NO_OPTIMIZATIONS_FOLDER_NAME));
     }
 
-    protected static TestCaseFiles optimize(TestCaseFiles toBeOptimized, OptOptions optOptions, String name) {
+    protected static TestCaseFiles optimize(TestCaseFiles toBeOptimized, List<Pass> optimizationPasses, String name) {
         File destinationFile = TestHelper.getTempLLFile(toBeOptimized.getOriginalFile(), "_" + name);
-        Opt.optimizeBitcodeFile(toBeOptimized.getBitCodeFile(), destinationFile, optOptions);
+        LLVMTools.Opt.optimizeBitcodeFile(toBeOptimized.getBitCodeFile(), destinationFile, optimizationPasses);
         return TestCaseFiles.createFromCompiledFile(toBeOptimized.getOriginalFile(), destinationFile, toBeOptimized.getFlags());
     }
 

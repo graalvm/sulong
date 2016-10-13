@@ -36,7 +36,7 @@ import java.util.List;
 
 import com.oracle.truffle.llvm.test.TestSuiteBase.TestCaseGenerator;
 import com.oracle.truffle.llvm.test.spec.SpecificationEntry;
-import com.oracle.truffle.llvm.tools.Clang;
+import com.oracle.truffle.llvm.tools.LLVMTools;
 import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
 import com.oracle.truffle.llvm.tools.util.PathUtil;
 
@@ -85,6 +85,6 @@ public class LLVMSuiteTestCaseGenerator implements TestCaseGenerator {
 
     @Override
     public ProgrammingLanguage[] getSupportedLanguages() {
-        return Clang.getSupportedLanguages();
+        return LLVMTools.Clang.getSupportedLanguages();
     }
 }

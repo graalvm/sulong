@@ -86,7 +86,7 @@ public enum LLVMBaseOption implements LLVMOption {
                     null,
                     LLVMOptions::parseDynamicLibraryPath,
                     PropertyCategory.GENERAL),
-    PROJECT_ROOT("ProjectRoot", "Overrides the root of the project. This option exists to set the project root from mx", ".", LLVMOptions::parseString, PropertyCategory.MX),
+    PROJECT_ROOT("ProjectRoot", "Overrides the root of the project. This option exists to set the project root from mx", "projects", LLVMOptions::parseString, PropertyCategory.MX),
     OPTIMIZATIONS_DISABLE_SPECULATIVE(
                     "DisableSpeculativeOptimizations",
                     "Disables all speculative optimizations regardless if they would be enabled otherwise",
