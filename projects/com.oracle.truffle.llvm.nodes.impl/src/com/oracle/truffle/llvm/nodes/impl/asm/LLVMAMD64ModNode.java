@@ -27,27 +27,20 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.base.model.functions;
+package com.oracle.truffle.llvm.nodes.impl.asm;
 
-import com.oracle.truffle.llvm.parser.base.model.symbols.constants.Constant;
-import com.oracle.truffle.llvm.parser.base.model.types.FunctionType;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI32Node;
 
-public final class FunctionDeclaration extends FunctionType implements Constant {
+@NodeChildren({@NodeChild("left"), @NodeChild("rightAX"), @NodeChild("rightDX")})
+public abstract class LLVMAMD64ModNode extends LLVMI32Node {
 
-    public FunctionDeclaration(FunctionType type) {
-        super(type.getReturnType(), type.getArgumentTypes(), type.isVarArg());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof FunctionDeclaration) {
-            return super.equals(obj);
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return "FunctionDeclaration [name=" + getName() + ", types=" + super.toString() + "]";
+    @Specialization
+    public int executeI32(int left, int rightAX, int rightDX) {
+        long dividend = (long) rightDX << LLVMI32Node.BYTE_SIZE * Byte.SIZE;
+        dividend = dividend | rightAX;
+        return (int) (dividend % left);
     }
 }

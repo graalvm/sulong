@@ -37,6 +37,7 @@ import com.oracle.truffle.llvm.parser.base.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public final class StructureType implements AggregateType, ValueSymbol {
 
@@ -178,15 +179,6 @@ public final class StructureType implements AggregateType, ValueSymbol {
     }
 
     @Override
-    public String toString() {
-        if (name.equals(ValueSymbol.UNKNOWN)) {
-            return toDeclarationString();
-        } else {
-            return "%" + name;
-        }
-    }
-
-    @Override
     public void setMetadataReference(MetadataReference metadata) {
         this.metadata = metadata;
     }
@@ -194,5 +186,40 @@ public final class StructureType implements AggregateType, ValueSymbol {
     @Override
     public MetadataReference getMetadataReference() {
         return metadata;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 11;
+        hash = 23 * hash + (isPacked ? 1231 : 1237);
+        hash = 23 * hash + Arrays.hashCode(types);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof StructureType) {
+            StructureType other = (StructureType) obj;
+            if (!Objects.equals(name, other.name)) {
+                return false;
+            }
+            if (isPacked != other.isPacked) {
+                return false;
+            }
+            if (!Arrays.equals(types, other.types)) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        if (name.equals(ValueSymbol.UNKNOWN)) {
+            return toDeclarationString();
+        } else {
+            return "%" + name;
+        }
     }
 }

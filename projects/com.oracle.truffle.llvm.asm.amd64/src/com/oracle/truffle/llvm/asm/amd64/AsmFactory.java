@@ -51,14 +51,24 @@ import com.oracle.truffle.llvm.nodes.impl.asm.LLVMAMD64I32BinaryNodeFactory.LLVM
 import com.oracle.truffle.llvm.nodes.impl.asm.LLVMAMD64IdivlNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.asm.LLVMAMD64ImmNode;
 import com.oracle.truffle.llvm.nodes.impl.asm.LLVMAMD64InclNodeGen;
+import com.oracle.truffle.llvm.nodes.impl.asm.LLVMAMD64ModNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.asm.LLVMAMD64NotlNodeGen;
+import com.oracle.truffle.llvm.nodes.impl.base.LLVMAddressNode;
+import com.oracle.truffle.llvm.nodes.impl.base.LLVMStructWriteNode;
 import com.oracle.truffle.llvm.nodes.impl.base.integers.LLVMI32Node;
+import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMAddressArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMArgNodeFactory.LLVMI32ArgNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMCallNode;
 import com.oracle.truffle.llvm.nodes.impl.func.LLVMInlineAssemblyRootNode;
+import com.oracle.truffle.llvm.nodes.impl.others.LLVMUnsupportedInlineAssemblerNode;
 import com.oracle.truffle.llvm.nodes.impl.others.LLVMUnsupportedInlineAssemblerNode.LLVMI32UnsupportedInlineAssemblerNode;
+import com.oracle.truffle.llvm.nodes.impl.vars.LLVMReadNodeFactory.LLVMAddressReadNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.vars.LLVMReadNodeFactory.LLVMI32ReadNodeGen;
+import com.oracle.truffle.llvm.nodes.impl.vars.LLVMWriteNode.LLVMWriteAddressNode;
+import com.oracle.truffle.llvm.nodes.impl.vars.LLVMWriteNodeFactory.LLVMWriteAddressNodeGen;
 import com.oracle.truffle.llvm.nodes.impl.vars.LLVMWriteNodeFactory.LLVMWriteI32NodeGen;
+import com.oracle.truffle.llvm.nodes.impl.vars.StructLiteralNode;
+import com.oracle.truffle.llvm.nodes.impl.vars.StructLiteralNode.LLVMI32StructWriteNode;
 import com.oracle.truffle.llvm.parser.LLVMBaseType;
 
 public class AsmFactory {
@@ -72,14 +82,16 @@ public class AsmFactory {
     private List<String> registers;
     private LLVMExpressionNode result;
     private String asmFlags;
+    private LLVMBaseType retType;
 
-    public AsmFactory(String asmFlags) {
+    public AsmFactory(String asmFlags, LLVMBaseType retType) {
         this.asmFlags = asmFlags;
         this.frameDescriptor = new FrameDescriptor();
         this.statements = new ArrayList<>();
         this.arguments = new ArrayList<>();
         this.registers = new ArrayList<>();
         this.registers.add("-");
+        this.retType = retType;
     }
 
     public LLVMInlineAssemblyRootNode finishInline() {
@@ -170,14 +182,31 @@ public class AsmFactory {
             FrameSlot edxSlot = frameDescriptor.findFrameSlot("%edx");
             LLVMI32Node edxNode = LLVMI32ReadNodeGen.create(edxSlot);
             LLVMI32Node divisionNode = LLVMAMD64IdivlNodeGen.create(divisorNode, eaxNode, edxNode);
-            statement = LLVMWriteI32NodeGen.create(divisionNode, eaxSlot);
-            returnNode = LLVMI32ReadNodeGen.create(eaxSlot);
+
+            if (retType == LLVMBaseType.STRUCT) {
+                LLVMI32Node remainderNode = LLVMAMD64ModNodeGen.create(divisorNode, eaxNode, edxNode);
+                LLVMI32StructWriteNode quotient = new LLVMI32StructWriteNode(divisionNode);
+                LLVMI32StructWriteNode remainder = new LLVMI32StructWriteNode(remainderNode);
+
+                LLVMExpressionNode structAllocInstr = LLVMAddressArgNodeGen.create(1);
+                FrameSlot returnValueSlot = frameDescriptor.addFrameSlot("returnValue");
+                returnValueSlot.setKind(FrameSlotKind.Object);
+                LLVMWriteAddressNode writeStructAddress = LLVMWriteAddressNodeGen.create(structAllocInstr, returnValueSlot);
+                statements.add(writeStructAddress);
+                LLVMAddressNode readStructAddress = LLVMAddressReadNodeGen.create(returnValueSlot);
+                returnNode = new StructLiteralNode(new int[]{0, LLVMI32Node.BYTE_SIZE}, new LLVMStructWriteNode[]{remainder, quotient}, readStructAddress);
+            } else if (retType == LLVMBaseType.I32) {
+                returnNode = divisionNode;
+            } else {
+                returnNode = new LLVMUnsupportedInlineAssemblerNode();
+            }
         } else {
             // TODO: Other div instruction shall go here
             returnNode = new LLVMI32UnsupportedInlineAssemblerNode();
             statement = returnNode;
+            this.statements.add(statement);
         }
-        this.statements.add(statement);
+
         this.result = returnNode;
     }
 
