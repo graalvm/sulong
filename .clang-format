@@ -43,6 +43,5 @@ SpaceInEmptyParentheses: false
 SpacesInCStyleCastParentheses: false
 SpaceAfterControlStatementKeyword: true
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeParens: ControlStatements
 ContinuationIndentWidth: 4
 ...
