@@ -7,4 +7,3 @@ int factorial(int x, int y) {
 }
 
 int main(void) { return factorial(5, 10) % 256; }
-
