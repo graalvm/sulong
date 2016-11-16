@@ -80,7 +80,9 @@ public abstract class BaseSuite {
             CaptureOutput.startCapturing();
             int sulongResult = -1;
             try {
-                assert candidate.toAbsolutePath().toFile().exists() : "File " + candidate.toAbsolutePath().toFile() + " does not exist.";
+                if (!candidate.toAbsolutePath().toFile().exists()) {
+                    throw new AssertionError("File " + candidate.toAbsolutePath().toFile() + " does not exist.");
+                }
                 sulongResult = LLVM.executeMain(candidate.toAbsolutePath().toFile());
             } finally {
                 CaptureOutput.stopCapturing();
