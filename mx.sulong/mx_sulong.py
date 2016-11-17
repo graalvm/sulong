@@ -573,10 +573,10 @@ def runLLVMTestCases(args=None):
 
 def runTruffleTestCases(args=None):
     """runs the Sulong test suite"""
-    ensureLLVMBinariesExist()
     ensureDragonEggExists()
+    testsuites.compileSuite(['sulong'])
     vmArgs, _ = truffle_extract_VM_args(args)
-    return unittest(getCommonUnitTestOptions() + ['-Dsulong.ExecutionCount=1000'] + vmArgs + ["com.oracle.truffle.llvm.test.SulongTestSuite"])
+    return unittest(['-Dgraal.TruffleCompilationThreshold=10', '-Dsulong.ExecutionCount=20'] + vmArgs + ["com.oracle.truffle.llvm.test.alpha.SulongSuite"])
 
 def runTypeTestCases(args=None):
     """runs the type test cases"""
