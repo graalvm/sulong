@@ -21,6 +21,9 @@ addons:
 install:
   - export MX_BINARY_SUITES="jvmci"
   - gem install mdl
+  - sudo apt-get update
+  - sudo apt-get install -y python-openssl libffi-dev libssl-dev
+  - pip install --upgrade requests[security] urllib3[secure] --user `whoami`
   - pip install astroid==1.1.0 --user `whoami`
   - pip install pylint==1.1.0 --user `whoami`
   - git clone https://github.com/graalvm/mx
