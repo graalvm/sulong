@@ -21,6 +21,7 @@ addons:
 install:
   - export MX_BINARY_SUITES="jvmci"
   - gem install mdl
+  - pip install --upgrade pip
   - sudo apt-get update
   - sudo apt-get install -y python-openssl libffi-dev libssl-dev
   - pip install --upgrade requests[security] urllib3[secure] --user `whoami`
