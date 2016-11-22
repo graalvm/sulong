@@ -127,6 +127,7 @@ public class SulongTestSuite extends TestSuiteBase {
     @Test
     public void test() {
         try {
+            long start = System.currentTimeMillis();
             int truffleResult = LLVM.executeMain(byteCodeFile);
             int expectedResult = TestHelper.executeLLVMBinary(byteCodeFile).getReturnValue();
             boolean pass = expectedResult == truffleResult;
@@ -135,6 +136,8 @@ public class SulongTestSuite extends TestSuiteBase {
                 recordTestCase(tuple, pass);
             }
             Assert.assertEquals(byteCodeFile.getAbsolutePath(), expectedResult, truffleResult);
+            long time = System.currentTimeMillis() - start;
+            System.err.println(tuple.getOriginalFile().toString() + " executed. Time = " + time / 1000 + "s " + time % 1000 + "ms");
         } catch (Throwable e) {
             recordTestCase(tuple, false);
             throw new AssertionError(e);
