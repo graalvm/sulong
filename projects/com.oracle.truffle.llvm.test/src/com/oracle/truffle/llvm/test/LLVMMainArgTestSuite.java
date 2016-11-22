@@ -94,7 +94,7 @@ public class LLVMMainArgTestSuite extends AbstractMainArgsTestBase<MainArgsTests
     }
 
     @Override
-    protected TestCaseFiles getTestCaseFiles(MainArgsTests prog) {
+    protected TestCaseFile getTestCaseFiles(MainArgsTests prog) {
         return TestHelper.compileToLLVMIRWithClang(prog.getFile(),
                         TestHelper.getTempLLFile(prog.getFile(), "_main"), prog.getFlags(),
                         ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE));

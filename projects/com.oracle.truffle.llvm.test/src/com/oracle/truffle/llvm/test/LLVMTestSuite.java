@@ -53,9 +53,9 @@ public class LLVMTestSuite extends RemoteTestSuiteBase {
     private final File expectedFile;
     private final File originalFile;
 
-    private TestCaseFiles tuple;
+    private TestCaseFile tuple;
 
-    public LLVMTestSuite(TestCaseFiles tuple) {
+    public LLVMTestSuite(TestCaseFile tuple) {
         this.tuple = tuple;
         this.bitCodeFile = tuple.getBitCodeFile();
         this.originalFile = tuple.getOriginalFile();
@@ -63,7 +63,7 @@ public class LLVMTestSuite extends RemoteTestSuiteBase {
     }
 
     @Parameterized.Parameters
-    public static List<TestCaseFiles[]> getTestFiles() throws IOException {
+    public static List<TestCaseFile[]> getTestFiles() throws IOException {
         File configFile = LLVMPaths.LLVM_TEST_SUITE_CONFIG;
         File testSuite = LLVMPaths.LLVM_TEST_SUITE;
         return getTestCasesFromConfigFile(configFile, testSuite, new LLVMSuiteTestCaseGenerator(true));

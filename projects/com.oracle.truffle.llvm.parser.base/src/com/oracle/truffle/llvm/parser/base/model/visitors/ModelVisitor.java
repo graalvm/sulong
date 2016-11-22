@@ -43,7 +43,7 @@ public interface ModelVisitor {
      * for those visitors which are not handled explicitly. This little method allows us to do so.
      */
     default void ifVisitNotOverwritten(Object obj) {
-        LLVMLogger.info("Ignored Visit to " + obj.getClass().getSimpleName() + ": " + obj);
+        LLVMLogger.debug("Ignored Visit to " + obj.getClass().getSimpleName() + ": " + obj);
     }
 
     default void visit(GlobalAlias alias) {

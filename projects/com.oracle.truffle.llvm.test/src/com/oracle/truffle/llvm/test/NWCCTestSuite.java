@@ -40,14 +40,14 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class NWCCTestSuite extends RemoteTestSuiteBase {
 
-    private TestCaseFiles tuple;
+    private TestCaseFile tuple;
 
-    public NWCCTestSuite(TestCaseFiles tuple) {
+    public NWCCTestSuite(TestCaseFile tuple) {
         this.tuple = tuple;
     }
 
     @Parameterized.Parameters
-    public static List<TestCaseFiles[]> getTestFiles() throws IOException, AssertionError {
+    public static List<TestCaseFile[]> getTestFiles() throws IOException, AssertionError {
         File configFile = LLVMPaths.NWCC_TEST_SUITE_CONFIG;
         File testSuite = LLVMPaths.NWCC_TEST_SUITE;
         return getTestCasesFromConfigFile(configFile, testSuite, new TestCaseGeneratorImpl(true, true));

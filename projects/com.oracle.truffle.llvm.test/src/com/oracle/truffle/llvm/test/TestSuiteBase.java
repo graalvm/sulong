@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,7 +71,7 @@ public abstract class TestSuiteBase {
     private static Map<UnsupportedReason, List<File>> unsupportedErrorTests;
     private static final int UNSIGNED_BYTE_MAX_VALUE = 0xff;
 
-    protected void recordTestCase(TestCaseFiles tuple, boolean pass) {
+    protected void recordTestCase(TestCaseFile tuple, boolean pass) {
         if (pass) {
             if (!succeedingTests.contains(tuple.getOriginalFile()) && !failingTests.contains(tuple.getOriginalFile())) {
                 succeedingTests.add(tuple.getOriginalFile());
@@ -82,7 +83,7 @@ public abstract class TestSuiteBase {
         }
     }
 
-    protected void recordError(TestCaseFiles tuple, Throwable error) {
+    protected void recordError(TestCaseFile tuple, Throwable error) {
         Throwable currentError = error;
         if (!failingTests.contains(tuple.getOriginalFile())) {
             failingTests.add(tuple.getOriginalFile());
@@ -150,9 +151,9 @@ public abstract class TestSuiteBase {
 
         ProgrammingLanguage[] getSupportedLanguages();
 
-        TestCaseFiles getBitCodeTestCaseFiles(SpecificationEntry bitCodeFile);
+        TestCaseFile getBitCodeTestCaseFiles(SpecificationEntry bitCodeFile);
 
-        List<TestCaseFiles> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled);
+        List<TestCaseFile> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled);
     }
 
     public static class TestCaseGeneratorAdapter implements TestCaseGenerator {
@@ -163,12 +164,12 @@ public abstract class TestSuiteBase {
         }
 
         @Override
-        public TestCaseFiles getBitCodeTestCaseFiles(SpecificationEntry bitCodeFile) {
+        public TestCaseFile getBitCodeTestCaseFiles(SpecificationEntry bitCodeFile) {
             return null;
         }
 
         @Override
-        public List<TestCaseFiles> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled) {
+        public List<TestCaseFile> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled) {
             return Collections.emptyList();
         }
 
@@ -190,52 +191,65 @@ public abstract class TestSuiteBase {
         }
 
         @Override
-        public TestCaseFiles getBitCodeTestCaseFiles(SpecificationEntry bitCodeFile) {
-            return TestCaseFiles.createFromBitCodeFile(bitCodeFile.getFile(), bitCodeFile.getFlags());
+        public TestCaseFile getBitCodeTestCaseFiles(SpecificationEntry bitCodeFile) {
+            return TestCaseFile.createFromBitCodeFile(bitCodeFile.getFile(), bitCodeFile.getFlags());
         }
 
+        /**
+         * Compile File with given specifications
+         */
         @Override
-        public List<TestCaseFiles> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled) {
-            List<TestCaseFiles> files = new ArrayList<>();
-            File toBeCompiledFile = toBeCompiled.getFile();
-            File dest;
+        public List<TestCaseFile> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled) {
+            List<TestCaseFile> files = new ArrayList<>();
+            File sourceFile = toBeCompiled.getFile();
+            final File dest;
             if (compileToLLVMIR) {
-                dest = TestHelper.getTempLLFile(toBeCompiledFile, "_main");
+                dest = TestHelper.getTempLLFile(sourceFile, "_main");
             } else {
-                dest = TestHelper.getTempBCFile(toBeCompiledFile);
+                dest = TestHelper.getTempBCFile(sourceFile, "_main");
             }
+            LLVMLogger.debug("create: " + dest);
             try {
-                if (ProgrammingLanguage.FORTRAN.isFile(toBeCompiledFile)) {
-                    TestCaseFiles gccCompiledTestCase = TestHelper.compileToLLVMIRWithGCC(toBeCompiledFile, dest, toBeCompiled.getFlags());
-                    files.add(gccCompiledTestCase);
-                } else if (ProgrammingLanguage.C_PLUS_PLUS.isFile(toBeCompiledFile)) {
-                    ClangOptions builder = ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE);
-                    OptOptions options = OptOptions.builder().pass(Pass.LOWER_INVOKE).pass(Pass.PRUNE_EH).pass(Pass.SIMPLIFY_CFG);
-                    TestCaseFiles compiledFiles = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, toBeCompiled.getFlags(), builder);
-                    files.add(optimize(compiledFiles, options, "opt"));
+                final TestCaseFile compiledFile;
+                if (ProgrammingLanguage.FORTRAN.isFile(sourceFile)) {
+                    compiledFile = getCompiledFortranFile(sourceFile, dest, toBeCompiled.getFlags());
+                } else if (ProgrammingLanguage.C_PLUS_PLUS.isFile(sourceFile)) {
+                    compiledFile = getCompiledCppFile(sourceFile, dest, toBeCompiled.getFlags());
+                } else if (ProgrammingLanguage.C.isFile(sourceFile)) {
+                    compiledFile = getCompiledCFile(sourceFile, dest, toBeCompiled.getFlags());
                 } else {
-                    ClangOptions builder = ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE);
-                    try {
-                        TestCaseFiles compiledFiles = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, toBeCompiled.getFlags(), builder);
-                        files.add(compiledFiles);
-                        if (withOptimizations) {
-                            TestCaseFiles optimized = getOptimizedTestCase(compiledFiles);
-                            files.add(optimized);
-                        }
-                    } catch (Exception e) {
-                        return Collections.emptyList();
-                    }
+                    throw new RuntimeException("unknow programming language of file: " + sourceFile);
+                }
+                files.add(compiledFile);
+                if (withOptimizations) {
+                    files.add(getOptimizedTestCase(compiledFile));
                 }
             } catch (Exception e) {
+                LLVMLogger.error("Exception thrown: " + e.getMessage());
                 return Collections.emptyList();
             }
             return files;
         }
 
-        private static TestCaseFiles getOptimizedTestCase(TestCaseFiles compiledFiles) {
+        private static TestCaseFile getCompiledFortranFile(File sourceFile, File dest, Set<TestCaseFlag> flags) {
+            return TestHelper.compileToLLVMIRWithGCC(sourceFile, dest, flags);
+        }
+
+        private static TestCaseFile getCompiledCppFile(File sourceFile, File dest, Set<TestCaseFlag> flags) {
+            ClangOptions builder = ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE);
+            OptOptions options = OptOptions.builder().pass(Pass.LOWER_INVOKE).pass(Pass.PRUNE_EH).pass(Pass.SIMPLIFY_CFG);
+            TestCaseFile compiledFiles = TestHelper.compileToLLVMIRWithClang(sourceFile, dest, flags, builder);
+            return optimize(compiledFiles, options, "opt");
+        }
+
+        private static TestCaseFile getCompiledCFile(File sourceFile, File dest, Set<TestCaseFlag> flags) {
+            ClangOptions builder = ClangOptions.builder().optimizationLevel(OptimizationLevel.NONE);
+            return TestHelper.compileToLLVMIRWithClang(sourceFile, dest, flags, builder);
+        }
+
+        private static TestCaseFile getOptimizedTestCase(TestCaseFile compiledFiles) {
             OptOptions options = OptOptions.builder().pass(Pass.MEM_TO_REG).pass(Pass.ALWAYS_INLINE).pass(Pass.JUMP_THREADING).pass(Pass.SIMPLIFY_CFG);
-            TestCaseFiles optimize = optimize(compiledFiles, options, "opt");
-            return optimize;
+            return optimize(compiledFiles, options, "opt");
         }
 
         @Override
@@ -245,10 +259,10 @@ public abstract class TestSuiteBase {
 
     }
 
-    protected static List<TestCaseFiles[]> getTestCasesFromConfigFile(File configFile, File testSuite, TestCaseGenerator gen) throws IOException, AssertionError {
+    protected static List<TestCaseFile[]> getTestCasesFromConfigFile(File configFile, File testSuite, TestCaseGenerator gen) throws IOException, AssertionError {
         TestSpecification testSpecification = SpecificationFileReader.readSpecificationFolder(configFile, testSuite);
         List<SpecificationEntry> includedFiles = testSpecification.getIncludedFiles();
-        List<TestCaseFiles[]> testCaseFiles;
+        List<TestCaseFile[]> testCaseFiles;
         if (SulongTestOptions.TEST.testDiscoveryPath() != null) {
             List<SpecificationEntry> excludedFiles = testSpecification.getExcludedFiles();
             File absoluteDiscoveryPath = new File(testSuite.getAbsolutePath(), SulongTestOptions.TEST.testDiscoveryPath());
@@ -261,37 +275,37 @@ public abstract class TestSuiteBase {
             for (SpecificationEntry excludedFile : excludedFiles) {
                 filesToRun.remove(excludedFile.getFile());
             }
-            List<TestCaseFiles[]> discoveryTestCases = new ArrayList<>();
+            List<TestCaseFile[]> discoveryTestCases = new ArrayList<>();
             for (File f : filesToRun) {
                 if (ProgrammingLanguage.LLVM.isFile(f)) {
-                    TestCaseFiles testCase = gen.getBitCodeTestCaseFiles(new SpecificationEntry(f));
-                    discoveryTestCases.add(new TestCaseFiles[]{testCase});
+                    TestCaseFile testCase = gen.getBitCodeTestCaseFiles(new SpecificationEntry(f));
+                    discoveryTestCases.add(new TestCaseFile[]{testCase});
                 } else {
-                    List<TestCaseFiles> testCases = gen.getCompiledTestCaseFiles(new SpecificationEntry(f));
-                    for (TestCaseFiles testCase : testCases) {
-                        discoveryTestCases.add(new TestCaseFiles[]{testCase});
+                    List<TestCaseFile> testCases = gen.getCompiledTestCaseFiles(new SpecificationEntry(f));
+                    for (TestCaseFile testCase : testCases) {
+                        discoveryTestCases.add(new TestCaseFile[]{testCase});
                     }
                 }
             }
             LLVMLogger.info("\tfinished collecting files");
             testCaseFiles = discoveryTestCases;
         } else {
-            List<TestCaseFiles[]> includedFileTestCases = collectIncludedFiles(includedFiles, gen);
+            List<TestCaseFile[]> includedFileTestCases = collectIncludedFiles(includedFiles, gen);
             testCaseFiles = includedFileTestCases;
         }
         return testCaseFiles;
     }
 
-    protected static List<TestCaseFiles[]> collectIncludedFiles(List<SpecificationEntry> specificationEntries, TestCaseGenerator gen) throws AssertionError {
-        List<TestCaseFiles[]> files = new ArrayList<>();
+    protected static List<TestCaseFile[]> collectIncludedFiles(List<SpecificationEntry> specificationEntries, TestCaseGenerator gen) throws AssertionError {
+        List<TestCaseFile[]> files = new ArrayList<>();
         for (SpecificationEntry e : specificationEntries) {
             File f = e.getFile();
             if (f.isFile()) {
                 if (ProgrammingLanguage.LLVM.isFile(f)) {
-                    files.add(new TestCaseFiles[]{gen.getBitCodeTestCaseFiles(e)});
+                    files.add(new TestCaseFile[]{gen.getBitCodeTestCaseFiles(e)});
                 } else {
-                    for (TestCaseFiles testCaseFile : gen.getCompiledTestCaseFiles(e)) {
-                        files.add(new TestCaseFiles[]{testCaseFile});
+                    for (TestCaseFile testCaseFile : gen.getCompiledTestCaseFiles(e)) {
+                        files.add(new TestCaseFile[]{testCaseFile});
                     }
                 }
             } else {
@@ -308,21 +322,26 @@ public abstract class TestSuiteBase {
         return allBitcodeFiles;
     }
 
-    protected static List<TestCaseFiles> applyOpt(List<TestCaseFiles> allBitcodeFiles, OptOptions pass, String name) {
+    protected static List<TestCaseFile> applyOpt(List<TestCaseFile> allBitcodeFiles, OptOptions pass, String name) {
         return getFilteredOptStream(allBitcodeFiles).map(f -> optimize(f, pass, name)).collect(Collectors.toList());
     }
 
-    protected static Stream<TestCaseFiles> getFilteredOptStream(List<TestCaseFiles> allBitcodeFiles) {
+    protected static Stream<TestCaseFile> getFilteredOptStream(List<TestCaseFile> allBitcodeFiles) {
         return allBitcodeFiles.parallelStream().filter(f -> !f.getOriginalFile().getParent().endsWith(LLVMPaths.NO_OPTIMIZATIONS_FOLDER_NAME));
     }
 
-    protected static TestCaseFiles optimize(TestCaseFiles toBeOptimized, OptOptions optOptions, String name) {
-        File destinationFile = TestHelper.getTempLLFile(toBeOptimized.getOriginalFile(), "_" + name);
+    protected static TestCaseFile optimize(TestCaseFile toBeOptimized, OptOptions optOptions, String name) {
+        final File destinationFile;
+        if (ProgrammingLanguage.LLVM.isFile(toBeOptimized.getBitCodeFile())) {
+            destinationFile = TestHelper.getTempLLFile(toBeOptimized.getOriginalFile(), "_" + name);
+        } else {
+            destinationFile = TestHelper.getTempBCFile(toBeOptimized.getOriginalFile(), "_" + name);
+        }
         Opt.optimizeBitcodeFile(toBeOptimized.getBitCodeFile(), destinationFile, optOptions);
-        return TestCaseFiles.createFromCompiledFile(toBeOptimized.getOriginalFile(), destinationFile, toBeOptimized.getFlags());
+        return TestCaseFile.createFromCompiledFile(toBeOptimized.getOriginalFile(), destinationFile, toBeOptimized.getFlags());
     }
 
-    public void executeLLVMBitCodeFileTest(TestCaseFiles tuple) {
+    public void executeLLVMBitCodeFileTest(TestCaseFile tuple) {
         try {
             LLVMLogger.info("original file: " + tuple.getOriginalFile());
             File bitCodeFile = tuple.getBitCodeFile();

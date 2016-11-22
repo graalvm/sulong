@@ -63,7 +63,7 @@ public class RemoteTestSuiteBase extends TestSuiteBase {
 
     protected static final Pattern RETURN_VALUE_PATTERN = Pattern.compile("exit ([-]*[0-9]*)");
 
-    public List<String> launchLocal(TestCaseFiles tuple, Object... args) {
+    public List<String> launchLocal(TestCaseFile tuple, Object... args) {
         List<String> result = new ArrayList<>();
         LLVMLogger.info("current file: " + tuple.getOriginalFile().getAbsolutePath());
         try {
@@ -81,7 +81,7 @@ public class RemoteTestSuiteBase extends TestSuiteBase {
         return result;
     }
 
-    public List<String> launchRemote(TestCaseFiles tuple, Object... args) throws IOException, AssertionError {
+    public List<String> launchRemote(TestCaseFile tuple, Object... args) throws IOException, AssertionError {
         if (SulongTestOptions.TEST.runRemoteTestcasesAsLocal()) {
             return launchLocal(tuple, args);
         } else {
@@ -117,7 +117,7 @@ public class RemoteTestSuiteBase extends TestSuiteBase {
     }
 
     // we have to launch a remote process to capture native prints
-    public List<String> launchRemote(TestCaseFiles tuple) throws IOException, AssertionError {
+    public List<String> launchRemote(TestCaseFile tuple) throws IOException, AssertionError {
         return launchRemote(tuple, new Object[0]);
     }
 
@@ -174,7 +174,7 @@ public class RemoteTestSuiteBase extends TestSuiteBase {
         Assert.fail(bitCodeFile + errorMessage.toString());
     }
 
-    public void remoteLaunchAndTest(TestCaseFiles tuple) throws Throwable {
+    public void remoteLaunchAndTest(TestCaseFile tuple) throws Throwable {
         LLVMLogger.info("original file: " + tuple.getOriginalFile());
         try {
             List<String> launchRemote = launchRemote(tuple);

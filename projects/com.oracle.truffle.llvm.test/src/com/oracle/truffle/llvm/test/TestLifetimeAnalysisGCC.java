@@ -70,13 +70,13 @@ public class TestLifetimeAnalysisGCC extends TestSuiteBase {
                     "projects/com.oracle.truffle.llvm.test/suites/gcc/gcc-5.2.0/gcc/testsuite/gfortran.fortran-torture/execute/integer_select.f90"
     };
 
-    private TestCaseFiles tuple;
+    private TestCaseFile tuple;
     private File referenceOutputFile;
     private final LifetimeFileFormat.Writer fileWriter;
     private BufferedReader referenceFileReader;
     private Map<String, LLVMLifetimeAnalysis> referenceResults;
 
-    public TestLifetimeAnalysisGCC(TestCaseFiles tuple) throws IOException {
+    public TestLifetimeAnalysisGCC(TestCaseFile tuple) throws IOException {
         this.tuple = tuple;
         setUpReferenceFilePath(tuple);
         if (SulongTestOptions.TEST.generateLifetimeReferenceOutput()) {
@@ -90,24 +90,24 @@ public class TestLifetimeAnalysisGCC extends TestSuiteBase {
         }
     }
 
-    private void setUpReferenceFilePath(TestCaseFiles tuple) {
+    private void setUpReferenceFilePath(TestCaseFile tuple) {
         String referenceFileRelative = tuple.getOriginalFile().getAbsolutePath().substring(LLVMPaths.GCC_TEST_SUITE.getAbsolutePath().length() + 1) + ".lifetime";
         referenceOutputFile = new File(LLVMPaths.LIFETIME_ANALYSIS_REFERENCE_FILES, referenceFileRelative);
     }
 
     @Parameterized.Parameters
-    public static List<TestCaseFiles[]> getTestFiles() throws IOException {
+    public static List<TestCaseFile[]> getTestFiles() throws IOException {
         File configFile = LLVMPaths.GCC_TEST_SUITE_CONFIG;
         File testSuite = LLVMPaths.GCC_TEST_SUITE;
-        List<TestCaseFiles[]> files = getTestCasesFromConfigFile(configFile, testSuite, new TestCaseGeneratorImpl(false, false));
+        List<TestCaseFile[]> files = getTestCasesFromConfigFile(configFile, testSuite, new TestCaseGeneratorImpl(false, false));
 
-        final List<TestCaseFiles[]> filteredFiles = new ArrayList<>();
+        final List<TestCaseFile[]> filteredFiles = new ArrayList<>();
         for (int i = 0; i < files.size(); i++) {
-            TestCaseFiles[] testCaseFilesArray = files.get(i);
+            TestCaseFile[] testCaseFilesArray = files.get(i);
             int index = 0;
             while (index < testCaseFilesArray.length) {
                 if (isExcluded(testCaseFilesArray[index])) {
-                    final TestCaseFiles[] newTestCaseFiles = new TestCaseFiles[testCaseFilesArray.length - 1];
+                    final TestCaseFile[] newTestCaseFiles = new TestCaseFile[testCaseFilesArray.length - 1];
                     int targetIndex = 0;
                     for (int j = 0; j < testCaseFilesArray.length; j++) {
                         if (index != j) {
@@ -126,7 +126,7 @@ public class TestLifetimeAnalysisGCC extends TestSuiteBase {
         return filteredFiles;
     }
 
-    private static boolean isExcluded(TestCaseFiles testCase) {
+    private static boolean isExcluded(TestCaseFile testCase) {
         for (String excludedFilename : excludedFiles) {
             if (testCase.getOriginalFile().getAbsolutePath().endsWith(excludedFilename)) {
                 return true;

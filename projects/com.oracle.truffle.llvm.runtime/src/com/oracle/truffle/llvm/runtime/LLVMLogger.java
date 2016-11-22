@@ -69,4 +69,12 @@ public final class LLVMLogger {
         }
     }
 
+    public static void debug(String string) {
+        CompilerAsserts.neverPartOfCompilation();
+        if (LLVMOptions.DEBUG.verbose()) {
+            // Checkstyle: stop
+            System.err.println(string);
+            // Checkstyle: resume
+        }
+    }
 }

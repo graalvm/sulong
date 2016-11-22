@@ -97,39 +97,39 @@ public class TestHelper {
         return collected;
     }
 
-    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, File expectedFile, Set<TestCaseFlag> flags) {
+    public static TestCaseFile compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, File expectedFile, Set<TestCaseFlag> flags) {
         return compileToLLVMIRWithClang(toBeCompiled, destinationFile, expectedFile, flags, ClangOptions.builder());
     }
 
-    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, File expectedFile, Set<TestCaseFlag> flags, ClangOptions builder) {
+    public static TestCaseFile compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, File expectedFile, Set<TestCaseFlag> flags, ClangOptions builder) {
         Clang.compileToLLVMIR(toBeCompiled, destinationFile, builder);
-        return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, expectedFile, flags);
+        return TestCaseFile.createFromCompiledFile(toBeCompiled, destinationFile, expectedFile, flags);
     }
 
-    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile) {
+    public static TestCaseFile compileToLLVMIRWithClang(File toBeCompiled, File destinationFile) {
         Clang.compileToLLVMIR(toBeCompiled, destinationFile, ClangOptions.builder());
-        return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, Collections.emptySet());
+        return TestCaseFile.createFromCompiledFile(toBeCompiled, destinationFile, Collections.emptySet());
     }
 
-    public static TestCaseFiles compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, Set<TestCaseFlag> flags, ClangOptions builder) {
+    public static TestCaseFile compileToLLVMIRWithClang(File toBeCompiled, File destinationFile, Set<TestCaseFlag> flags, ClangOptions builder) {
         Clang.compileToLLVMIR(toBeCompiled, destinationFile, builder);
-        return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, flags);
+        return TestCaseFile.createFromCompiledFile(toBeCompiled, destinationFile, flags);
     }
 
-    public static TestCaseFiles compileToLLVMIRWithGCC(File toBeCompiled, File destinationFile) {
+    public static TestCaseFile compileToLLVMIRWithGCC(File toBeCompiled, File destinationFile) {
         GCC.compileToLLVMIR(toBeCompiled, destinationFile);
-        return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, Collections.emptySet());
+        return TestCaseFile.createFromCompiledFile(toBeCompiled, destinationFile, Collections.emptySet());
     }
 
-    public static TestCaseFiles compileToLLVMIRWithGCC(File toBeCompiled, File destinationFile, Set<TestCaseFlag> flags) {
+    public static TestCaseFile compileToLLVMIRWithGCC(File toBeCompiled, File destinationFile, Set<TestCaseFlag> flags) {
         GCC.compileToLLVMIR(toBeCompiled, destinationFile);
-        return TestCaseFiles.createFromCompiledFile(toBeCompiled, destinationFile, flags);
+        return TestCaseFile.createFromCompiledFile(toBeCompiled, destinationFile, flags);
     }
 
-    public static TestCaseFiles compileLLVMIRToLLVMBC(TestCaseFiles caseFile) {
-        File llvmBinaryCodeFile = TestHelper.getTempBCFile(caseFile.getBitCodeFile());
+    public static TestCaseFile compileLLVMIRToLLVMBC(TestCaseFile caseFile) {
+        File llvmBinaryCodeFile = TestHelper.getTempBCFile(caseFile.getBitCodeFile(), "");
         LLVMAssembler.assembleToBitcodeFile(caseFile.getBitCodeFile(), llvmBinaryCodeFile);
-        return TestCaseFiles.createFromCompiledFile(caseFile.getOriginalFile(), llvmBinaryCodeFile, caseFile.getExpectedResult(), caseFile.getFlags());
+        return TestCaseFile.createFromCompiledFile(caseFile.getOriginalFile(), llvmBinaryCodeFile, caseFile.getExpectedResult(), caseFile.getFlags());
     }
 
     public static File getTempLLFile(File toBeCompiled, String optionName) {
@@ -139,9 +139,9 @@ public class TestHelper {
         return destinationFile;
     }
 
-    public static File getTempBCFile(File toBeCompiled) {
+    public static File getTempBCFile(File toBeCompiled, String optionName) {
         String absolutePathToFileName = absolutePathToFileName(toBeCompiled);
-        String outputFileName = PathUtil.replaceExtension(absolutePathToFileName, "." + Constants.TMP_EXTENSION + Constants.LLVM_BINARYFILE_EXTENSION);
+        String outputFileName = PathUtil.replaceExtension(absolutePathToFileName, "." + optionName + Constants.TMP_EXTENSION + Constants.LLVM_BINARYFILE_EXTENSION);
         File destinationFile = new File(LLVMPaths.TEMP_DIRECTORY, outputFileName);
         return destinationFile;
     }
@@ -229,9 +229,9 @@ public class TestHelper {
         return files;
     }
 
-    public static void removeFilesTestCases(List<TestCaseFiles[]> collectedSpecificationFiles, List<TestCaseFiles[]> filesRecursively) {
-        for (TestCaseFiles[] alreadyCanExecute : collectedSpecificationFiles) {
-            for (TestCaseFiles[] allFilesFile : filesRecursively) {
+    public static void removeFilesTestCases(List<TestCaseFile[]> collectedSpecificationFiles, List<TestCaseFile[]> filesRecursively) {
+        for (TestCaseFile[] alreadyCanExecute : collectedSpecificationFiles) {
+            for (TestCaseFile[] allFilesFile : filesRecursively) {
                 if (alreadyCanExecute[0].getOriginalFile().equals(allFilesFile[0].getOriginalFile())) {
                     boolean removed = filesRecursively.remove(allFilesFile);
                     if (!removed) {
@@ -243,21 +243,21 @@ public class TestHelper {
         }
     }
 
-    public static void removeFilesFromTestCases(List<File> excludedFiles, List<TestCaseFiles[]> filesRecursively) {
+    public static void removeFilesFromTestCases(List<File> excludedFiles, List<TestCaseFile[]> filesRecursively) {
         for (File excludedFile : excludedFiles) {
-            List<TestCaseFiles[]> filesToRemove = new ArrayList<>();
-            for (TestCaseFiles[] allFilesFile : filesRecursively) {
+            List<TestCaseFile[]> filesToRemove = new ArrayList<>();
+            for (TestCaseFile[] allFilesFile : filesRecursively) {
                 if (excludedFile.equals(allFilesFile[0].getOriginalFile())) {
                     filesToRemove.add(allFilesFile);
                 }
             }
-            for (TestCaseFiles[] remove : filesToRemove) {
+            for (TestCaseFile[] remove : filesToRemove) {
                 filesRecursively.remove(remove);
             }
         }
     }
 
-    public static ProcessResult executeSourceAsBinary(TestCaseFiles tuple) {
+    public static ProcessResult executeSourceAsBinary(TestCaseFile tuple) {
         File exe = Clang.compileToExecutable(tuple.getOriginalFile(), ClangOptions.builder());
         return ProcessUtil.executeNativeCommand(exe.getAbsolutePath());
     }
