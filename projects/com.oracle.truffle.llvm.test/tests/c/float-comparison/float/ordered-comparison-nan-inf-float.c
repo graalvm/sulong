@@ -1,2 +1,2 @@
-#include "float.h"
 #include "../ordered-comparison-nan-inf.h"
+#include "float.h"

@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <complex.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 void testDouble() {
