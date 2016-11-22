@@ -32,7 +32,6 @@ package com.oracle.truffle.llvm.test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -178,16 +177,16 @@ public abstract class TestSuiteBase {
     public static class TestCaseGeneratorImpl implements TestCaseGenerator {
 
         private boolean withOptimizations;
-        private boolean isLLFileTestGenerator;
+        private boolean compileToLLVMIR; // by default, compile to .bc files
 
-        public TestCaseGeneratorImpl(boolean withOptimizations, boolean isLLFileTestGenerator) {
+        public TestCaseGeneratorImpl(boolean withOptimizations, boolean compileToLLLVMIR) {
             this.withOptimizations = withOptimizations;
-            this.isLLFileTestGenerator = isLLFileTestGenerator;
+            this.compileToLLVMIR = compileToLLLVMIR;
         }
 
         public TestCaseGeneratorImpl(boolean isLLFileTestGenerator) {
             withOptimizations = true;
-            this.isLLFileTestGenerator = isLLFileTestGenerator;
+            this.compileToLLVMIR = isLLFileTestGenerator;
         }
 
         @Override
@@ -200,7 +199,7 @@ public abstract class TestSuiteBase {
             List<TestCaseFiles> files = new ArrayList<>();
             File toBeCompiledFile = toBeCompiled.getFile();
             File dest;
-            if (isLLFileTestGenerator) {
+            if (compileToLLVMIR) {
                 dest = TestHelper.getTempLLFile(toBeCompiledFile, "_main");
             } else {
                 dest = TestHelper.getTempBCFile(toBeCompiledFile);
@@ -247,10 +246,6 @@ public abstract class TestSuiteBase {
     }
 
     protected static List<TestCaseFiles[]> getTestCasesFromConfigFile(File configFile, File testSuite, TestCaseGenerator gen) throws IOException, AssertionError {
-        return getTestCasesFromConfigFile(configFile, testSuite, gen, SulongTestOptions.TEST.useBinaryParser());
-    }
-
-    protected static List<TestCaseFiles[]> getTestCasesFromConfigFile(File configFile, File testSuite, TestCaseGenerator gen, boolean assembleToBC) throws IOException, AssertionError {
         TestSpecification testSpecification = SpecificationFileReader.readSpecificationFolder(configFile, testSuite);
         List<SpecificationEntry> includedFiles = testSpecification.getIncludedFiles();
         List<TestCaseFiles[]> testCaseFiles;
@@ -283,19 +278,6 @@ public abstract class TestSuiteBase {
         } else {
             List<TestCaseFiles[]> includedFileTestCases = collectIncludedFiles(includedFiles, gen);
             testCaseFiles = includedFileTestCases;
-        }
-        // compile to *.bc files to test the binary parser
-        if (assembleToBC) {
-            LLVMLogger.info("\t-Dsulong.TestBinaryParser=true was set, assembling tests to bitcode files");
-            List<TestCaseFiles[]> allLLVMBitcodeFiles = testCaseFiles.stream().map(t -> {
-                TestCaseFiles[] llvmBinaryFiles = Arrays.copyOf(t, t.length);
-                for (int i = 0; i < llvmBinaryFiles.length; i++) {
-                    llvmBinaryFiles[i] = TestHelper.compileLLVMIRToLLVMBC(llvmBinaryFiles[i]);
-                }
-                return llvmBinaryFiles;
-            }).collect(Collectors.toList());
-            testCaseFiles.clear();
-            testCaseFiles.addAll(allLLVMBitcodeFiles);
         }
         return testCaseFiles;
     }
