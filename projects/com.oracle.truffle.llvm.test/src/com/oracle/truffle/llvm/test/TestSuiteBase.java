@@ -208,7 +208,6 @@ public abstract class TestSuiteBase {
             } else {
                 dest = TestHelper.getTempBCFile(sourceFile, "_main");
             }
-            LLVMLogger.debug("create: " + dest);
             try {
                 final TestCaseFile compiledFile;
                 if (ProgrammingLanguage.FORTRAN.isFile(sourceFile)) {
@@ -334,10 +333,12 @@ public abstract class TestSuiteBase {
         final File destinationFile;
         if (ProgrammingLanguage.LLVM.isFile(toBeOptimized.getBitCodeFile())) {
             destinationFile = TestHelper.getTempLLFile(toBeOptimized.getOriginalFile(), "_" + name);
+            Opt.optimizeLLVMIRFile(toBeOptimized.getBitCodeFile(), destinationFile, optOptions);
         } else {
             destinationFile = TestHelper.getTempBCFile(toBeOptimized.getOriginalFile(), "_" + name);
+            Opt.optimizeBitcodeFile(toBeOptimized.getBitCodeFile(), destinationFile, optOptions);
         }
-        Opt.optimizeBitcodeFile(toBeOptimized.getBitCodeFile(), destinationFile, optOptions);
+
         return TestCaseFile.createFromCompiledFile(toBeOptimized.getOriginalFile(), destinationFile, toBeOptimized.getFlags());
     }
 

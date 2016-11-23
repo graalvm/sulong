@@ -87,8 +87,13 @@ public class Opt {
 
     }
 
-    public static void optimizeBitcodeFile(File bitCodeFile, File destinationFile, OptOptions options) {
+    public static void optimizeLLVMIRFile(File bitCodeFile, File destinationFile, OptOptions options) {
         String clangCompileCommand = LLVMToolPaths.getLLVMProgram(LLVMTool.OPT) + " -S " + getStringPasses(options.getPasses()) + " " + bitCodeFile.getAbsolutePath() + " -o " + destinationFile;
+        ProcessUtil.executeNativeCommandZeroReturn(clangCompileCommand);
+    }
+
+    public static void optimizeBitcodeFile(File bitCodeFile, File destinationFile, OptOptions options) {
+        String clangCompileCommand = LLVMToolPaths.getLLVMProgram(LLVMTool.OPT) + " " + getStringPasses(options.getPasses()) + " " + bitCodeFile.getAbsolutePath() + " -o " + destinationFile;
         ProcessUtil.executeNativeCommandZeroReturn(clangCompileCommand);
     }
 

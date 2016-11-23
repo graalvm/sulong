@@ -728,7 +728,7 @@ public final class LLVMInteropTest {
                 File bcFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bc_" + fileName, ".ll");
                 File bcOptFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bcopt_" + fileName, ".ll");
                 Clang.compileToLLVMIR(cFile, bcFile, ClangOptions.builder());
-                Opt.optimizeBitcodeFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
+                Opt.optimizeLLVMIRFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
                 return engine.eval(Source.newBuilder(bcOptFile).build()).as(Integer.class);
             } catch (IOException e) {
                 throw new AssertionError(e);
@@ -744,7 +744,7 @@ public final class LLVMInteropTest {
                 File bcFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bc_" + fileName, ".ll");
                 File bcOptFile = File.createTempFile(LLVMPaths.INTEROP_TESTS + "/" + "bcopt_" + fileName, ".ll");
                 Clang.compileToLLVMIR(cFile, bcFile, ClangOptions.builder());
-                Opt.optimizeBitcodeFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
+                Opt.optimizeLLVMIRFile(bcFile, bcOptFile, OptOptions.builder().pass(Pass.MEM_TO_REG));
                 engine.eval(Source.newBuilder(bcOptFile).build()).as(Integer.class);
             } catch (IOException e) {
                 throw new AssertionError(e);

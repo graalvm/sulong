@@ -100,7 +100,6 @@ public class TestLifetimeAnalysisGCC extends TestSuiteBase {
         File configFile = LLVMPaths.GCC_TEST_SUITE_CONFIG;
         File testSuite = LLVMPaths.GCC_TEST_SUITE;
         List<TestCaseFile[]> files = getTestCasesFromConfigFile(configFile, testSuite, new TestCaseGeneratorImpl(false, false));
-
         final List<TestCaseFile[]> filteredFiles = new ArrayList<>();
         for (int i = 0; i < files.size(); i++) {
             TestCaseFile[] testCaseFilesArray = files.get(i);
@@ -139,6 +138,7 @@ public class TestLifetimeAnalysisGCC extends TestSuiteBase {
     public void test() throws Throwable {
         try {
             LLVMLogger.info("original file: " + tuple.getOriginalFile());
+            LLVMLogger.info("compiled file: " + tuple.getBitCodeFile());
 
             final LLVMBitcodeVisitor.BitcodeParserResult parserResult = LLVMBitcodeVisitor.BitcodeParserResult.getFromFile(tuple.getBitCodeFile().getAbsolutePath());
             parserResult.getModel().accept(new ModelVisitor() {
