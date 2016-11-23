@@ -116,7 +116,7 @@ public class ShootoutsTestSuite extends AbstractMainArgsTestBase<Benchmark> {
     }
 
     @Override
-    protected TestCaseFiles getTestCaseFiles(Benchmark prog) {
+    protected TestCaseFile getTestCaseFiles(Benchmark prog) {
         return TestHelper.compileToLLVMIRWithClang(prog.getFile(),
                         TestHelper.getTempLLFile(prog.getFile(), "_main"), prog.getFlags(),
                         ClangOptions.builder().optimizationLevel(OptimizationLevel.O1));

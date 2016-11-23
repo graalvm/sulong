@@ -27,48 +27,20 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.test;
+package com.oracle.truffle.llvm.test.util;
 
-import java.io.File;
-import java.util.List;
+public interface LifetimeFileParserEventListener {
+    void startFile();
 
-import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.xtext.resource.XtextResource;
-import org.eclipse.xtext.resource.XtextResourceSet;
+    void endFile(String functionName);
 
-import com.google.inject.Injector;
-import com.intel.llvm.ireditor.LLVM_IRStandaloneSetup;
-import com.intel.llvm.ireditor.lLVM_IR.FunctionDef;
-import com.intel.llvm.ireditor.lLVM_IR.Model;
+    void beginDead();
 
-public class FunctionVisitorIterator {
+    void endDead();
 
-    interface LLVMFunctionVisitor {
-        void visit(FunctionDef def);
-    }
+    void variableIndent(String variableName);
 
-    public static void visitFunctions(LLVMFunctionVisitor visitor, File source) {
-        LLVM_IRStandaloneSetup setup = new LLVM_IRStandaloneSetup();
-        Injector injector = setup.createInjectorAndDoEMFRegistration();
-        XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
-        resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
-        Resource resource = resourceSet.getResource(URI.createURI(source.getPath()), true);
-        EList<EObject> contents = resource.getContents();
-        if (contents.size() == 0) {
-            throw new IllegalStateException("empty file?");
-        }
-        Model model = (Model) contents.get(0);
+    void finishEntry(String block);
 
-        List<EObject> objects = model.eContents();
-        for (EObject object : objects) {
-            if (object instanceof FunctionDef) {
-                visitor.visit((FunctionDef) object);
-            }
-        }
-
-    }
-
+    void functionIndent(String functionName);
 }

@@ -39,7 +39,7 @@ import org.junit.runners.Parameterized;
 
 import com.oracle.truffle.llvm.test.LLVMPaths;
 import com.oracle.truffle.llvm.test.RemoteTestSuiteBase;
-import com.oracle.truffle.llvm.test.TestCaseFiles;
+import com.oracle.truffle.llvm.test.TestCaseFile;
 import com.oracle.truffle.llvm.test.options.SulongTestOptions;
 import com.oracle.truffle.llvm.test.spec.SpecificationEntry;
 import com.oracle.truffle.llvm.test.spec.SpecificationFileReader;
@@ -47,14 +47,14 @@ import com.oracle.truffle.llvm.test.spec.SpecificationFileReader;
 @RunWith(Parameterized.class)
 public class LLVMInlineAssemblyTest extends RemoteTestSuiteBase {
 
-    private final TestCaseFiles tuple;
+    private final TestCaseFile tuple;
 
-    public LLVMInlineAssemblyTest(TestCaseFiles testCase) {
+    public LLVMInlineAssemblyTest(TestCaseFile testCase) {
         this.tuple = testCase;
     }
 
     @Parameterized.Parameters
-    public static List<TestCaseFiles[]> getTestCases() {
+    public static List<TestCaseFile[]> getTestCases() {
         List<String> testCaseFileNames = new ArrayList<>();
         for (File file : LLVMPaths.INLINEASSEMBLY_TESTS.listFiles()) {
             testCaseFileNames.add(file.getName());

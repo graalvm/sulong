@@ -36,22 +36,22 @@ import java.util.Set;
 
 import com.oracle.truffle.llvm.tools.util.PathUtil;
 
-public final class TestCaseFiles {
+public final class TestCaseFile {
 
     private final File originalFile;
     private final File bitCodeFile;
     private final File expectedResult;
     private final Set<TestCaseFlag> flags;
 
-    private TestCaseFiles(File bitCodeFile, Set<TestCaseFlag> flags) {
+    private TestCaseFile(File bitCodeFile, Set<TestCaseFlag> flags) {
         this(bitCodeFile, bitCodeFile, bitCodeFile, flags);
     }
 
-    private TestCaseFiles(File originalFile, File byteCodeFile, Set<TestCaseFlag> flags) {
+    private TestCaseFile(File originalFile, File byteCodeFile, Set<TestCaseFlag> flags) {
         this(originalFile, byteCodeFile, null, flags);
     }
 
-    private TestCaseFiles(File originalFile, File bitCodeFile, File expectedResult, Set<TestCaseFlag> flags) {
+    private TestCaseFile(File originalFile, File bitCodeFile, File expectedResult, Set<TestCaseFlag> flags) {
         checkBitCodeFile(bitCodeFile);
         this.originalFile = originalFile;
         this.bitCodeFile = bitCodeFile;
@@ -79,20 +79,20 @@ public final class TestCaseFiles {
         return Collections.unmodifiableSet(flags);
     }
 
-    public static TestCaseFiles createFromCompiledFile(File originalFile, File bitCodeFile, File expectedResult, Set<TestCaseFlag> flags) {
-        return new TestCaseFiles(originalFile, bitCodeFile, expectedResult, flags);
+    public static TestCaseFile createFromCompiledFile(File originalFile, File bitCodeFile, File expectedResult, Set<TestCaseFlag> flags) {
+        return new TestCaseFile(originalFile, bitCodeFile, expectedResult, flags);
     }
 
-    public static TestCaseFiles createFromCompiledFile(File originalFile, File bitCodeFile, Set<TestCaseFlag> flags) {
-        return new TestCaseFiles(originalFile, bitCodeFile, flags);
+    public static TestCaseFile createFromCompiledFile(File originalFile, File bitCodeFile, Set<TestCaseFlag> flags) {
+        return new TestCaseFile(originalFile, bitCodeFile, flags);
     }
 
-    public static TestCaseFiles createFromBitCodeFile(File bitCodeFile, Set<TestCaseFlag> flags) {
-        return new TestCaseFiles(bitCodeFile, flags);
+    public static TestCaseFile createFromBitCodeFile(File bitCodeFile, Set<TestCaseFlag> flags) {
+        return new TestCaseFile(bitCodeFile, flags);
     }
 
-    public static TestCaseFiles createFromBitCodeFile(File bitCodeFile, File expectedResult, Set<TestCaseFlag> flags) {
-        return new TestCaseFiles(bitCodeFile, bitCodeFile, expectedResult, flags);
+    public static TestCaseFile createFromBitCodeFile(File bitCodeFile, File expectedResult, Set<TestCaseFlag> flags) {
+        return new TestCaseFile(bitCodeFile, bitCodeFile, expectedResult, flags);
     }
 
     private static void checkBitCodeFile(File bitCodeFile) {
@@ -105,10 +105,10 @@ public final class TestCaseFiles {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof TestCaseFiles)) {
+        if (!(obj instanceof TestCaseFile)) {
             return false;
         } else {
-            TestCaseFiles other = (TestCaseFiles) obj;
+            TestCaseFile other = (TestCaseFile) obj;
             return bitCodeFile.equals(other.bitCodeFile) && originalFile.equals(other.originalFile) &&
                             (expectedResult == null && other.expectedResult == null || expectedResult.equals(other.expectedResult));
         }

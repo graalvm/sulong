@@ -76,7 +76,7 @@ public abstract class AbstractMainArgsTestBase<T extends ProgramWithMainArgs> ex
     }
 
     public void test() throws Throwable {
-        TestCaseFiles compileResult = getTestCaseFiles(program);
+        TestCaseFile compileResult = getTestCaseFiles(program);
         int truffleResult;
         if (program.getMainArgs() != null && program.getMainArgs().size() != 0) {
             truffleResult = LLVM.executeMain(compileResult.getBitCodeFile(), program.getMainArgs().toArray(new Object[program.getMainArgs().size()]));
@@ -92,6 +92,6 @@ public abstract class AbstractMainArgsTestBase<T extends ProgramWithMainArgs> ex
         return 0;
     }
 
-    protected abstract TestCaseFiles getTestCaseFiles(T prog);
+    protected abstract TestCaseFile getTestCaseFiles(T prog);
 
 }

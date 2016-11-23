@@ -42,18 +42,18 @@ import com.oracle.truffle.llvm.runtime.LLVMLogger;
 @RunWith(Parameterized.class)
 public class TestGCCSuite extends TestSuiteBase {
 
-    private TestCaseFiles tuple;
+    private TestCaseFile tuple;
 
-    public TestGCCSuite(TestCaseFiles tuple) {
+    public TestGCCSuite(TestCaseFile tuple) {
         this.tuple = tuple;
     }
 
     @Parameterized.Parameters
-    public static List<TestCaseFiles[]> getTestFiles() throws IOException {
+    public static List<TestCaseFile[]> getTestFiles() throws IOException {
         File configFile = LLVMPaths.GCC_TEST_SUITE_CONFIG;
         File testSuite = LLVMPaths.GCC_TEST_SUITE;
         LLVMLogger.info("...start to read and compile files");
-        List<TestCaseFiles[]> files = getTestCasesFromConfigFile(configFile, testSuite, new TestCaseGeneratorImpl(true));
+        List<TestCaseFile[]> files = getTestCasesFromConfigFile(configFile, testSuite, new TestCaseGeneratorImpl(true));
         LLVMLogger.info("...finished reading and compiling files!");
         return files;
     }

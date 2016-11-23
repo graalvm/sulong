@@ -43,26 +43,26 @@ import com.oracle.truffle.llvm.tools.util.PathUtil;
 public class LLVMSuiteTestCaseGenerator implements TestCaseGenerator {
 
     private static final String LLVM_REFERENCE_OUTPUT_EXTENSION = ".reference_output";
-    private boolean isLLFileTestGenerator;
+    private boolean compileToLLVMIR;
 
-    public LLVMSuiteTestCaseGenerator(boolean isLLFileGenerator) {
-        this.isLLFileTestGenerator = isLLFileGenerator;
+    public LLVMSuiteTestCaseGenerator(boolean compileToLLVMIR) {
+        this.compileToLLVMIR = compileToLLVMIR; // by default, compile to .bc files
     }
 
     @Override
-    public List<TestCaseFiles> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled) {
+    public List<TestCaseFile> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled) {
         File toBeCompiledFile = toBeCompiled.getFile();
         String expectedOutputName = PathUtil.replaceExtension(toBeCompiledFile.getAbsolutePath(), LLVM_REFERENCE_OUTPUT_EXTENSION);
         File expectedOutputFile = new File(expectedOutputName);
         File dest;
-        if (isLLFileTestGenerator) {
+        if (compileToLLVMIR) {
             dest = TestHelper.getTempLLFile(toBeCompiledFile, "_main");
         } else {
-            dest = TestHelper.getTempBCFile(toBeCompiledFile);
+            dest = TestHelper.getTempBCFile(toBeCompiledFile, "_main");
         }
 
         try {
-            TestCaseFiles result = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, expectedOutputFile, toBeCompiled.getFlags());
+            TestCaseFile result = TestHelper.compileToLLVMIRWithClang(toBeCompiledFile, dest, expectedOutputFile, toBeCompiled.getFlags());
             return Arrays.asList(result);
         } catch (Exception e) {
             return Collections.emptyList();
@@ -70,15 +70,15 @@ public class LLVMSuiteTestCaseGenerator implements TestCaseGenerator {
     }
 
     @Override
-    public TestCaseFiles getBitCodeTestCaseFiles(SpecificationEntry bitCode) {
+    public TestCaseFile getBitCodeTestCaseFiles(SpecificationEntry bitCode) {
         File bitCodeFile = bitCode.getFile();
         String expectedOutputName = PathUtil.replaceExtension(bitCodeFile.getAbsolutePath(), LLVM_REFERENCE_OUTPUT_EXTENSION);
         File expectedOutputFile = new File(expectedOutputName);
-        TestCaseFiles testCaseFiles;
+        TestCaseFile testCaseFiles;
         if (expectedOutputFile.exists()) {
-            testCaseFiles = TestCaseFiles.createFromBitCodeFile(bitCodeFile, expectedOutputFile, bitCode.getFlags());
+            testCaseFiles = TestCaseFile.createFromBitCodeFile(bitCodeFile, expectedOutputFile, bitCode.getFlags());
         } else {
-            testCaseFiles = TestCaseFiles.createFromBitCodeFile(bitCodeFile, bitCode.getFlags());
+            testCaseFiles = TestCaseFile.createFromBitCodeFile(bitCodeFile, bitCode.getFlags());
         }
         return testCaseFiles;
     }

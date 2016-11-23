@@ -60,32 +60,32 @@ import com.oracle.truffle.llvm.tools.ProgrammingLanguage;
 public class SulongTestSuite extends TestSuiteBase {
 
     private final File byteCodeFile;
-    private TestCaseFiles tuple;
+    private TestCaseFile tuple;
 
-    public SulongTestSuite(TestCaseFiles tuple) {
+    public SulongTestSuite(TestCaseFile tuple) {
         this.tuple = tuple;
         this.byteCodeFile = tuple.getBitCodeFile();
     }
 
     @Parameterized.Parameters
-    public static List<TestCaseFiles[]> getTestFiles() {
+    public static List<TestCaseFile[]> getTestFiles() {
         if (SulongTestOptions.TEST.testDiscoveryPath() != null) {
             throw new AssertionError("this suite does not have a discovery mode!");
         }
         return getFilesRecursively(LLVMPaths.LOCAL_TESTS);
     }
 
-    private static List<TestCaseFiles[]> getFilesRecursively(File currentFolder) {
-        List<TestCaseFiles> allBitcodeFiles = new ArrayList<>();
+    private static List<TestCaseFile[]> getFilesRecursively(File currentFolder) {
+        List<TestCaseFile> allBitcodeFiles = new ArrayList<>();
 
         // *.ll files
         List<File> byteCodeFiles = TestHelper.collectFilesWithExtension(currentFolder, ProgrammingLanguage.LLVM);
-        allBitcodeFiles.addAll(byteCodeFiles.stream().map(t -> TestCaseFiles.createFromBitCodeFile(t, Collections.emptySet())).collect(Collectors.toList()));
+        allBitcodeFiles.addAll(byteCodeFiles.stream().map(t -> TestCaseFile.createFromBitCodeFile(t, Collections.emptySet())).collect(Collectors.toList()));
 
         // C, C++, Objective C files
         List<File> cFiles = TestHelper.collectFilesWithExtension(currentFolder, Clang.getSupportedLanguages());
         allBitcodeFiles.addAll(getClangCompiledFiles(cFiles, OptimizationLevel.NONE, false));
-        List<TestCaseFiles> optimizedFiles = new ArrayList<>();
+        List<TestCaseFile> optimizedFiles = new ArrayList<>();
         OptOptions optionBuilder = OptOptions.builder();
         OptOptions passes1 = optionBuilder.pass(Pass.FUNC_ATTRS).pass(Pass.INST_COMBINE).pass(Pass.ALWAYS_INLINE);
         OptOptions passes2 = passes1.pass(Pass.JUMP_THREADING).pass(Pass.SIMPLIFY_CFG).pass(Pass.MEM_TO_REG);
@@ -97,21 +97,21 @@ public class SulongTestSuite extends TestSuiteBase {
         allBitcodeFiles.addAll(getClangCompiledFiles(cFiles, OptimizationLevel.O3, true));
         allBitcodeFiles.addAll(optimizedFiles);
 
-        List<TestCaseFiles> allLLVMBitcodeFiles = allBitcodeFiles.stream().map(TestHelper::compileLLVMIRToLLVMBC).collect(Collectors.toList());
+        List<TestCaseFile> allLLVMBitcodeFiles = allBitcodeFiles.stream().map(TestHelper::compileLLVMIRToLLVMBC).collect(Collectors.toList());
         // remove all testcases - Sulong testsuite will only run bc files and only test bc parser
         allBitcodeFiles.clear();
         allBitcodeFiles.addAll(allLLVMBitcodeFiles);
 
-        return allBitcodeFiles.parallelStream().map(t -> new TestCaseFiles[]{t}).collect(Collectors.toList());
+        return allBitcodeFiles.parallelStream().map(t -> new TestCaseFile[]{t}).collect(Collectors.toList());
     }
 
-    private static Collection<? extends TestCaseFiles> getGCCCompiledFiles(List<File> cFiles) {
-        List<TestCaseFiles> compiledFiles = cFiles.parallelStream().map(file -> TestHelper.compileToLLVMIRWithGCC(file, TestHelper.getTempLLFile(file, "main"))).collect(Collectors.toList());
+    private static Collection<? extends TestCaseFile> getGCCCompiledFiles(List<File> cFiles) {
+        List<TestCaseFile> compiledFiles = cFiles.parallelStream().map(file -> TestHelper.compileToLLVMIRWithGCC(file, TestHelper.getTempLLFile(file, "main"))).collect(Collectors.toList());
         return compiledFiles;
     }
 
-    private static List<TestCaseFiles> getClangCompiledFiles(List<File> cFiles, OptimizationLevel level, boolean filter) {
-        List<TestCaseFiles> compiledFiles = cFiles.parallelStream().map(file -> {
+    private static List<TestCaseFile> getClangCompiledFiles(List<File> cFiles, OptimizationLevel level, boolean filter) {
+        List<TestCaseFile> compiledFiles = cFiles.parallelStream().map(file -> {
             ClangOptions optimizationLevel = ClangOptions.builder().optimizationLevel(level);
             return TestHelper.compileToLLVMIRWithClang(file, TestHelper.getTempLLFile(file, level.toString()), Collections.emptySet(), optimizationLevel);
         }).collect(Collectors.toList());
