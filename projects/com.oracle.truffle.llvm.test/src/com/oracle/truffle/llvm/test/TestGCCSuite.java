@@ -60,7 +60,10 @@ public class TestGCCSuite extends TestSuiteBase {
 
     @Test
     public void test() {
+        long start = System.currentTimeMillis();
         executeLLVMBitCodeFileTest(tuple);
+        long time = System.currentTimeMillis() - start;
+        System.err.println(tuple.getOriginalFile().toString() + " executed. Time = " + time / 1000 + "s " + time % 1000 + "ms");
     }
 
 }
