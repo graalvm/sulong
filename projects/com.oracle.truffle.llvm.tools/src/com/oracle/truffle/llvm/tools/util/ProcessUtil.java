@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ProcessUtil {
 
+    private static final int BUFFER_SIZE = 1024;
     private static final int PROCESS_WAIT_TIMEOUT = 5000;
 
     /**
@@ -152,7 +153,7 @@ public class ProcessUtil {
 
     public static String readStreamAndClose(InputStream inputStream) throws IOException {
         final ByteArrayOutputStream result = new ByteArrayOutputStream();
-        final byte[] buffer = new byte[1024];
+        final byte[] buffer = new byte[BUFFER_SIZE];
         int length;
         while ((length = inputStream.read(buffer)) != -1) {
             result.write(buffer, 0, length);
@@ -163,7 +164,7 @@ public class ProcessUtil {
 
     public static String readStream(InputStream inputStream) throws IOException {
         final ByteArrayOutputStream result = new ByteArrayOutputStream();
-        final byte[] buffer = new byte[1024];
+        final byte[] buffer = new byte[BUFFER_SIZE];
         int length;
         while ((length = inputStream.read(buffer)) != -1) {
             result.write(buffer, 0, length);

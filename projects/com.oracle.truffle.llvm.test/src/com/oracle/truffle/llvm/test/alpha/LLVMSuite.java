@@ -41,7 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 
 @RunWith(Parameterized.class)
-public final class LLVMSuite extends BaseSuite {
+public final class LLVMSuite extends BaseSuiteHarness {
 
     private static final Path LLVM_SUITE_DIR = new File(LLVMOptions.ENGINE.projectRoot() + "/../tests/cache/tests/llvm").toPath();
     private static final Path LLVM_CONFIG_DIR = new File(LLVMOptions.ENGINE.projectRoot() + "/../tests/llvm/configs").toPath();
