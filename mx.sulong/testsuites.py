@@ -53,6 +53,11 @@ def compileLLVMSuite():
     print("Compiling LLVM Suite with -O0 ", end='')
     tools.printProgress(tools.multicompileFolder(_llvmSuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude'], [tools.Optimization.O0], tools.ProgrammingLanguage.LLVMBC, excludes=excludes))
 
+def runLLVMSuite(vmArgs):
+    """runs the LLVM test suite"""
+    compileSuite(['llvm'])
+    return mx_unittest.unittest(mx_sulong.getCommonUnitTestOptions() + vmArgs + [mx_sulong.getRemoteClasspathOption(), '--verbose', "com.oracle.truffle.llvm.test.alpha.LLVMSuite"])
+
 def compileGCCSuite():
     ensureGCCSuiteExists()
     excludes = tools.collectExcludePattern(os.path.join(_gccSuiteDir, "configs/"))
@@ -72,7 +77,7 @@ def compileShootoutSuite():
 
 testSuites = {
     'gcc' : (compileGCCSuite, None),
-    'llvm' : (compileLLVMSuite, None),
+    'llvm' : (compileLLVMSuite, runLLVMSuite),
     'sulong' : (compileSulongSuite, runSulongSuite),
     'shootout' : (compileShootoutSuite, runShootoutSuite),
 }
