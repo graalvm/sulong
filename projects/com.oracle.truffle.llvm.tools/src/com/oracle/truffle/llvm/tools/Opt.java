@@ -32,9 +32,9 @@ package com.oracle.truffle.llvm.tools;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.oracle.truffle.llvm.tools.LLVMToolPaths.LLVMTool;
-import com.oracle.truffle.llvm.tools.Opt.OptOptions.Pass;
 import com.oracle.truffle.llvm.tools.util.ProcessUtil;
 
 public class Opt {
@@ -85,25 +85,18 @@ public class Opt {
             return passes;
         }
 
+        public String createArgumentString() {
+            return passes.stream().map(Pass::getOption).collect(Collectors.joining(" "));
+        }
     }
 
     public static void optimizeLLVMIRFile(File bitCodeFile, File destinationFile, OptOptions options) {
-        String clangCompileCommand = LLVMToolPaths.getLLVMProgram(LLVMTool.OPT) + " -S " + getStringPasses(options.getPasses()) + " " + bitCodeFile.getAbsolutePath() + " -o " + destinationFile;
+        String clangCompileCommand = LLVMToolPaths.getLLVMProgram(LLVMTool.OPT) + " -S " + options.createArgumentString() + " " + bitCodeFile.getAbsolutePath() + " -o " + destinationFile;
         ProcessUtil.executeNativeCommandZeroReturn(clangCompileCommand);
     }
 
     public static void optimizeBitcodeFile(File bitCodeFile, File destinationFile, OptOptions options) {
-        String clangCompileCommand = LLVMToolPaths.getLLVMProgram(LLVMTool.OPT) + " " + getStringPasses(options.getPasses()) + " " + bitCodeFile.getAbsolutePath() + " -o " + destinationFile;
+        String clangCompileCommand = LLVMToolPaths.getLLVMProgram(LLVMTool.OPT) + " " + options.createArgumentString() + " " + bitCodeFile.getAbsolutePath() + " -o " + destinationFile;
         ProcessUtil.executeNativeCommandZeroReturn(clangCompileCommand);
     }
-
-    private static String getStringPasses(List<Pass> passes) {
-        StringBuilder sb = new StringBuilder();
-        for (Pass pass : passes) {
-            sb.append(pass.getOption());
-            sb.append(" ");
-        }
-        return sb.toString();
-    }
-
 }

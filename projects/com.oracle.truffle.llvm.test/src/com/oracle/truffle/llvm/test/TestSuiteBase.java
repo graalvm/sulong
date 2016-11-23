@@ -196,7 +196,7 @@ public abstract class TestSuiteBase {
         }
 
         /**
-         * Compile File with given specifications
+         * Compile File with given specifications.
          */
         @Override
         public List<TestCaseFile> getCompiledTestCaseFiles(SpecificationEntry toBeCompiled) {
