@@ -34,9 +34,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -295,22 +301,43 @@ public abstract class TestSuiteBase {
         return testCaseFiles;
     }
 
+    private static int N_THREADS = 4; // TODO: allow external change of this option
+
     protected static List<TestCaseFile[]> collectIncludedFiles(List<SpecificationEntry> specificationEntries, TestCaseGenerator gen) throws AssertionError {
-        List<TestCaseFile[]> files = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(N_THREADS);
+        List<Future<List<TestCaseFile[]>>> futures = new LinkedList<>();
+
         for (SpecificationEntry e : specificationEntries) {
             File f = e.getFile();
             if (f.isFile()) {
-                if (ProgrammingLanguage.LLVM.isFile(f)) {
-                    files.add(new TestCaseFile[]{gen.getBitCodeTestCaseFiles(e)});
-                } else {
-                    for (TestCaseFile testCaseFile : gen.getCompiledTestCaseFiles(e)) {
-                        files.add(new TestCaseFile[]{testCaseFile});
+                futures.add(executor.submit(new Callable<List<TestCaseFile[]>>() {
+                    @Override
+                    public List<TestCaseFile[]> call() {
+                        List<TestCaseFile[]> createdFiles = new LinkedList<>();
+                        if (ProgrammingLanguage.LLVM.isFile(f)) {
+                            createdFiles.add(new TestCaseFile[]{gen.getBitCodeTestCaseFiles(e)});
+                        } else {
+                            for (TestCaseFile testCaseFile : gen.getCompiledTestCaseFiles(e)) {
+                                createdFiles.add(new TestCaseFile[]{testCaseFile});
+                            }
+                        }
+                        return createdFiles;
                     }
-                }
-            } else {
-                throw new AssertionError("could not find specified test file " + f);
+                }));
             }
         }
+
+        List<TestCaseFile[]> files = new LinkedList<>();
+
+        for (Future<List<TestCaseFile[]>> futureEntry : futures) {
+            try {
+                List<TestCaseFile[]> entry = futureEntry.get();
+                files.addAll(entry);
+            } catch (InterruptedException e1) {
+            } catch (ExecutionException e1) {
+            }
+        }
+
         return files;
     }
 
