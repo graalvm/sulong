@@ -27,8 +27,8 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <truffle.h>
 #include <stdlib.h>
+#include <truffle.h>
 
 typedef struct complex {
   double real;
