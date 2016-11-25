@@ -459,12 +459,8 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
 
         LLVMGlobalVariableDescriptor descriptor;
 
-        if (globalVariable.isStatic()) {
-            descriptor = new LLVMGlobalVariableDescriptor(name, nativeResolver);
-        } else {
-            LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
-            descriptor = context.getGlobalVariableRegistry().lookupOrAdd(name, nativeResolver);
-        }
+        LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+        descriptor = context.getGlobalVariableRegistry().lookupOrAdd(name, nativeResolver);
 
         if ((globalVariable.getInitialiser() > 0 || !globalVariable.isExtern()) && !descriptor.isDeclared()) {
             Type resolvedType = ((PointerType) globalVariable.getType()).getPointeeType();

@@ -113,6 +113,7 @@ public class LLVMGlobalVariableDescriptor {
     }
 
     public void declare(LLVMAddress setNativeStorage) {
+        CompilerAsserts.neverPartOfCompilation();
         assert state == State.UNKNOWN : this;
         state = State.DECLARED;
         nativeStorage = setNativeStorage;
