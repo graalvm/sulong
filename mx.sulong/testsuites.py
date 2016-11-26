@@ -20,10 +20,13 @@ _benchmarksgameSuiteDirRoot = os.path.join(_benchmarksgameSuiteDir, "benchmarksg
 _interoptestsDir = os.path.join(_testDir, "interoptests/")
 _inlineassemblytestsDir = os.path.join(_testDir, "inlineassemblytests/")
 _llvmSuiteDir = os.path.join(_testDir, "llvm/")
+_assemblySuiteDir = os.path.join(_testDir, "inlineassemblytests/")
 _llvmSuiteDirRoot = os.path.join(_llvmSuiteDir, "test-suite-3.2.src/")
 _gccSuiteDir = os.path.join(_testDir, "gcc/")
 _gccSuiteDirRoot = os.path.join(_gccSuiteDir, "gcc-5.2.0/gcc/testsuite/")
-
+_nwccSuiteDir = os.path.join(_testDir, "nwcc/")
+_nwccSuiteDirRoot2 = os.path.join(_nwccSuiteDir, "nwcc_0.8.3/tests/")
+_nwccSuiteDirRoot1 = os.path.join(_nwccSuiteDir, "nwcc_0.8.3/test2/")
 
 def compileSulongSuite():
     print("Compiling Sulong Suite reference executables ", end='')
@@ -52,6 +55,11 @@ def runLLVMSuite(vmArgs):
     compileSuite(['llvm'])
     return mx_unittest.unittest(mx_sulong.getCommonUnitTestOptions() + vmArgs + [mx_sulong.getRemoteClasspathOption(), "com.oracle.truffle.llvm.test.alpha.LLVMSuite"])
 
+def runNWCCSuite(vmArgs):
+    """runs the NWCC test suite"""
+    compileSuite(['nwcc'])
+    return mx_unittest.unittest(mx_sulong.getCommonUnitTestOptions() + vmArgs + ['--very-verbose', mx_sulong.getRemoteClasspathOption(), "com.oracle.truffle.llvm.test.alpha.NWCCSuite"])
+
 def runGCCSuite(vmArgs):
     """runs the LLVM test suite"""
     mx_sulong.ensureDragonEggExists()
@@ -72,6 +80,12 @@ def runTCKTests(vmArgs):
     compileSuite(['interop'])
     return mx_unittest.unittest(mx_sulong.getCommonUnitTestOptions() + vmArgs + ["com.oracle.truffle.llvm.test.interop.LLVMTckTest"])
 
+def runInlineAssemblySuite(vmArgs):
+    """runs the InlineAssembly test suite"""
+    compileSuite(['assembly'])
+    return mx_unittest.unittest(mx_sulong.getCommonUnitTestOptions() + vmArgs + ["com.oracle.truffle.llvm.test.alpha.InlineAssemblyTest"])
+
+
 def compileLLVMSuite():
     ensureLLVMSuiteExists()
     excludes = tools.collectExcludePattern(os.path.join(_llvmSuiteDir, "configs/"))
@@ -79,6 +93,13 @@ def compileLLVMSuite():
     tools.printProgress(tools.multicompileRefFolder(_llvmSuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude'], excludes=excludes))
     print("Compiling LLVM Suite with -O0 ", end='')
     tools.printProgress(tools.multicompileFolder(_llvmSuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude'], [tools.Optimization.O0], tools.ProgrammingLanguage.LLVMBC, excludes=excludes))
+
+def compileInlineAssemblySuite():
+    print("Compiling Assembly Suite reference executables ", end='')
+    tools.printProgress(tools.multicompileRefFolder(_assemblySuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude']))
+    print("Compiling Assembly Suite with -O0 ", end='')
+    tools.printProgress(tools.multicompileFolder(_assemblySuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude'], [tools.Optimization.O0], tools.ProgrammingLanguage.LLVMBC))
+
 
 def compileGCCSuite():
     ensureGCCSuiteExists()
@@ -101,8 +122,17 @@ def compileShootoutSuite():
     print("Compiling Shootout Suite with -O1 ", end='')
     tools.printProgress(tools.multicompileFolder(_benchmarksgameSuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude', '-lm'], [tools.Optimization.O1], tools.ProgrammingLanguage.LLVMBC, excludes=excludes))
 
+def compileNWCCSuite():
+    ensureNWCCSuiteExists()
+    excludes = tools.collectExcludePattern(os.path.join(_nwccSuiteDir, "configs/"))
+    print("Compiling NWCC Suite reference executables ", end='')
+    tools.printProgress(tools.multicompileRefFolder(_nwccSuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude'], excludes=excludes))
+    print("Compiling NWCC Suite with -O0 ", end='')
+    tools.printProgress(tools.multicompileFolder(_nwccSuiteDir, _cacheDir, [tools.Tool.CLANG], ['-Iinclude'], [tools.Optimization.O0], tools.ProgrammingLanguage.LLVMBC, excludes=excludes))
 
 testSuites = {
+    'nwcc' : (compileNWCCSuite, runNWCCSuite),
+    'assembly' : (compileInlineAssemblySuite, runInlineAssemblySuite),
     'gcc' : (compileGCCSuite, runGCCSuite),
     'llvm' : (compileLLVMSuite, runLLVMSuite),
     'sulong' : (compileSulongSuite, runSulongSuite),
@@ -156,6 +186,14 @@ def ensureGCCSuiteExists():
     """downloads the GCC suite if not downloaded yet"""
     if not os.path.exists(_gccSuiteDirRoot):
         pullTestSuite('GCC_SOURCE', _gccSuiteDir, subDirInsideTar=[os.path.relpath(_gccSuiteDirRoot, _gccSuiteDir)])
+
+def ensureNWCCSuiteExists():
+    """downloads the NWCC suite if not downloaded yet"""
+    if not os.path.exists(_nwccSuiteDirRoot1):
+        pullTestSuite('NWCC_SUITE', _nwccSuiteDir, subDirInsideTar=[os.path.relpath(_nwccSuiteDirRoot1, _nwccSuiteDir)])
+    if not os.path.exists(_nwccSuiteDirRoot2):
+        pullTestSuite('NWCC_SUITE', _nwccSuiteDir, subDirInsideTar=[os.path.relpath(_nwccSuiteDirRoot2, _nwccSuiteDir)])
+
 
 def pullTestSuite(library, destDir, **kwargs):
     """downloads and unpacks a test suite"""
