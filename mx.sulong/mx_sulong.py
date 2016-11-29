@@ -875,8 +875,12 @@ def genInlineAssemblyParser(args=None, out=None):
 
 def sulongBuild(args=None):
     """custom build command to wrap inline assembly parser generation"""
-    genInlineAssemblyParser()
+    sulongSpecificBuild(args)
     originalBuildCommand(args)
+
+def sulongSpecificBuild(args=None):
+    getBitcodeLibrariesOption()
+    genInlineAssemblyParser()
 
 
 checkCases = {
@@ -901,6 +905,7 @@ mx.update_commands(_suite, {
     'clangbench' : [clangBench, ''],
     'gccbench' : [gccBench, ''],
     'build' : [sulongBuild, ''],
+    'su-build' : [sulongSpecificBuild, ''],
     'su-checks' : [runChecks, ''],
     'su-tests' : [runTests, ''],
     'su-suite' : [mx_testsuites.runSuite, ''],
