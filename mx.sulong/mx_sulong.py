@@ -873,12 +873,6 @@ def genInlineAssemblyParser(args=None, out=None):
         command = [mx.get_jdk().java, "-jar", localCocoJarFile, "-package", _inlineAssemblyPackageName, "-o", generatedParserDir, _inlineAssemblyGrammer]
         mx.run(command)
 
-def sulongBuild(args=None):
-    """custom build command to wrap inline assembly parser generation"""
-    genInlineAssemblyParser()
-    originalBuildCommand(args)
-
-
 checkCases = {
     'gitlog' : logCheck,
     'mdl' : mdlCheck,
@@ -893,16 +887,15 @@ checkCases = {
     'eclipseformat' : (lambda args: mx.eclipseformat(['--primary'] + args))
 }
 
-originalBuildCommand = mx.command_function('build')
-
 mx.update_commands(_suite, {
     'suoptbench' : [suOptBench, ''],
     'subench' : [suBench, ''],
     'clangbench' : [clangBench, ''],
     'gccbench' : [gccBench, ''],
-    'build' : [sulongBuild, ''],
     'su-checks' : [runChecks, ''],
     'su-tests' : [runTests, ''],
+    'su-libbuild' : [getBitcodeLibrariesOption, ''],
+    'su-asmbuild' : [genInlineAssemblyParser, ''],
     'su-suite' : [mx_testsuites.runSuite, ''],
     'su-clang' : [compileWithClang, ''],
     'su-options' : [printOptions, ''],

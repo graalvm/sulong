@@ -215,11 +215,18 @@ suite = {
       "license" : "BSD-new",
     },
 
+  "com.oracle.truffle.llvm.asm.amd64.native" : {
+        "subDir" : "projects",
+        "native" : True,
+        "license" : "BSD-new",
+    },
+
     "com.oracle.truffle.llvm.asm.amd64" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.truffle.llvm.nodes.impl",
+        "com.oracle.truffle.llvm.asm.amd64.native",
        ],
       "checkstyle" : "com.oracle.truffle.llvm",
       "javaCompliance" : "1.8",
@@ -317,6 +324,15 @@ suite = {
       "workingSets" : "Truffle, LLVM",
       "license" : "BSD-new",
     },
+  },
+
+  "com.oracle.truffle.llvm.nativebuilder" : {
+      "subDir" : "projects",
+      "native" : True,
+      "dependencies" : [
+        "com.oracle.truffle.llvm",
+      ],
+      "license" : "BSD-new",
   },
 
   "distributions" : {
