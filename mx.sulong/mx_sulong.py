@@ -1,6 +1,6 @@
 import tarfile
 import os
-from os.path import join, isfile
+from os.path import join, isfile, getmtime
 import shutil
 import subprocess
 import sys
@@ -801,17 +801,33 @@ def mdlCheck(args=None):
 
 def getBitcodeLibrariesOption():
     libraries = []
-    if 'SULONG_NO_LIBRARY' not in os.environ:
-        for path, _, files in os.walk(_libPath):
-            for f in files:
-                # TODO: also allow other extensions, best introduce a command "compile" that compiles C, C++, Fortran and other files
-                if f.endswith('.c'):
-                    bitcodeFile = f.rsplit(".", 1)[0] + '.bc'
-                    absBitcodeFile = path + '/' + bitcodeFile
-                    if not os.path.isfile(absBitcodeFile):
-                        compileWithClangOpt(path + '/' + f, absBitcodeFile)
-                    libraries.append(absBitcodeFile)
-    return ['-Dsulong.DynamicBitcodeLibraries=' + ':'.join(libraries)] if libraries else []
+    if 'SULONG_NO_LIBRARY' in os.environ:
+        return []
+    else:
+        compileLibrary()
+        return ['-Dsulong.DynamicBitcodeLibraries=' + _libPath + '/truffle.su']
+
+def compileLibrary():
+    su_file = _libPath + '/truffle.su'
+    if isfile(su_file):
+        su_mtime = getmtime(su_file)
+    else:
+        su_mtime = 0
+    src_files = filter(lambda f: f.endswith('.c'), [path + '/' + f for path, _, files in os.walk(_libPath) for f in files])
+    bc_files = {src_file: src_file.rsplit('.', 1)[0] + '.bc' for src_file in src_files}
+    if any([getmtime(src_file) > su_mtime for src_file in src_files]):
+        for src_file in src_files:
+            src_mtime = getmtime(src_file)
+            bc_file = bc_files[src_file]
+            if isfile(bc_file):
+                bc_mtime = getmtime(bc_file)
+            else:
+                bc_mtime = 0
+            if src_mtime > bc_mtime:
+                mx.log('rebuilding ' + bc_file)
+                compileWithClangOpt(src_file, bc_file)
+        mx.log('rebuilding ' + su_file)
+        link(['-o', su_file] + [bc_files[src_file] for src_file in src_files])
 
 def clangformatcheck(args=None):
     """ Performs a format check on the include/truffle.h file """
@@ -875,8 +891,12 @@ def genInlineAssemblyParser(args=None, out=None):
 
 def sulongBuild(args=None):
     """custom build command to wrap inline assembly parser generation"""
-    genInlineAssemblyParser()
+    sulongSpecificBuild(args)
     originalBuildCommand(args)
+
+def sulongSpecificBuild(args=None):
+    genInlineAssemblyParser()
+    compileLibrary()
 
 
 checkCases = {
@@ -901,6 +921,7 @@ mx.update_commands(_suite, {
     'clangbench' : [clangBench, ''],
     'gccbench' : [gccBench, ''],
     'build' : [sulongBuild, ''],
+    'su-build' : [sulongSpecificBuild, ''],
     'su-checks' : [runChecks, ''],
     'su-tests' : [runTests, ''],
     'su-suite' : [mx_testsuites.runSuite, ''],
