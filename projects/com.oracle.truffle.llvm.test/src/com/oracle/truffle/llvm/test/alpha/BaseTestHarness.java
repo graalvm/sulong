@@ -94,7 +94,7 @@ public abstract class BaseTestHarness {
 
     public static Collection<Object[]> collectTestCases(Path suiteDir, Predicate<? super Path> whiteListFilter) throws AssertionError {
         try {
-            return Files.walk(suiteDir).filter(isExecutable).map(f -> f.getParent()).filter(whiteListFilter).map(f -> new Object[]{f, f.toString()}).collect(Collectors.toList());
+            return Files.walk(suiteDir).map(f -> f.getParent()).filter(whiteListFilter).map(f -> new Object[]{f, f.toString()}).collect(Collectors.toSet());
         } catch (IOException e) {
             throw new AssertionError("Test cases not found", e);
         }

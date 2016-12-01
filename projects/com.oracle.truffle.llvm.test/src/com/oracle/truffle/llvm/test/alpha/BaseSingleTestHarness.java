@@ -50,7 +50,7 @@ public abstract class BaseSingleTestHarness extends BaseTestHarness {
     public void test() throws Exception {
         assert Files.walk(getTestDirectory()).filter(isExecutable).count() == 1;
 
-        Path referenceFile = Files.walk(getTestDirectory()).filter(isExecutable).findFirst().get();
+        Path referenceFile = Files.walk(getTestDirectory()).filter(isExecutable).collect(Collectors.toList()).get(0);
         List<Path> testCandidates = Files.walk(getTestDirectory()).filter(isFile).filter(isSulong).collect(Collectors.toList());
         String command = referenceFile.toAbsolutePath().toString() + " " + Arrays.stream(getArguments(referenceFile.getParent())).map(String::valueOf).collect(Collectors.joining(" "));
         ProcessResult processResult = ProcessUtil.executeNativeCommand(command);
