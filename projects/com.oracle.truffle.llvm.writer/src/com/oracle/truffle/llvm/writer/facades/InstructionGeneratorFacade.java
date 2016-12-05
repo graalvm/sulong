@@ -29,20 +29,20 @@
  */
 package com.oracle.truffle.llvm.writer.facades;
 
-import com.oracle.truffle.llvm.parser.base.datalayout.DataLayoutConverter;
-import com.oracle.truffle.llvm.parser.base.model.blocks.InstructionBlock;
-import com.oracle.truffle.llvm.parser.base.model.blocks.MetadataBlock;
-import com.oracle.truffle.llvm.parser.base.model.enums.BinaryOperator;
-import com.oracle.truffle.llvm.parser.base.model.functions.FunctionDefinition;
-import com.oracle.truffle.llvm.parser.base.model.symbols.Symbol;
-import com.oracle.truffle.llvm.parser.base.model.symbols.Symbols;
-import com.oracle.truffle.llvm.parser.base.model.symbols.constants.Constant;
-import com.oracle.truffle.llvm.parser.base.model.symbols.constants.integer.IntegerConstant;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.Instruction;
-import com.oracle.truffle.llvm.parser.base.model.types.FunctionType;
-import com.oracle.truffle.llvm.parser.base.model.types.IntegerType;
-import com.oracle.truffle.llvm.parser.base.model.types.PointerType;
-import com.oracle.truffle.llvm.parser.base.model.types.Type;
+import com.oracle.truffle.llvm.parser.api.datalayout.DataLayoutConverter;
+import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
+import com.oracle.truffle.llvm.parser.api.model.blocks.MetadataBlock;
+import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
+import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
+import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
+import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
+import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public class InstructionGeneratorFacade {
     private static final String x86DataTargetLayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128";

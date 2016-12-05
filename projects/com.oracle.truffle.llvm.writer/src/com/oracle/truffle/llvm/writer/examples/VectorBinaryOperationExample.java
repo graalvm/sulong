@@ -29,11 +29,11 @@
  */
 package com.oracle.truffle.llvm.writer.examples;
 
-import com.oracle.truffle.llvm.parser.base.model.enums.BinaryOperator;
-import com.oracle.truffle.llvm.parser.base.model.symbols.constants.integer.IntegerConstant;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.Instruction;
-import com.oracle.truffle.llvm.parser.base.model.types.ArrayType;
-import com.oracle.truffle.llvm.parser.base.model.types.IntegerType;
+import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
+import com.oracle.truffle.llvm.parser.api.model.types.ArrayType;
+import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.writer.facades.FunctionV32Writer;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 

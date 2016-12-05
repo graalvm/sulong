@@ -35,21 +35,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.oracle.truffle.llvm.parser.base.model.blocks.InstructionBlock;
-import com.oracle.truffle.llvm.parser.base.model.functions.FunctionDefinition;
-import com.oracle.truffle.llvm.parser.base.model.symbols.Symbol;
-import com.oracle.truffle.llvm.parser.base.model.symbols.constants.Constant;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.AllocateInstruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.BinaryOperationInstruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.BranchInstruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.ConditionalBranchInstruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.ExtractElementInstruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.InsertElementInstruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.Instruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.LoadInstruction;
-import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.ReturnInstruction;
-import com.oracle.truffle.llvm.parser.base.model.visitors.FunctionVisitor;
-import com.oracle.truffle.llvm.parser.base.model.visitors.InstructionVisitorAdapter;
+import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
+import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.AllocateInstruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.BinaryOperationInstruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.BranchInstruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ConditionalBranchInstruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ExtractElementInstruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.InsertElementInstruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.LoadInstruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ReturnInstruction;
+import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
+import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitorAdapter;
 
 public class FunctionV32Writer {
 
