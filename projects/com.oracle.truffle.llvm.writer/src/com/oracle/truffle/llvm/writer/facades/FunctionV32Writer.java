@@ -41,6 +41,8 @@ import com.oracle.truffle.llvm.parser.base.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.base.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.AllocateInstruction;
 import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.BinaryOperationInstruction;
+import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.BranchInstruction;
+import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.ConditionalBranchInstruction;
 import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.ExtractElementInstruction;
 import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.InsertElementInstruction;
 import com.oracle.truffle.llvm.parser.base.model.symbols.instructions.Instruction;
@@ -64,8 +66,8 @@ public class FunctionV32Writer {
 
             @Override
             public void visit(InstructionBlock block) {
+                sb.append(createBranchLabel(block) + ":\n");
                 block.accept(instructionVisitor);
-                sb.append("; block_end: " + block.getBlockIndex() + "\n");
             }
         });
 
@@ -81,6 +83,10 @@ public class FunctionV32Writer {
         assert function.isVarArg() == false; // TODO: not implemented yet
         sb.add(function.getName() + "()");
         return sb.stream().collect(Collectors.joining(" "));
+    }
+
+    private static String createBranchLabel(InstructionBlock block) {
+        return "block_" + block.getBlockIndex();
     }
 
     public static class InstructionToLLVMIRVisitor implements InstructionVisitorAdapter {
@@ -104,11 +110,19 @@ public class FunctionV32Writer {
         }
 
         private String createSymbolLabel(Symbol s) {
+            return s.getType() + " " + createSymbolLabelWithoutType(s);
+        }
+
+        private String createSymbolLabelWithoutType(Symbol s) {
             if (s instanceof Constant) {
-                return s.getType() + " " + s.toString(); // TODO: needs check
+                return s.toString(); // TODO: needs check
             } else {
-                return s.getType() + " " + labels.get(s);
+                return labels.get(s);
             }
+        }
+
+        private static String createSymbolLabel(InstructionBlock s) {
+            return "label %" + createBranchLabel(s);
         }
 
         @Override
@@ -127,8 +141,26 @@ public class FunctionV32Writer {
             sb.add(newLabel(operation) + " =");
             sb.add(operation.getOperator().getName());
             sb.add(operation.getType().toString());
-            sb.add(labels.get(operation.getLHS()) + ",");
-            sb.add(labels.get(operation.getRHS()));
+            sb.add(createSymbolLabelWithoutType(operation.getLHS()) + ",");
+            sb.add(createSymbolLabelWithoutType(operation.getRHS()));
+            addInstructionString(sb.stream().collect(Collectors.joining(" ")));
+        }
+
+        @Override
+        public void visit(BranchInstruction branch) {
+            List<String> sb = new ArrayList<>();
+            sb.add("br");
+            sb.add(createSymbolLabel(branch.getSuccessor()));
+            addInstructionString(sb.stream().collect(Collectors.joining(" ")));
+        }
+
+        @Override
+        public void visit(ConditionalBranchInstruction branch) {
+            List<String> sb = new ArrayList<>();
+            sb.add("br");
+            sb.add(createSymbolLabel(branch.getCondition()) + ",");
+            sb.add(createSymbolLabel(branch.getTrueSuccessor()) + ",");
+            sb.add(createSymbolLabel(branch.getFalseSuccessor()));
             addInstructionString(sb.stream().collect(Collectors.joining(" ")));
         }
 

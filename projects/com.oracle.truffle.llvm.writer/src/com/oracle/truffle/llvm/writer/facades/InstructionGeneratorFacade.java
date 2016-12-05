@@ -67,6 +67,10 @@ public class InstructionGeneratorFacade {
         return def;
     }
 
+    public void nextBlock() {
+        this.gen = (InstructionBlock) this.def.generateBlock();
+    }
+
     private static Symbol createI32Constant(int value) {
         return new IntegerConstant(IntegerType.INTEGER, value);
     }
@@ -95,6 +99,17 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
+    public Instruction createBranch(int block) {
+        gen.createBranch(block);
+        return getLastInstruction();
+    }
+
+    public Instruction createBranch(Symbol condition, int ifBlock, int elseBlock) {
+        int conditionIdx = addSymbol(condition);
+        gen.createBranch(conditionIdx, ifBlock, elseBlock);
+        return getLastInstruction();
+    }
+
     public Instruction createLoad(Instruction source) {
         Type type = ((PointerType) source.getType()).getPointeeType();
         int sourceIdx = addSymbol(source);
@@ -105,12 +120,12 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
-    public Instruction createInsertelement(Instruction source, Constant value, int index) {
-        Type type = source.getType();
-        int sourceIdx = addSymbol(source);
+    public Instruction createInsertelement(Instruction vector, Constant value, int index) {
+        Type type = vector.getType();
+        int vectorIdx = addSymbol(vector);
         int valueIdx = addSymbol(value);
         int indexIdx = addSymbol(new IntegerConstant(IntegerType.INTEGER, index));
-        gen.createInsertElement(type, sourceIdx, indexIdx, valueIdx);
+        gen.createInsertElement(type, vectorIdx, indexIdx, valueIdx);
         return getLastInstruction();
     }
 
@@ -123,11 +138,11 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
-    public Instruction createExtractelement(Instruction source, int index) {
-        Type type = source.getType().getIndexType(index);
-        int sourceIdx = addSymbol(source);
+    public Instruction createExtractelement(Instruction vector, int index) {
+        Type type = vector.getType().getIndexType(index);
+        int vectorIdx = addSymbol(vector);
         int indexIdx = addSymbol(createI32Constant(index));
-        gen.createExtractElement(type, sourceIdx, indexIdx);
+        gen.createExtractElement(type, vectorIdx, indexIdx);
         return getLastInstruction();
     }
 

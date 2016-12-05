@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.writer.test;
+package com.oracle.truffle.llvm.writer.examples;
 
 import com.oracle.truffle.llvm.parser.base.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.base.model.symbols.constants.integer.IntegerConstant;
@@ -37,7 +37,7 @@ import com.oracle.truffle.llvm.parser.base.model.types.IntegerType;
 import com.oracle.truffle.llvm.writer.facades.FunctionV32Writer;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 
-public class VectorBinaryOperationTest {
+public class VectorBinaryOperationExample {
 
     public static void main(String[] args) {
         IntegerType[] testedTypes = new IntegerType[]{
