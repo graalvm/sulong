@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.AllocateInstruction;
@@ -45,7 +46,6 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.BranchInstr
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ConditionalBranchInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ExtractElementInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.InsertElementInstruction;
-import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.LoadInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ReturnInstruction;
 import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
@@ -59,10 +59,12 @@ public class FunctionV32Writer {
 
     public static String generateLLVM(FunctionDefinition function) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(createFunctionHeader(function) + " {\n");
+        final Map<Symbol, String> labels = new HashMap<>();
+
+        sb.append(createFunctionHeader(function, labels) + " {\n");
 
         function.accept(new FunctionVisitor() {
-            InstructionToLLVMIRVisitor instructionVisitor = new InstructionToLLVMIRVisitor(sb);
+            InstructionToLLVMIRVisitor instructionVisitor = new InstructionToLLVMIRVisitor(sb, labels);
 
             @Override
             public void visit(InstructionBlock block) {
@@ -75,26 +77,42 @@ public class FunctionV32Writer {
         return sb.toString();
     }
 
-    public static String createFunctionHeader(FunctionDefinition function) {
+    public static String createFunctionHeader(FunctionDefinition function, Map<Symbol, String> labels) {
         List<String> sb = new ArrayList<>();
         sb.add("define");
         sb.add(function.getReturnType().toString());
-        assert function.getParameters().isEmpty(); // TODO: not implemented yet
-        assert function.isVarArg() == false; // TODO: not implemented yet
-        sb.add(function.getName() + "()");
+
+        List<String> args = new ArrayList<>();
+        for (FunctionParameter fArg : function.getParameters()) {
+            args.add(fArg.getType() + " " + addLabelToSymbolsMap(labels, fArg));
+        }
+        if (function.isVarArg()) {
+            args.add("...");
+        }
+
+        sb.add(function.getName() + "(" + args.stream().collect(Collectors.joining(", ")) + ")");
         return sb.stream().collect(Collectors.joining(" "));
     }
 
+    private static String addLabelToSymbolsMap(Map<Symbol, String> labels, Symbol curSymbol) {
+        // we simply use named variables, so we don't have to worry about enumeration
+        String returnVar = "%sym_" + (labels.size() + 1);
+        labels.put(curSymbol, returnVar);
+        return returnVar;
+    }
+
     private static String createBranchLabel(InstructionBlock block) {
+        // we simply use named blocks, so we don't have to worry about enumeration
         return "block_" + block.getBlockIndex();
     }
 
     public static class InstructionToLLVMIRVisitor implements InstructionVisitorAdapter {
         private final StringBuilder llvmir;
-        final Map<Instruction, String> labels = new HashMap<>();
+        final Map<Symbol, String> labels;
 
-        public InstructionToLLVMIRVisitor(StringBuilder llvmir) {
+        public InstructionToLLVMIRVisitor(StringBuilder llvmir, Map<Symbol, String> labels) {
             this.llvmir = llvmir;
+            this.labels = labels;
         }
 
         private void addInstructionString(String str) {
@@ -103,10 +121,8 @@ public class FunctionV32Writer {
             llvmir.append("\n");
         }
 
-        private String newLabel(Instruction curInstr) {
-            String returnVar = "%" + (labels.size() + 1);
-            labels.put(curInstr, returnVar);
-            return returnVar;
+        private String newLabel(Symbol curInstr) {
+            return addLabelToSymbolsMap(labels, curInstr);
         }
 
         private String createSymbolLabel(Symbol s) {

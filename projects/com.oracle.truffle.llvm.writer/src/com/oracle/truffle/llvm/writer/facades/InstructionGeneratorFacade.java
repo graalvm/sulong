@@ -34,6 +34,7 @@ import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.blocks.MetadataBlock;
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
@@ -51,12 +52,8 @@ public class InstructionGeneratorFacade {
     private final FunctionDefinition def;
     private InstructionBlock gen;
 
-    public InstructionGeneratorFacade(String name, int blocks, Type retType) {
-        this(name, blocks, retType, new Type[]{}, false);
-    }
-
-    public InstructionGeneratorFacade(String name, int blocks, Type retType, Type[] params, boolean varArgs) {
-        FunctionType func = new FunctionType(retType, params, varArgs);
+    public InstructionGeneratorFacade(String name, int blocks, Type retType, boolean isVarArg) {
+        FunctionType func = new FunctionType(retType, new Type[]{}, isVarArg);
         this.def = new FunctionDefinition(func, new MetadataBlock());
         def.setName(name);
         this.def.allocateBlocks(blocks);
@@ -65,6 +62,11 @@ public class InstructionGeneratorFacade {
 
     public FunctionDefinition getFunctionDefinition() {
         return def;
+    }
+
+    public FunctionParameter createParameter(Type type) {
+        def.createParameter(type);
+        return def.getParameters().get(def.getParameters().size() - 1);
     }
 
     public void nextBlock() {

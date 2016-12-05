@@ -74,7 +74,7 @@ public class VectorBinaryOperationExample {
     }
 
     public static void createBinaryVectorTest(IntegerType type, BinaryOperator op) {
-        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 1, type);
+        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 1, type, false);
 
         Instruction curSymbol;
         curSymbol = facade.createAllocate(new ArrayType(type, 4));

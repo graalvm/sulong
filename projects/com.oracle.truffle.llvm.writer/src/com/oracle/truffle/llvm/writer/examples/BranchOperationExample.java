@@ -37,7 +37,7 @@ import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 public class BranchOperationExample {
 
     public static void main(String[] args) {
-        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 3, IntegerType.INTEGER);
+        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 3, IntegerType.INTEGER, false);
 
         facade.createBranch(new IntegerConstant(IntegerType.BOOLEAN, 0), 1, 2);
 
