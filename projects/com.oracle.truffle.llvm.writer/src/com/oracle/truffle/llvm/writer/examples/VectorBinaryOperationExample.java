@@ -73,6 +73,7 @@ public class VectorBinaryOperationExample {
         }
     }
 
+    // Checkstyle: stop magic number name check
     public static void createBinaryVectorTest(IntegerType type, BinaryOperator op) {
         InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 1, type, false);
 
@@ -89,5 +90,6 @@ public class VectorBinaryOperationExample {
 
         System.out.println(FunctionV32Writer.generateLLVM(facade));
     }
+    // Checkstyle: resume magic number name check
 
 }

@@ -36,6 +36,7 @@ import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 
 public class BranchOperationExample {
 
+    // Checkstyle: stop magic number name check
     public static void main(String[] args) {
         InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 3, IntegerType.INTEGER, false);
 
@@ -51,5 +52,6 @@ public class BranchOperationExample {
         System.out.println(FunctionV32Writer.generateLLVM(facade));
         System.out.println("######################");
     }
+    // Checkstyle: resume magic number name check
 
 }
