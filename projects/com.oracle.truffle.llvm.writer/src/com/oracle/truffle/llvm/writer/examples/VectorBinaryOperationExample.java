@@ -32,8 +32,8 @@ package com.oracle.truffle.llvm.writer.examples;
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
-import com.oracle.truffle.llvm.parser.api.model.types.ArrayType;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
+import com.oracle.truffle.llvm.parser.api.model.types.VectorType;
 import com.oracle.truffle.llvm.writer.facades.FunctionV32Writer;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 
@@ -78,7 +78,7 @@ public class VectorBinaryOperationExample {
         InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 1, type, false);
 
         Instruction curSymbol;
-        curSymbol = facade.createAllocate(new ArrayType(type, 4));
+        curSymbol = facade.createAllocate(new VectorType(type, 4));
         curSymbol = facade.createLoad(curSymbol);
         curSymbol = facade.createInsertelement(curSymbol, new IntegerConstant(type, 2), 0);
         curSymbol = facade.createInsertelement(curSymbol, new IntegerConstant(type, 3), 1);

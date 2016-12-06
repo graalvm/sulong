@@ -129,6 +129,6 @@ public class ArrayType implements AggregateType {
 
     @Override
     public String toString() {
-        return String.format("<%d x %s>", getLength(), getElementType());
+        return String.format("[%d x %s]", getLength(), getElementType());
     }
 }
