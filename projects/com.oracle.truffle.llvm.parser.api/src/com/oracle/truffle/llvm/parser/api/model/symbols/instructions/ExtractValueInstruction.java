@@ -36,6 +36,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class ExtractValueInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "extractvalue";
+
     private Symbol aggregate;
 
     private final int index;

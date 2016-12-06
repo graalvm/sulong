@@ -37,6 +37,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class AllocateInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "alloca";
+
     private Symbol count;
 
     private final int align;

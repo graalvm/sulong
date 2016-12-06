@@ -36,6 +36,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class SelectInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "select";
+
     private Symbol condition;
 
     private Symbol trueValue;

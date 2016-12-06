@@ -42,6 +42,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class GetElementPointerInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "getelementptr";
+
     private Symbol base;
 
     private final List<Symbol> indices;

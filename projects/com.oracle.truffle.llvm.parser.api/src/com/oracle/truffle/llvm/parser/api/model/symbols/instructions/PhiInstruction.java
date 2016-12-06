@@ -41,6 +41,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class PhiInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "phi";
+
     private final List<Symbol> values = new ArrayList<>();
 
     private final List<InstructionBlock> blocks = new ArrayList<>();

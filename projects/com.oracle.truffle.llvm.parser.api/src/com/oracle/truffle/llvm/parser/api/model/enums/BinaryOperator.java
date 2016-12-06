@@ -72,7 +72,8 @@ public enum BinaryOperator {
         return fpmap < 0 ? null : values()[fpmap];
     }
 
-    public String getName() {
+    @Override
+    public String toString() {
         return name;
     }
 }

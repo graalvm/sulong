@@ -36,6 +36,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class ShuffleVectorInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "shufflevector";
+
     private Symbol vector1;
 
     private Symbol vector2;

@@ -38,6 +38,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class LoadInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "load";
+
     private final int align;
     private final AtomicOrdering atomicOrdering;
     private final boolean isVolatile;

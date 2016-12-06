@@ -42,6 +42,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class CallInstruction extends ValueInstruction implements Call {
 
+    public static final String LLVMIR_LABEL = "call";
+
     private final Linkage linkage;
 
     private final Visibility visibility;

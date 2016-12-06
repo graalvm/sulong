@@ -145,7 +145,7 @@ public class FunctionV32Writer {
         public void visit(AllocateInstruction allocate) {
             List<String> sb = new ArrayList<>();
             sb.add(newLabel(allocate) + " =");
-            sb.add("alloca");
+            sb.add(AllocateInstruction.LLVMIR_LABEL);
             sb.add(allocate.getPointeeType() + ",");
             sb.add("align " + allocate.getAlign());
             addInstructionString(sb.stream().collect(Collectors.joining(" ")));
@@ -155,7 +155,7 @@ public class FunctionV32Writer {
         public void visit(BinaryOperationInstruction operation) {
             List<String> sb = new ArrayList<>();
             sb.add(newLabel(operation) + " =");
-            sb.add(operation.getOperator().getName());
+            sb.add(operation.getOperator().toString());
             sb.add(operation.getType().toString());
             sb.add(createSymbolLabelWithoutType(operation.getLHS()) + ",");
             sb.add(createSymbolLabelWithoutType(operation.getRHS()));
@@ -165,7 +165,7 @@ public class FunctionV32Writer {
         @Override
         public void visit(BranchInstruction branch) {
             List<String> sb = new ArrayList<>();
-            sb.add("br");
+            sb.add(BranchInstruction.LLVMIR_LABEL);
             sb.add(createSymbolLabel(branch.getSuccessor()));
             addInstructionString(sb.stream().collect(Collectors.joining(" ")));
         }
@@ -173,7 +173,7 @@ public class FunctionV32Writer {
         @Override
         public void visit(ConditionalBranchInstruction branch) {
             List<String> sb = new ArrayList<>();
-            sb.add("br");
+            sb.add(ConditionalBranchInstruction.LLVMIR_LABEL);
             sb.add(createSymbolLabel(branch.getCondition()) + ",");
             sb.add(createSymbolLabel(branch.getTrueSuccessor()) + ",");
             sb.add(createSymbolLabel(branch.getFalseSuccessor()));
@@ -184,7 +184,7 @@ public class FunctionV32Writer {
         public void visit(ExtractElementInstruction extract) {
             List<String> sb = new ArrayList<>();
             sb.add(newLabel(extract) + " =");
-            sb.add("extractelement");
+            sb.add(ExtractElementInstruction.LLVMIR_LABEL);
             sb.add(createSymbolLabel(extract.getVector()) + ",");
             sb.add(createSymbolLabel(extract.getIndex()));
             addInstructionString(sb.stream().collect(Collectors.joining(" ")));
@@ -194,7 +194,7 @@ public class FunctionV32Writer {
         public void visit(InsertElementInstruction insert) {
             List<String> sb = new ArrayList<>();
             sb.add(newLabel(insert) + " =");
-            sb.add("insertelement");
+            sb.add(InsertElementInstruction.LLVMIR_LABEL);
             sb.add(createSymbolLabel(insert.getVector()) + ",");
             sb.add(createSymbolLabel(insert.getValue()) + ",");
             sb.add(createSymbolLabel(insert.getIndex()));
@@ -205,7 +205,7 @@ public class FunctionV32Writer {
         public void visit(LoadInstruction load) {
             List<String> sb = new ArrayList<>();
             sb.add(newLabel(load) + " =");
-            sb.add("load");
+            sb.add(LoadInstruction.LLVMIR_LABEL);
             sb.add(createSymbolLabel(load.getSource()));
             addInstructionString(sb.stream().collect(Collectors.joining(" ")));
         }
@@ -213,7 +213,7 @@ public class FunctionV32Writer {
         @Override
         public void visit(ReturnInstruction ret) {
             List<String> sb = new ArrayList<>();
-            sb.add("ret");
+            sb.add(ReturnInstruction.LLVMIR_LABEL);
             sb.add(createSymbolLabel(ret.getValue()));
             addInstructionString(sb.stream().collect(Collectors.joining(" ")));
         }

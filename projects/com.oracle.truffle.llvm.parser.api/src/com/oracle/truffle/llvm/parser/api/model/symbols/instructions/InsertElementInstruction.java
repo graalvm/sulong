@@ -36,6 +36,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class InsertElementInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "insertelement";
+
     private Symbol vector;
 
     private Symbol index;
