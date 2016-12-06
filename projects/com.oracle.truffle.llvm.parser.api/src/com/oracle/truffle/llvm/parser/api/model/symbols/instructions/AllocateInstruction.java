@@ -45,7 +45,7 @@ public final class AllocateInstruction extends ValueInstruction {
 
     private AllocateInstruction(Type type, int align) {
         super(type);
-        this.align = align;
+        this.align = align; // TODO: currently this tells us the position of the 1 bit
     }
 
     @Override
@@ -82,5 +82,10 @@ public final class AllocateInstruction extends ValueInstruction {
         final AllocateInstruction inst = new AllocateInstruction(type, align);
         inst.count = symbols.getSymbol(count, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s = %s %s, align %d", getName(), LLVMIR_LABEL, getPointeeType(), 1 << (getAlign() - 1));
     }
 }

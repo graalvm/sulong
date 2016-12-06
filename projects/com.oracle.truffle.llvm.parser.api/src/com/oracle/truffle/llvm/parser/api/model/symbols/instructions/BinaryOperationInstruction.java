@@ -93,4 +93,9 @@ public final class BinaryOperationInstruction extends ValueInstruction {
         inst.rhs = symbols.getSymbol(rhs, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s = %s %s %s, %s", getName(), getOperator(), getType(), lhs.getName(), rhs.getName());
+    }
 }

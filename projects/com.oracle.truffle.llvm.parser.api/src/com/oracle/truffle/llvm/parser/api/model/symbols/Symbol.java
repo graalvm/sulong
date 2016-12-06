@@ -37,6 +37,10 @@ public interface Symbol {
 
     boolean hasName();
 
+    default String getName() {
+        return "<anon>";
+    }
+
     @SuppressWarnings("unused")
     default void replace(Symbol original, Symbol replacement) {
         throw new IllegalStateException("Fordward reference used with unsuspecting type " + getClass().getSimpleName());

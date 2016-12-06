@@ -85,4 +85,12 @@ public final class InsertElementInstruction extends ValueInstruction {
         inst.value = symbols.getSymbol(value, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s = %s %s %s, %s %s, %s %s", getName(), LLVMIR_LABEL,
+                        vector.getType(), vector.getName(),
+                        value.getType(), value.getName(),
+                        index.getType(), index.getName());
+    }
 }

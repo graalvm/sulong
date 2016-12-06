@@ -37,8 +37,6 @@ public interface ValueSymbol extends Symbol {
         return 0;
     }
 
-    String getName();
-
     @Override
     default boolean hasName() {
         return true;

@@ -59,4 +59,10 @@ public interface Constant extends Symbol {
     static Constant createFromValues(Type type, Symbols symbols, int[] valueIndices) {
         return AggregateConstant.fromSymbols(symbols, type, valueIndices);
     }
+
+    // TODO: should be moved inside various constant types
+    @Override
+    default String getName() {
+        return toString();
+    }
 }

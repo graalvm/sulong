@@ -96,4 +96,11 @@ public final class ExtractElementInstruction extends ValueInstruction {
         inst.index = symbols.getSymbol(index, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s = %s %s %s, %s %s", getName(), LLVMIR_LABEL,
+                        vector.getType(), vector.getName(),
+                        index.getType(), index.getName());
+    }
 }

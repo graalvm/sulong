@@ -62,4 +62,9 @@ public final class BranchInstruction implements VoidInstruction, TerminatingInst
     public static BranchInstruction fromTarget(InstructionBlock block) {
         return new BranchInstruction(block);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s label %s", LLVMIR_LABEL, successor.getName());
+    }
 }

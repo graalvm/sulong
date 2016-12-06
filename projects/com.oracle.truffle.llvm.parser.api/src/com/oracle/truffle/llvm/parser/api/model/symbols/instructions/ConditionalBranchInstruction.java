@@ -86,4 +86,12 @@ public final class ConditionalBranchInstruction implements VoidInstruction, Term
         inst.condition = symbols.getSymbol(conditionIndex, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s %s %s, label %s, label %s", LLVMIR_LABEL,
+                        condition.getType(), condition.getName(),
+                        trueSuccessor.getName(),
+                        falseSuccessor.getName());
+    }
 }

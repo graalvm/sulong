@@ -100,4 +100,9 @@ public final class LoadInstruction extends ValueInstruction {
             source = replacement;
         }
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s = %s %s %s", getName(), LLVMIR_LABEL, getSource().getType(), ((ValueInstruction) getSource()).getName());
+    }
 }

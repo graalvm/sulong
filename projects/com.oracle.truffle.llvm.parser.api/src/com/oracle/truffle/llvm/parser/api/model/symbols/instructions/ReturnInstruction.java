@@ -76,4 +76,13 @@ public final class ReturnInstruction implements VoidInstruction, TerminatingInst
     public static ReturnInstruction generate() {
         return new ReturnInstruction();
     }
+
+    @Override
+    public String toString() {
+        if (value == null) {
+            return LLVMIR_LABEL;
+        } else {
+            return String.format("%s %s %s", LLVMIR_LABEL, value.getType(), value.getName());
+        }
+    }
 }
