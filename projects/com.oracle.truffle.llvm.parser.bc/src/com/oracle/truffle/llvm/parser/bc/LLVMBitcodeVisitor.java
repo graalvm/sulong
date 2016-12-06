@@ -29,12 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.bc;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -64,6 +59,7 @@ import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.aggregate.ArrayConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.aggregate.StructureConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ValueInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.VoidInstruction;
@@ -106,8 +102,8 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
         RootNode globalVarDeallocs = factoryFacade.createStaticInitsRootNode(visitor, deallocs);
         RootCallTarget globalVarDeallocsTarget = Truffle.getRuntime().createCallTarget(globalVarDeallocs);
 
-        final List<RootCallTarget> constructorFunctions = visitor.getStructor("@llvm.global_ctors", stack);
-        final List<RootCallTarget> destructorFunctions = visitor.getStructor("@llvm.global_dtors", stack);
+        final List<RootCallTarget> constructorFunctions = visitor.getConstructorFunction(stack);
+        final List<RootCallTarget> destructorFunctions = visitor.getDestructorFunction(stack);
 
         final RootCallTarget mainFunctionCallTarget;
         if (mainFunction != null) {
@@ -312,20 +308,30 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
         }
     }
 
-    private List<RootCallTarget> getStructor(String name, FrameSlot stackSlot) {
+    private static final String CONSTRUCTORS_VARNAME = "@llvm.global_ctors";
+
+    private List<RootCallTarget> getConstructorFunction(FrameSlot stackSlot) {
+        return getStructor(CONSTRUCTORS_VARNAME, stackSlot, true);
+    }
+
+    private static final String DESTRUCTORS_VARNAME = "@llvm.global_dtors";
+
+    private List<RootCallTarget> getDestructorFunction(FrameSlot stackSlot) {
+        return getStructor(DESTRUCTORS_VARNAME, stackSlot, false);
+    }
+
+    private List<RootCallTarget> getStructor(String name, FrameSlot stackSlot, boolean ascendingPriority) {
         for (GlobalValueSymbol globalValueSymbol : globals.keySet()) {
             if (globalValueSymbol.getName().equals(name)) {
-                final LLVMNode[] targets = resolveStructor(globalValueSymbol, stackSlot);
+                final LLVMNode[] targets = resolveStructor(globalValueSymbol, stackSlot, ascendingPriority);
                 final RootCallTarget constructorFunctionsRootCallTarget = Truffle.getRuntime().createCallTarget(factoryFacade.createStaticInitsRootNode(this, targets));
-                final List<RootCallTarget> targetList = new ArrayList<>(1);
-                targetList.add(constructorFunctionsRootCallTarget);
-                return targetList;
+                return Collections.singletonList(constructorFunctionsRootCallTarget);
             }
         }
         return Collections.emptyList();
     }
 
-    private LLVMNode[] resolveStructor(GlobalValueSymbol globalVar, FrameSlot stackSlot) {
+    private LLVMNode[] resolveStructor(GlobalValueSymbol globalVar, FrameSlot stackSlot, boolean ascendingPriority) {
         final Object globalVariableDescriptor = globalVariableScope.get(globalVar.getName());
         final ArrayConstant arrayConstant = (ArrayConstant) globalVar.getValue();
         final int elemCount = arrayConstant.getElementCount();
@@ -336,7 +342,7 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
         final FunctionType functionType = (FunctionType) ((PointerType) elementType.getElementType(1)).getPointeeType();
         final int indexedTypeLength = getByteAlignment(functionType);
 
-        final LLVMNode[] structors = new LLVMNode[elemCount];
+        final SortedLLVMNodeList sortedStructors = new SortedLLVMNodeList(ascendingPriority);
         for (int i = 0; i < elemCount; i++) {
             final LLVMExpressionNode globalVarAddress = factoryFacade.createLiteral(this, globalVariableDescriptor, LLVMBaseType.ADDRESS);
             final LLVMExpressionNode iNode = factoryFacade.createLiteral(this, i, LLVMBaseType.I32);
@@ -348,10 +354,74 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
             final LLVMExpressionNode loadedFunction = factoryFacade.createLoad(this, functionType, functionLoadTarget);
             final LLVMExpressionNode[] argNodes = new LLVMExpressionNode[]{factoryFacade.createFrameRead(this, LLVMBaseType.ADDRESS, stackSlot)};
             final LLVMNode functionCall = factoryFacade.createFunctionCall(this, loadedFunction, argNodes, LLVMBaseType.VOID);
-            structors[i] = functionCall;
+
+            final StructureConstant structureConstant = (StructureConstant) arrayConstant.getElement(i);
+            final Integer priorityConstant = LLVMSymbolResolver.evaluateIntegerConstant(structureConstant.getElement(0));
+            assert priorityConstant != null;
+            sortedStructors.add(priorityConstant, functionCall);
         }
 
-        return structors;
+        return sortedStructors.getAll();
+    }
+
+    private static final class SortedLLVMNodeList {
+
+        private SortedLLVMNodeList(boolean ascending) {
+            this.ascending = ascending;
+        }
+
+        private static final class Element {
+            final int priority;
+            final LLVMNode structorNode;
+
+            Element next = null;
+
+            private Element(int priority, LLVMNode structorNode) {
+                this.priority = priority;
+                this.structorNode = structorNode;
+            }
+        }
+
+        private final boolean ascending;
+
+        private Element head = null;
+
+        private int size = 0;
+
+        void add(int priority, LLVMNode structorNode) {
+            final Element elem = new Element(priority, structorNode);
+            if (head == null) {
+                head = elem;
+            } else if (head.priority > priority) {
+                elem.next = head;
+                head = elem;
+            } else {
+                Element cur = head;
+                while (cur.next != null && cur.next.priority <= priority) {
+                    cur = cur.next;
+                }
+                elem.next = cur.next;
+                cur.next = elem;
+            }
+            size++;
+        }
+
+        LLVMNode[] getAll() {
+            final LLVMNode[] nodes = new LLVMNode[size];
+            if (ascending) {
+                int i = 0;
+                for (Element cur = head; cur != null; cur = cur.next) {
+                    nodes[i++] = cur.structorNode;
+                }
+            } else {
+                int i = size - 1;
+                for (Element cur = head; cur != null; cur = cur.next) {
+                    nodes[i--] = cur.structorNode;
+                }
+            }
+            return nodes;
+        }
+
     }
 
     private final Map<String, Object> globalVariableScope = new HashMap<>();
