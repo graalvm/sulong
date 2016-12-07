@@ -51,7 +51,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.llvm.context.LLVMContext;
 import com.oracle.truffle.llvm.context.LLVMLanguage;
 import com.oracle.truffle.llvm.nodes.api.LLVMExpressionNode;
@@ -199,26 +198,22 @@ public abstract class LLVMCallNode {
         @Override
         public Object executeGeneric(VirtualFrame frame) {
             CompilerDirectives.transferToInterpreter();
-            try {
-                if (functionNode instanceof LLVMFunctionLiteralNode) {
-                    TruffleObject function = functionNode.executeTruffleObject(frame);
-                    LLVMFunctionDescriptor llvmFunction = (LLVMFunctionDescriptor) function;
-                    CallTarget callTarget = context.getFunction(llvmFunction);
-                    if (callTarget == null) {
-                        NativeFunctionHandle nativeHandle = context.getNativeHandle(llvmFunction, nativeArgsTypes);
-                        if (nativeHandle == null) {
-                            throw new IllegalStateException("could not find function " + llvmFunction.getName());
-                        }
-                        return replace(getResolvedNativeCall(llvmFunction, nativeHandle, getArgs(), argsTypes, context)).executeGeneric(frame);
-                    } else {
-                        return replace(new LLVMResolvedDirectCallNode(callTarget, getArgs(), argsTypes)).executeGeneric(frame);
+            if (functionNode instanceof LLVMFunctionLiteralNode) {
+                TruffleObject function = LLVMExpressionNode.expectTruffleObject(functionNode, frame);
+                LLVMFunctionDescriptor llvmFunction = (LLVMFunctionDescriptor) function;
+                CallTarget callTarget = context.getFunction(llvmFunction);
+                if (callTarget == null) {
+                    NativeFunctionHandle nativeHandle = context.getNativeHandle(llvmFunction, nativeArgsTypes);
+                    if (nativeHandle == null) {
+                        throw new IllegalStateException("could not find function " + llvmFunction.getName());
                     }
+                    return replace(getResolvedNativeCall(llvmFunction, nativeHandle, getArgs(), argsTypes, context)).executeGeneric(frame);
                 } else {
-                    LLVMFunctionCallChain rootNode = LLVMFunctionCallChainNodeGen.create(context, getArgs(), argsTypes, returnType);
-                    return replace(new LLVMFunctionCallChainStartNode(functionNode, rootNode, getArgs(), argsTypes)).executeGeneric(frame);
+                    return replace(new LLVMResolvedDirectCallNode(callTarget, getArgs(), argsTypes)).executeGeneric(frame);
                 }
-            } catch (UnexpectedResultException e) {
-                throw new IllegalStateException(e);
+            } else {
+                LLVMFunctionCallChain rootNode = LLVMFunctionCallChainNodeGen.create(context, getArgs(), argsTypes, returnType);
+                return replace(new LLVMFunctionCallChainStartNode(functionNode, rootNode, getArgs(), argsTypes)).executeGeneric(frame);
             }
         }
 
@@ -314,21 +309,16 @@ public abstract class LLVMCallNode {
 
         @Override
         public Object executeGeneric(VirtualFrame frame) {
-            try {
-                Object[] args = evaluateArgs(frame);
-                TruffleObject function = functionCallNode.executeTruffleObject(frame);
-                if (function instanceof LLVMFunctionDescriptor) {
-                    return chain.executeDispatch(frame, (LLVMFunctionDescriptor) function, args);
-                } else {
-                    if (foreignExecute == null) {
-                        CompilerDirectives.transferToInterpreterAndInvalidate();
-                        foreignExecute = insert(Message.createExecute(getFunctionArgumentLength(frame)).createNode());
-                    }
-                    return doExecute(frame, foreignExecute, function, args, toLLVM, chain.returnType);
+            Object[] args = evaluateArgs(frame);
+            TruffleObject function = LLVMExpressionNode.expectTruffleObject(functionCallNode, frame);
+            if (function instanceof LLVMFunctionDescriptor) {
+                return chain.executeDispatch(frame, (LLVMFunctionDescriptor) function, args);
+            } else {
+                if (foreignExecute == null) {
+                    CompilerDirectives.transferToInterpreterAndInvalidate();
+                    foreignExecute = insert(Message.createExecute(getFunctionArgumentLength(frame)).createNode());
                 }
-            } catch (UnexpectedResultException e) {
-                CompilerDirectives.transferToInterpreter();
-                throw new IllegalStateException(e);
+                return doExecute(frame, foreignExecute, function, args, toLLVM, chain.returnType);
             }
         }
 

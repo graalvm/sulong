@@ -29,9 +29,7 @@
  */
 package com.oracle.truffle.llvm.nodes.memory;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.llvm.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.types.LLVMAddress;
 import com.oracle.truffle.llvm.types.memory.LLVMHeap;
@@ -53,15 +51,10 @@ public abstract class LLVMInsertValueNode extends LLVMExpressionNode {
 
     @Override
     public LLVMAddress executeLLVMAddress(VirtualFrame frame) {
-        try {
-            LLVMAddress sourceAggr = sourceAggregate.executeLLVMAddress(frame);
-            LLVMAddress targetAggr = targetAggregate.executeLLVMAddress(frame);
-            LLVMHeap.memCopy(targetAggr, sourceAggr, sourceAggregateSize);
-            return targetAggr;
-        } catch (UnexpectedResultException e) {
-            CompilerDirectives.transferToInterpreter();
-            throw new IllegalStateException(e);
-        }
+        LLVMAddress sourceAggr = LLVMExpressionNode.expectLLVMAddress(sourceAggregate, frame);
+        LLVMAddress targetAggr = LLVMExpressionNode.expectLLVMAddress(targetAggregate, frame);
+        LLVMHeap.memCopy(targetAggr, sourceAggr, sourceAggregateSize);
+        return targetAggr;
     }
 
     @Override
@@ -80,16 +73,11 @@ public abstract class LLVMInsertValueNode extends LLVMExpressionNode {
 
         @Override
         public LLVMAddress executeLLVMAddress(VirtualFrame frame) {
-            try {
-                LLVMAddress targetAggr = super.executeLLVMAddress(frame);
-                LLVMAddress insertPosition = targetAggr.increment(offset);
-                float value = element.executeFloat(frame);
-                LLVMMemory.putFloat(insertPosition, value);
-                return targetAggr;
-            } catch (UnexpectedResultException e) {
-                CompilerDirectives.transferToInterpreter();
-                throw new IllegalStateException(e);
-            }
+            LLVMAddress targetAggr = super.executeLLVMAddress(frame);
+            LLVMAddress insertPosition = targetAggr.increment(offset);
+            float value = LLVMExpressionNode.expectFloat(element, frame);
+            LLVMMemory.putFloat(insertPosition, value);
+            return targetAggr;
         }
     }
 
@@ -104,16 +92,11 @@ public abstract class LLVMInsertValueNode extends LLVMExpressionNode {
 
         @Override
         public LLVMAddress executeLLVMAddress(VirtualFrame frame) {
-            try {
-                LLVMAddress targetAggr = super.executeLLVMAddress(frame);
-                LLVMAddress insertPosition = targetAggr.increment(offset);
-                double value = element.executeDouble(frame);
-                LLVMMemory.putDouble(insertPosition, value);
-                return targetAggr;
-            } catch (UnexpectedResultException e) {
-                CompilerDirectives.transferToInterpreter();
-                throw new IllegalStateException(e);
-            }
+            LLVMAddress targetAggr = super.executeLLVMAddress(frame);
+            LLVMAddress insertPosition = targetAggr.increment(offset);
+            double value = LLVMExpressionNode.expectDouble(element, frame);
+            LLVMMemory.putDouble(insertPosition, value);
+            return targetAggr;
         }
     }
 

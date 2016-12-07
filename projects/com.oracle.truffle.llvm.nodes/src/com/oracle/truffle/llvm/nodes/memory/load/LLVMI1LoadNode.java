@@ -33,7 +33,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.llvm.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.memory.load.LLVMI1LoadNodeFactory.LLVMI1DirectLoadNodeGen;
 import com.oracle.truffle.llvm.types.LLVMAddress;
@@ -63,13 +62,9 @@ public abstract class LLVMI1LoadNode extends LLVMExpressionNode {
         @Override
         public boolean executeI1(VirtualFrame frame) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            try {
-                boolean val = LLVMMemory.getI1(addressNode.executeLLVMAddress(frame));
-                replace(new LLVMI1ProfilingLoadNode(addressNode, val));
-                return val;
-            } catch (UnexpectedResultException e) {
-                throw new IllegalStateException(e);
-            }
+            boolean val = LLVMMemory.getI1(LLVMExpressionNode.expectLLVMAddress(addressNode, frame));
+            replace(new LLVMI1ProfilingLoadNode(addressNode, val));
+            return val;
         }
 
         @Override
@@ -91,18 +86,13 @@ public abstract class LLVMI1LoadNode extends LLVMExpressionNode {
 
         @Override
         public boolean executeI1(VirtualFrame frame) {
-            try {
-                boolean value = LLVMMemory.getI1(addressNode.executeLLVMAddress(frame));
-                if (value == profiledValue) {
-                    return profiledValue;
-                } else {
-                    CompilerDirectives.transferToInterpreterAndInvalidate();
-                    replace(LLVMI1DirectLoadNodeGen.create(addressNode));
-                    return value;
-                }
-            } catch (UnexpectedResultException e) {
-                CompilerDirectives.transferToInterpreter();
-                throw new IllegalStateException(e);
+            boolean value = LLVMMemory.getI1(LLVMExpressionNode.expectLLVMAddress(addressNode, frame));
+            if (value == profiledValue) {
+                return profiledValue;
+            } else {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                replace(LLVMI1DirectLoadNodeGen.create(addressNode));
+                return value;
             }
         }
 
