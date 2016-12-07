@@ -31,8 +31,6 @@ package com.oracle.truffle.llvm.parser.api.model.symbols;
 
 public interface ValueSymbol extends Symbol {
 
-    String UNKNOWN = "<anon>";
-
     default int getAlign() {
         return 0;
     }
