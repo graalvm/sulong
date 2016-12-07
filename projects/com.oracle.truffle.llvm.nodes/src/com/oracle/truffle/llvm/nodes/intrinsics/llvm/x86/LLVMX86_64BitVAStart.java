@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.nodes.intrinsics.llvm.x86;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.llvm.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.func.LLVMCallNode;
 import com.oracle.truffle.llvm.types.LLVMAddress;
@@ -224,6 +225,7 @@ public class LLVMX86_64BitVAStart extends LLVMExpressionNode {
         return type;
     }
 
+    @ExplodeLoop
     static void allocateOverflowArgArea(LLVMRuntimeType type, VirtualFrame frame, LLVMAddress address, int varArgsStartIndex, int nrVarArgs, int typeLength, final int nrVarArgsInRegisterArea) {
         if (nrVarArgsInRegisterArea != nrVarArgs) {
             final int remainingVarArgs = nrVarArgs - nrVarArgsInRegisterArea;
