@@ -32,6 +32,8 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
@@ -40,6 +42,8 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class SwitchInstruction implements VoidInstruction, TerminatingInstruction {
+
+    public static final String LLVMIR_LABEL = "switch";
 
     private Symbol condition;
 
@@ -111,5 +115,27 @@ public final class SwitchInstruction implements VoidInstruction, TerminatingInst
         }
 
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // switch <intty> <value>, label <defaultdest>
+        sb.append(String.format("%s %s %s, label %s", LLVMIR_LABEL,
+                        condition.getType(), condition.getName(),
+                        defaultBlock.getName()));
+
+        // [ <intty> <val>, label <dest> ... ]
+        // @formatter:off
+        sb.append(String.format(" [%s ]",
+                        IntStream.range(0, getCaseCount())
+                        .mapToObj(i -> String.format(" %s %s, label %s",
+                                        values[i].getType(), values[i].getName(),
+                                        blocks[i].getName()))
+                        .collect(Collectors.joining("\n          ")))); // TODO: same space indentation
+        // @formatter:on
+
+        return sb.toString();
     }
 }
