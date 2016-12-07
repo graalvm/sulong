@@ -31,6 +31,7 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
@@ -43,6 +44,8 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class VoidCallInstruction implements Call, VoidInstruction {
+
+    public static final String LLVMIR_LABEL = "call";
 
     private final Linkage linkage;
 
@@ -124,5 +127,37 @@ public final class VoidCallInstruction implements Call, VoidInstruction {
             }
         }
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = [tail] call
+        sb.append(String.format("%s", LLVMIR_LABEL)); // TODO: [tail]
+
+        // [cconv] [ret attrs]
+        // TODO: implement
+
+        // <ty>
+        sb.append(String.format(" %s", getType()));
+
+        // [<fnty>*]
+        // TODO: implement
+
+        // <fnptrval>(<function args>)
+        sb.append(" " + target.getName());
+        sb.append('(');
+        // @formatter:off
+        sb.append(arguments.stream()
+                        .map(s -> String.format("%s %s", s.getType(), s.getName()))
+                        .collect(Collectors.joining(", ")));
+        // @formatter:on
+        sb.append(')');
+
+        // [fn attrs]
+        // TODO: implement
+
+        return sb.toString();
     }
 }

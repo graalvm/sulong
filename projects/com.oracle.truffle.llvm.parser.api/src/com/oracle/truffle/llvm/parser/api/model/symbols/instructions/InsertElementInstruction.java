@@ -88,6 +88,7 @@ public final class InsertElementInstruction extends ValueInstruction {
 
     @Override
     public String toString() {
+        // <result> = insertelement <n x <ty>> <val>, <ty> <elt>, i32 <idx>
         return String.format("%s = %s %s %s, %s %s, %s %s", getName(), LLVMIR_LABEL,
                         vector.getType(), vector.getName(),
                         value.getType(), value.getName(),

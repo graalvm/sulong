@@ -37,6 +37,9 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class CompareInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "icmp";
+    public static final String LLVMIR_LABEL_FP = "fcmp";
+
     private final CompareOperator operator;
 
     private Symbol lhs;
@@ -80,5 +83,18 @@ public final class CompareInstruction extends ValueInstruction {
         cmpInst.lhs = symbols.getSymbol(lhs, cmpInst);
         cmpInst.rhs = symbols.getSymbol(rhs, cmpInst);
         return cmpInst;
+    }
+
+    @Override
+    public String toString() {
+        if (operator.isFloatingPoint()) {
+            // <result> = fcmp <cond> <ty> <op1>, <op2>
+            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL_FP, operator, lhs.getType(),
+                            lhs.getName(), rhs.getName());
+        } else {
+            // <result> = icmp <cond> <ty> <op1>, <op2>
+            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL, operator, lhs.getType(),
+                            lhs.getName(), rhs.getName());
+        }
     }
 }

@@ -85,4 +85,13 @@ public final class ShuffleVectorInstruction extends ValueInstruction {
         inst.mask = symbols.getSymbol(mask, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        // <result> = shufflevector <n x <ty>> <v1>, <n x <ty>> <v2>, <m x i32> <mask>
+        return String.format("%s = %s %s %s, %s %s, %s %s", getName(), LLVMIR_LABEL,
+                        vector1.getType(), vector1.getName(),
+                        vector2.getType(), vector2.getName(),
+                        mask.getType(), mask.getName());
+    }
 }

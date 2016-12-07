@@ -114,4 +114,30 @@ public final class GetElementPointerInstruction extends ValueInstruction {
         }
         return inst;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = getelementptr
+        sb.append(String.format("%s = %s", getName(), LLVMIR_LABEL));
+
+        // [inbounds]
+        if (isInbounds) {
+            sb.append(" inbounds");
+        }
+
+        // <pty>* <ptrval>
+        sb.append(String.format(" %s %s", base.getType(), base.getName()));
+
+        // {, <ty> <idx>}*
+        for (Symbol sym : indices) {
+            sb.append(String.format(", %s %s", sym.getType(), sym.getName()));
+        }
+
+        return sb.toString();
+
+        // TODO: implement:
+        // <result> = getelementptr <ptr vector> ptrval, <vector index type> idx
+    }
 }

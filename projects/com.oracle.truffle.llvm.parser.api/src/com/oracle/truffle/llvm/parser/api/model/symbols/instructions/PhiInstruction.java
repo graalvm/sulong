@@ -31,6 +31,8 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
@@ -85,5 +87,22 @@ public final class PhiInstruction extends ValueInstruction {
             phi.blocks.add(function.getBlock(blocks[i]));
         }
         return phi;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = phi <ty>
+        sb.append(String.format("%s = %s %s", getName(), LLVMIR_LABEL, getType()));
+
+        // [ <val0>, <label0>], ...
+        // @formatter:off
+        sb.append(IntStream.range(0, getSize())
+                        .mapToObj(i -> String.format(" [ %s, %s ]", values.get(i).getName(), blocks.get(i).getName()))
+                        .collect(Collectors.joining(",")));
+        // @formatter:on
+
+        return sb.toString();
     }
 }

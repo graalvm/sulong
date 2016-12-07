@@ -96,6 +96,19 @@ public final class BinaryOperationInstruction extends ValueInstruction {
 
     @Override
     public String toString() {
-        return String.format("%s = %s %s %s, %s", getName(), getOperator(), getType(), lhs.getName(), rhs.getName());
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = <op>
+        sb.append(String.format("%s = %s", getName(), operator));
+
+        // { <flag>}*
+        for (Flag flag : flags) {
+            sb.append(" " + flag);
+        }
+
+        // <ty> <op1>, <op2>
+        sb.append(String.format(" %s %s, %s", getType(), lhs.getName(), rhs.getName()));
+
+        return sb.toString();
     }
 }

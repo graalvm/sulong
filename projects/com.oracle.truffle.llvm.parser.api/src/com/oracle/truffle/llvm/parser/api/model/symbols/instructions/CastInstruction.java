@@ -80,6 +80,7 @@ public final class CastInstruction extends ValueInstruction {
 
     @Override
     public String toString() {
-        return String.format("(%s) %s", operator, value);
+        // <result> = <op> <ty> <value> to <ty2>
+        return String.format("%s = %s %s %s to %s", getName(), operator, value.getType(), value.getName(), getType());
     }
 }

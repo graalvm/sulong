@@ -99,6 +99,7 @@ public final class ExtractElementInstruction extends ValueInstruction {
 
     @Override
     public String toString() {
+        // <result> = extractelement <n x <ty>> <val>, i32 <idx>
         return String.format("%s = %s %s %s, %s %s", getName(), LLVMIR_LABEL,
                         vector.getType(), vector.getName(),
                         index.getType(), index.getName());

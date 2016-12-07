@@ -82,4 +82,12 @@ public final class InsertValueInstruction extends ValueInstruction {
         inst.value = symbols.getSymbol(value, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        // <result> = insertvalue <aggregate type> <val>, <ty> <elt>, <idx>{, <idx>}*
+        return String.format("%s = %s %s %s, %s %s, %d", getName(), LLVMIR_LABEL,
+                        aggregate.getType(), aggregate.getName(),
+                        value.getType(), value.getName(), index);
+    }
 }

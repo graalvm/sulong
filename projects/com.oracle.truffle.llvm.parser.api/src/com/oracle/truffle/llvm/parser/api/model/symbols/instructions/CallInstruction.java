@@ -31,10 +31,10 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
-import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
@@ -112,19 +112,32 @@ public final class CallInstruction extends ValueInstruction implements Call {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (target instanceof FunctionDeclaration) {
-            sb.append(((FunctionDeclaration) target).getName());
-        } else {
-            sb.append(target);
-        }
+
+        // <result> = [tail] call
+        sb.append(String.format("%s = %s", getName(), LLVMIR_LABEL)); // TODO: [tail]
+
+        // [cconv] [ret attrs]
+        // TODO: implement
+
+        // <ty>
+        sb.append(String.format(" %s", getType()));
+
+        // [<fnty>*]
+        // TODO: implement
+
+        // <fnptrval>(<function args>)
+        sb.append(" " + target.getName());
         sb.append('(');
-        for (int i = 0; i < arguments.size(); i++) {
-            if (i != 0) {
-                sb.append(", ");
-            }
-            sb.append(arguments.get(i));
-        }
+        // @formatter:off
+        sb.append(arguments.stream()
+                        .map(s -> String.format("%s %s", s.getType(), s.getName()))
+                        .collect(Collectors.joining(", ")));
+        // @formatter:on
         sb.append(')');
+
+        // [fn attrs]
+        // TODO: implement
+
         return sb.toString();
     }
 }

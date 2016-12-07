@@ -72,4 +72,11 @@ public final class ExtractValueInstruction extends ValueInstruction {
         inst.aggregate = symbols.getSymbol(aggregate, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        // <result> = extractvalue <aggregate type> <val>, <idx>{, <idx>}*
+        return String.format("%s = %s %s %s, %d", getName(), LLVMIR_LABEL,
+                        aggregate.getType(), aggregate.getName(), index);
+    }
 }

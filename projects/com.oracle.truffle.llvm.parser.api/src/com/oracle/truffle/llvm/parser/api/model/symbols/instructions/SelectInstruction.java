@@ -85,4 +85,13 @@ public final class SelectInstruction extends ValueInstruction {
         inst.falseValue = symbols.getSymbol(falseValue, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        // <result> = select selty <cond>, <ty> <val1>, <ty> <val2>
+        return String.format("%s = %s %s %s, %s %s, %s %s", getName(), LLVMIR_LABEL,
+                        condition.getType(), condition.getName(),
+                        trueValue.getType(), trueValue.getName(),
+                        falseValue.getType(), falseValue.getName());
+    }
 }
