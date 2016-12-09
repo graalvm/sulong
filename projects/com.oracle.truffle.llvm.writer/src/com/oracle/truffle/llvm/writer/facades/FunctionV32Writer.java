@@ -57,17 +57,17 @@ public class FunctionV32Writer {
 
             @Override
             public void visit(GlobalAlias alias) {
-                sb.append("; GlobalAlias: " + alias + "\n\n"); // TODO
+                sb.append(alias.toString() + "\n\n");
             }
 
             @Override
             public void visit(GlobalConstant constant) {
-                sb.append("; GlobalConstant: " + constant + "\n\n"); // TODO
+                sb.append(constant.toString() + "\n\n");
             }
 
             @Override
             public void visit(GlobalVariable variable) {
-                sb.append("; GlobalVariable: " + variable + "\n\n"); // TODO
+                sb.append(variable.toString() + "\n\n");
             }
 
             @Override

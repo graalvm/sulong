@@ -29,13 +29,17 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.globals;
 
+import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
+import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 
 public final class GlobalVariable extends GlobalValueSymbol {
 
-    private GlobalVariable(Type type, int initialiser, int align, long linkage) {
-        super(type, initialiser, align, linkage);
+    private static final String IR_KEYWORD = "global";
+
+    private GlobalVariable(Type type, int initialiser, int align, Linkage linkage, Visibility visibility) {
+        super(type, initialiser, align, linkage, visibility);
     }
 
     @Override
@@ -43,7 +47,12 @@ public final class GlobalVariable extends GlobalValueSymbol {
         visitor.visit(this);
     }
 
-    public static GlobalVariable create(Type type, int initialiser, int align, long linkage) {
-        return new GlobalVariable(type, initialiser, align, linkage);
+    @Override
+    public String getIRKeyword() {
+        return IR_KEYWORD;
+    }
+
+    public static GlobalVariable create(Type type, int initialiser, int align, long linkage, long visibility) {
+        return new GlobalVariable(type, initialiser, align, Linkage.decode(linkage), Visibility.decode(visibility));
     }
 }

@@ -30,9 +30,11 @@
 package com.oracle.truffle.llvm.parser.api.model.globals;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
+import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 
@@ -50,11 +52,14 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
 
     private final Linkage linkage;
 
-    GlobalValueSymbol(Type type, int initialiser, int align, long linkage) {
+    private final Visibility visibility;
+
+    GlobalValueSymbol(Type type, int initialiser, int align, Linkage linkage, Visibility visibility) {
         this.type = type;
         this.initialiser = initialiser;
         this.align = align;
-        this.linkage = Linkage.decode((int) linkage);
+        this.linkage = linkage;
+        this.visibility = visibility;
     }
 
     public abstract void accept(ModelVisitor visitor);
@@ -67,6 +72,8 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
     public int getInitialiser() {
         return initialiser;
     }
+
+    public abstract String getIRKeyword();
 
     @Override
     public String getName() {
@@ -94,6 +101,10 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
         return value;
     }
 
+    public Visibility getVisibility() {
+        return visibility;
+    }
+
     public void initialise(Symbols symbols) {
         if (getInitialiser() > 0) {
             value = symbols.getSymbol(getInitialiser() - 1);
@@ -107,6 +118,29 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
 
     @Override
     public String toString() {
-        return getName();
+
+        final StringBuilder builder = new StringBuilder();
+
+        builder.append(getName()).append(" = ");
+
+        // TODO threadlocal model
+
+        builder.append(getLinkage().getIrString()).append(' ');
+
+        // TODO calling convention
+
+        builder.append(getIRKeyword()).append(' ');
+
+        builder.append(((PointerType) getType()).getPointeeType().toString());
+
+        if (getValue() != null) {
+            builder.append(' ').append(getValue().toString());
+        }
+
+        if (getAlign() > 0) {
+            builder.append(", align").append(align);
+        }
+
+        return builder.toString();
     }
 }
