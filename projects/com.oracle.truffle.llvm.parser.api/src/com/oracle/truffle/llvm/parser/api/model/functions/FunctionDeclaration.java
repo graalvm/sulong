@@ -31,6 +31,10 @@ package com.oracle.truffle.llvm.parser.api.model.functions;
 
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
+import com.oracle.truffle.llvm.parser.api.model.types.Type;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public final class FunctionDeclaration extends FunctionType implements Constant {
 
@@ -45,6 +49,7 @@ public final class FunctionDeclaration extends FunctionType implements Constant 
 
     @Override
     public String toString() {
-        return "FunctionDeclaration [name=" + getName() + ", types=" + super.toString() + "]";
+        return String.format("declare %s %s%s", getReturnType().toString(), getName(),
+                        Arrays.stream(getArgumentTypes()).map(Type::toString).collect(Collectors.joining(", ", "(", isVarArg() ? ", ...)" : ")")));
     }
 }

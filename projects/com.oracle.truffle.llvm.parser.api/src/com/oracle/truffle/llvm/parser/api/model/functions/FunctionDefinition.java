@@ -282,6 +282,7 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
 
     @Override
     public String toString() {
-        return "FunctionDefinition [symbolCount=" + symbols.getSize() + ", parameters=" + parameters + ", blocks=" + blocks.length + ", currentBlock=" + currentBlock + ", name=" + getName() + "]";
+        return String.format("define %s %s%s", getReturnType().toString(), getName(),
+                        getParameters().stream().map(FunctionParameter::toString).collect(Collectors.joining(", ", "(", isVarArg() ? ", ...)" : ")")));
     }
 }
