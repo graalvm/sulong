@@ -79,6 +79,8 @@ import com.oracle.truffle.llvm.parser.api.util.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.api.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.parser.bc.nodes.LLVMSymbolResolver;
 import com.oracle.truffle.llvm.parser.bc.util.LLVMFrameIDs;
+import com.oracle.truffle.llvm.parser.bc.util.writer.IRUtil;
+import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 import com.oracle.truffle.llvm.parser.bc.util.Pair;
 import com.oracle.truffle.llvm.types.LLVMFunction;
 
@@ -99,6 +101,7 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
 
         LLVMExpressionNode[] globals = visitor.getGobalVariables().toArray(new LLVMExpressionNode[0]);
         RootNode globalVarInits = factoryFacade.createStaticInitsRootNode(visitor, globals);
+
         RootCallTarget globalVarInitsTarget = Truffle.getRuntime().createCallTarget(globalVarInits);
         LLVMExpressionNode[] deallocs = visitor.getDeallocations();
         RootNode globalVarDeallocs = factoryFacade.createStaticInitsRootNode(visitor, deallocs);
@@ -106,6 +109,10 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
 
         final List<RootCallTarget> constructorFunctions = visitor.getConstructors();
         final List<RootCallTarget> destructorFunctions = visitor.getDestructors();
+
+        if (LLVMOptions.DEBUG.printLLVMIR()) {
+            IRUtil.printIR(System.out, model);
+        }
 
         final RootCallTarget mainFunctionCallTarget;
         if (mainFunction != null) {
@@ -421,7 +428,7 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
 
     private final Map<String, Type> nameToTypeMapping = new HashMap<>();
 
-    final InstructionVisitor nameToTypeMappingVisitor = new ReducedInstructionVisitor() {
+    private final InstructionVisitor nameToTypeMappingVisitor = new ReducedInstructionVisitor() {
         @Override
         public void visitValueInstruction(ValueInstruction valueInstruction) {
             nameToTypeMapping.put(valueInstruction.getName(), valueInstruction.getType());

@@ -50,6 +50,9 @@ abstract class SulongDebugOption {
     @Option(commandLineName = "PrintASTs", help = "Prints the Truffle ASTs for the parsed functions.", name = "printFunctionASTs") //
     protected static final Boolean PRINT_FUNCTION_ASTS = false;
 
+    @Option(commandLineName = "PrintLLVMIR", help = "Prints the LLVM IR for the parsed Bitcode File.", name = "printLLVMIR") //
+    protected static final Boolean PRINT_LLVM_IR = false;
+
     @Option(commandLineName = "PrintExecutionTime", help = "Prints the execution time for the main function of the program.", name = "printExecutionTime") //
     protected static final Boolean PRINT_EXECUTION_TIME = false;
 
