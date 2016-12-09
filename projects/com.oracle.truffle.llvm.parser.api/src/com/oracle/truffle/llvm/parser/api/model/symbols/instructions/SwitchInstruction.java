@@ -119,23 +119,34 @@ public final class SwitchInstruction implements VoidInstruction, TerminatingInst
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         // switch <intty> <value>, label <defaultdest>
-        sb.append(String.format("%s %s %s, label %s", LLVMIR_LABEL,
-                        condition.getType(), condition.getName(),
-                        defaultBlock.getName()));
+        sb.append(LLVMIR_LABEL).append(' ');
+        sb.append(condition.getType().toString()).append(' ');
+        sb.append(condition.getName());
+        sb.append(", label ").append(defaultBlock.getName());
 
         // [ <intty> <val>, label <dest> ... ]
         // @formatter:off
-        sb.append(String.format(" [%s ]",
-                        IntStream.range(0, getCaseCount())
-                        .mapToObj(i -> String.format(" %s %s, label %s",
-                                        values[i].getType(), values[i].getName(),
-                                        blocks[i].getName()))
-                        .collect(Collectors.joining("\n          ")))); // TODO: same space indentation
+        sb.append(" [");
+        final String indent = buildIndent(sb.length());
+        sb.append(IntStream.range(0, getCaseCount()).mapToObj(i -> {
+            final Symbol val = values[i];
+            final Symbol blk = blocks[i];
+            return String.format("%s %s, label %s", val.getType().toString(), val.getName(), blk.getName());
+        }).collect(Collectors.joining(indent)));
         // @formatter:on
-
+        sb.append("]");
         return sb.toString();
+    }
+
+    private static String buildIndent(int length) {
+        final StringBuilder builder = new StringBuilder(length + 1);
+        builder.append('\n');
+        for (int i = 0; i < length; i++) {
+            builder.append(' ');
+        }
+        return builder.toString();
     }
 }

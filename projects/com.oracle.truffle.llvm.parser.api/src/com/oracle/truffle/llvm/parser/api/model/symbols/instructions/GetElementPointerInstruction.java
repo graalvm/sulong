@@ -117,6 +117,7 @@ public final class GetElementPointerInstruction extends ValueInstruction {
 
     @Override
     public String toString() {
+        // <result> = getelementptr <ptr vector> ptrval, <vector index type> idx
         StringBuilder sb = new StringBuilder();
 
         // <result> = getelementptr
@@ -136,8 +137,5 @@ public final class GetElementPointerInstruction extends ValueInstruction {
         }
 
         return sb.toString();
-
-        // TODO: implement:
-        // <result> = getelementptr <ptr vector> ptrval, <vector index type> idx
     }
 }
