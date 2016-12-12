@@ -149,9 +149,9 @@ public final class VoidCallInstruction implements Call, VoidInstruction {
         sb.append(" " + target.getName());
         sb.append('(');
         // @formatter:off
-        sb.append(arguments.stream()
-                        .map(s -> String.format("%s %s", s.getType(), s.getName()))
-                        .collect(Collectors.joining(", ")));
+        sb.append(arguments.stream().map(s ->
+            String.format("%s %s", s.getType(), s.getName())
+        ).collect(Collectors.joining(", ")));
         // @formatter:on
         sb.append(')');
 

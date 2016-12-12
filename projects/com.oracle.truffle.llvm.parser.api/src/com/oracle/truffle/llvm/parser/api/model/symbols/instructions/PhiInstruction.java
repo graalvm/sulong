@@ -98,9 +98,9 @@ public final class PhiInstruction extends ValueInstruction {
 
         // [ <val0>, <label0>], ...
         // @formatter:off
-        sb.append(IntStream.range(0, getSize())
-                        .mapToObj(i -> String.format(" [ %s, %s ]", values.get(i).getName(), blocks.get(i).getName()))
-                        .collect(Collectors.joining(",")));
+        sb.append(IntStream.range(0, getSize()).mapToObj(i ->
+            String.format(" [ %s, %s ]", values.get(i).getName(), blocks.get(i).getName())
+        ).collect(Collectors.joining(",")));
         // @formatter:on
 
         return sb.toString();

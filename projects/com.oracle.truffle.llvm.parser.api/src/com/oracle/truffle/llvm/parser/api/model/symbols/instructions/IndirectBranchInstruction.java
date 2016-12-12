@@ -94,9 +94,9 @@ public final class IndirectBranchInstruction implements VoidInstruction, Termina
         // indirectbr <somety>* <address>, [ label <dest1>, label <dest2>, ... ]
         // @formatter:off
         return String.format("%s %s %s, [ %s ]", LLVMIR_LABEL, address.getType(), address.getName(),
-                        Arrays.stream(successors)
-                            .map(s -> String.format("label %s", s.getName()))
-                            .collect(Collectors.joining(", ")));
+                        Arrays.stream(successors).map(s ->
+                            String.format("label %s", s.getName())
+                        ).collect(Collectors.joining(", ")));
         // @formatter:on
     }
 }

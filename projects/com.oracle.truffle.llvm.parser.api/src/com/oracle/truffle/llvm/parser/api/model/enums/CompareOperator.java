@@ -80,7 +80,7 @@ public enum CompareOperator {
     private final boolean fp;
     private final String name;
 
-    private CompareOperator(boolean fp, String name) {
+    CompareOperator(boolean fp, String name) {
         this.fp = fp;
         this.name = name;
     }

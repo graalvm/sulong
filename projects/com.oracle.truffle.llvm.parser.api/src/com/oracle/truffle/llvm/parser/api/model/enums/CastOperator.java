@@ -55,7 +55,7 @@ public enum CastOperator {
 
     private final String name;
 
-    private CastOperator(String name) {
+    CastOperator(String name) {
         this.name = name;
     }
 
