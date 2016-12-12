@@ -29,6 +29,8 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint;
 
+import java.util.Locale;
+
 import com.oracle.truffle.llvm.parser.api.model.types.FloatingPointType;
 
 public final class DoubleConstant extends FloatingPointConstant {
@@ -46,7 +48,7 @@ public final class DoubleConstant extends FloatingPointConstant {
 
     @Override
     public String toString() {
-        return String.format("%.6f", value);
+        return String.format(Locale.ROOT, "%.15f", value);
     }
 
     public static DoubleConstant create(double value) {

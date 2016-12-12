@@ -29,7 +29,8 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
-import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
+import com.oracle.truffle.llvm.parser.api.model.types.FloatingPointType;
+import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public final class NullConstant extends AbstractConstant {
@@ -40,10 +41,13 @@ public final class NullConstant extends AbstractConstant {
 
     @Override
     public String toString() {
-        if (getType() instanceof PointerType) {
-            return "null";
-        } else {
+        // TODO: why do we don't get the correct type in the first place?
+        if (getType() instanceof IntegerType) {
             return "0";
+        } else if (getType() instanceof FloatingPointType) {
+            return "0.0";
         }
+
+        return "null";
     }
 }
