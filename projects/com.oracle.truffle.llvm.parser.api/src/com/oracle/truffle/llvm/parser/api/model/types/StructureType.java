@@ -149,7 +149,7 @@ public class StructureType implements AggregateType, ValueSymbol {
         this.name = name;
     }
 
-    private String toDeclarationString() {
+    public String toDeclarationString() {
         StringBuilder str = new StringBuilder();
         if (isPacked) {
             str.append("<{ ");

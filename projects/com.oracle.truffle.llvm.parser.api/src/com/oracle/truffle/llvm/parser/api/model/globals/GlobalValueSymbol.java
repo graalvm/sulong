@@ -138,7 +138,7 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
         }
 
         if (getAlign() > 0) {
-            builder.append(", align").append(align);
+            builder.append(String.format(", align %d", align));
         }
 
         return builder.toString();
