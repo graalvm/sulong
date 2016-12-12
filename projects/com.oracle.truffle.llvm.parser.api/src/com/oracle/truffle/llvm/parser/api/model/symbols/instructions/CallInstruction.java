@@ -30,13 +30,16 @@
 package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
@@ -119,11 +122,18 @@ public final class CallInstruction extends ValueInstruction implements Call {
         // [cconv] [ret attrs]
         // TODO: implement
 
-        // <ty>
-        sb.append(String.format(" %s", getType()));
+        if (target instanceof FunctionType) {
+            // <ty>
+            FunctionType decl = (FunctionType) target;
+            sb.append(String.format(" %s", decl.getReturnType()));
 
-        // [<fnty>*]
-        // TODO: implement
+            // [<fnty>*]
+            sb.append(String.format(" %s*", Arrays.stream(decl.getArgumentTypes()).map(Type::toString).collect(Collectors.joining(", ", "(", decl.isVarArg() ? ", ...)" : ")"))));
+        } else if (target instanceof FunctionParameter) {
+            sb.append(String.format(" %s", target.getType()));
+        } else {
+            throw new AssertionError("unexpected target type");
+        }
 
         // <fnptrval>(<function args>)
         sb.append(" " + target.getName());

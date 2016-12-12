@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public final class NullConstant extends AbstractConstant {
@@ -39,6 +40,10 @@ public final class NullConstant extends AbstractConstant {
 
     @Override
     public String toString() {
-        return "null";
+        if (getType() instanceof PointerType) {
+            return "null";
+        } else {
+            return "0";
+        }
     }
 }
