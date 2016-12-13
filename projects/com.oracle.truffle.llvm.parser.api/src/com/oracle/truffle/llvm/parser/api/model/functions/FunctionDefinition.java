@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionGenerator;
@@ -282,7 +283,12 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
 
     @Override
     public String toString() {
-        return String.format("define %s %s%s", getReturnType().toString(), getName(),
-                        getParameters().stream().map(FunctionParameter::toString).collect(Collectors.joining(", ", "(", isVarArg() ? ", ...)" : ")")));
+        Stream<String> parameterStream = getParameters().stream().map(FunctionParameter::toString);
+        if (isVarArg()) {
+            parameterStream = Stream.concat(parameterStream, Stream.of("..."));
+        }
+
+        return String.format("define %s %s(%s)", getReturnType().toString(), getName(),
+                        parameterStream.collect(Collectors.joining(", ")));
     }
 }

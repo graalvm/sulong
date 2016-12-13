@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
@@ -147,7 +148,11 @@ public final class VoidCallInstruction implements Call, VoidInstruction {
             sb.append(String.format(" %s", decl.getReturnType()));
 
             // [<fnty>*]
-            sb.append(String.format(" %s*", Arrays.stream(decl.getArgumentTypes()).map(Type::toString).collect(Collectors.joining(", ", "(", decl.isVarArg() ? ", ...)" : ")"))));
+            Stream<String> argumentStream = Arrays.stream(decl.getArgumentTypes()).map(Type::toString);
+            if (decl.isVarArg()) {
+                argumentStream = Stream.concat(argumentStream, Stream.of("..."));
+            }
+            sb.append(String.format(" (%s)*", argumentStream.collect(Collectors.joining(", "))));
         } else if (target instanceof FunctionParameter) {
             sb.append(String.format(" %s", target.getType()));
         } else {
