@@ -40,6 +40,7 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ValueInstruction;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
@@ -52,6 +53,8 @@ public class InstructionGeneratorFacade {
     private final Model model = new Model();
     private final FunctionDefinition def;
     private InstructionBlock gen;
+
+    private int counter = 1;
 
     public InstructionGeneratorFacade(String name, int blocks, Type retType, boolean isVarArg) {
         FunctionType func = new FunctionType(retType, new Type[]{}, isVarArg);
@@ -72,11 +75,14 @@ public class InstructionGeneratorFacade {
 
     public FunctionParameter createParameter(Type type) {
         def.createParameter(type);
-        return def.getParameters().get(def.getParameters().size() - 1);
+        FunctionParameter newParam = def.getParameters().get(def.getParameters().size() - 1);
+        newParam.setName(Integer.toString(counter++));
+        return newParam;
     }
 
     public void nextBlock() {
         this.gen = (InstructionBlock) this.def.generateBlock();
+        this.gen.setName(Integer.toString(counter++));
     }
 
     private static Symbol createI32Constant(int value) {
@@ -96,7 +102,11 @@ public class InstructionGeneratorFacade {
      * Get the last instruction added to the function.
      */
     private Instruction getLastInstruction() {
-        return gen.getInstruction(gen.getInstructionCount() - 1);
+        Instruction lastInstr = gen.getInstruction(gen.getInstructionCount() - 1);
+        if (lastInstr instanceof ValueInstruction && lastInstr.getName().equals(Instruction.UNKNOWN)) {
+            ((ValueInstruction) lastInstr).setName(Integer.toString(counter++));
+        }
+        return lastInstr;
     }
 
     public Instruction createAllocate(Type type) {

@@ -53,13 +53,12 @@ final class FunctionToIRVisitor implements FunctionVisitor {
     public void visit(InstructionBlock block) {
         if (!block.getName().equals(ValueSymbol.UNKNOWN)) {
             if (isNamedLabel(block.getName())) {
-                builder.append(block.getName().substring(1)).append(":").append(NEWLINE);
+                builder.append(NEWLINE).append(block.getName().substring(1)).append(":").append(NEWLINE);
             } else {
-                builder.append(LABEL_BEGIN).append(block.getName().substring(1)).append(NEWLINE);
+                builder.append(NEWLINE).append(LABEL_BEGIN).append(block.getName().substring(1)).append(NEWLINE);
             }
         }
         block.accept(instructionVisitor);
-        builder.append(NEWLINE);
     }
 
     static FunctionVisitor create(StringBuilder builder) {
