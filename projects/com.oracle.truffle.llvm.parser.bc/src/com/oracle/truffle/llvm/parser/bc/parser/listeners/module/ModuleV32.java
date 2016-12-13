@@ -67,7 +67,7 @@ public class ModuleV32 extends Module {
         if (args.length >= 7) {
             visibility = args[6];
         }
-        // Checkstyle: stop magic number name check
+        // Checkstyle: resume magic number name check
 
         generator.createGlobal(type, isConstant, initialiser, align, linkage, visibility);
         symbols.add(type);
