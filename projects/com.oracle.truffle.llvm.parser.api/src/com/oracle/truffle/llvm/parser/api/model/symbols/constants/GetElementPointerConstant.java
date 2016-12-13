@@ -39,6 +39,8 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public final class GetElementPointerConstant extends AbstractConstant {
 
+    public static final String LLVMIR_LABEL = "getelementptr";
+
     private final boolean isInbounds;
 
     private Symbol base;
@@ -82,5 +84,31 @@ public final class GetElementPointerConstant extends AbstractConstant {
             constant.indices.add(symbols.getSymbol(index, constant));
         }
         return constant;
+    }
+
+    @Override
+    public String toString() {
+        // <result> = getelementptr <ptr vector> ptrval, <vector index type> idx
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = getelementptr
+        sb.append(LLVMIR_LABEL);
+
+        // [inbounds]
+        if (isInbounds) {
+            sb.append(" inbounds");
+        }
+
+        // <pty>* <ptrval>
+        sb.append(String.format(" (%s %s", base.getType(), base.getName()));
+
+        // {, <ty> <idx>}*
+        for (Symbol sym : indices) {
+            sb.append(String.format(", %s %s", sym.getType(), sym.getName()));
+        }
+
+        sb.append(")");
+
+        return sb.toString();
     }
 }

@@ -52,7 +52,11 @@ final class FunctionToIRVisitor implements FunctionVisitor {
     @Override
     public void visit(InstructionBlock block) {
         if (!block.getName().equals(ValueSymbol.UNKNOWN)) {
-            builder.append(LABEL_BEGIN).append(block.getName().substring(1)).append(NEWLINE);
+            if (isNamedLabel(block.getName())) {
+                builder.append(block.getName().substring(1)).append(":").append(NEWLINE);
+            } else {
+                builder.append(LABEL_BEGIN).append(block.getName().substring(1)).append(NEWLINE);
+            }
         }
         block.accept(instructionVisitor);
         builder.append(NEWLINE);
@@ -60,5 +64,9 @@ final class FunctionToIRVisitor implements FunctionVisitor {
 
     static FunctionVisitor create(StringBuilder builder) {
         return new FunctionToIRVisitor(builder);
+    }
+
+    private static boolean isNamedLabel(String label) {
+        return !label.substring(1).matches("^[0-9]+$");
     }
 }
