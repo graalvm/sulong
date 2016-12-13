@@ -55,4 +55,9 @@ public final class UnreachableInstruction implements VoidInstruction, Terminatin
     public static UnreachableInstruction generate() {
         return new UnreachableInstruction();
     }
+
+    @Override
+    public String toString() {
+        return LLVMIR_LABEL;
+    }
 }

@@ -35,6 +35,7 @@ import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
+import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.types.StructureType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
@@ -88,8 +89,9 @@ final class ModelToIRVisitor implements ModelVisitor {
 
     @Override
     public void visit(Type type) {
-        if (type instanceof StructureType) {
-            builder.append(String.format("%%%s = type %s", ((StructureType) type).getName(), ((StructureType) type).toDeclarationString()));
+        if (type instanceof StructureType && !((StructureType) type).getName().equals(ValueSymbol.UNKNOWN)) {
+            StructureType actualType = (StructureType) type;
+            builder.append(String.format("%%%s = type %s", actualType.getName(), actualType.toDeclarationString()));
             builder.append(NEWLINE).append(NEWLINE);
         }
     }
