@@ -31,7 +31,7 @@ package com.oracle.truffle.llvm.writer.examples;
 
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
-import com.oracle.truffle.llvm.writer.facades.FunctionV32Writer;
+import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 
 public class BranchOperationExample {
@@ -49,7 +49,7 @@ public class BranchOperationExample {
         facade.createReturn(new IntegerConstant(IntegerType.INTEGER, 102));
 
         System.out.println("######################");
-        System.out.println(FunctionV32Writer.generateLLVM(facade));
+        System.out.println(ModelToIRVisitor.getIRString(facade.getModel()));
         System.out.println("######################");
     }
     // Checkstyle: resume magic number name check

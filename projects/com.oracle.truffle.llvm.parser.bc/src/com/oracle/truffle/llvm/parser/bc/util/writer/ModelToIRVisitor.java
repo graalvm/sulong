@@ -41,7 +41,7 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 
-final class ModelToIRVisitor implements ModelVisitor {
+public final class ModelToIRVisitor implements ModelVisitor {
 
     private static final char NEWLINE = '\n';
 
@@ -100,7 +100,7 @@ final class ModelToIRVisitor implements ModelVisitor {
         return builder.toString();
     }
 
-    static String getIRString(Model model) {
+    public static String getIRString(Model model) {
         // TODO add Top-Level Structures like TargetDataLayout
         final ModelToIRVisitor visitor = new ModelToIRVisitor();
         model.accept(visitor);

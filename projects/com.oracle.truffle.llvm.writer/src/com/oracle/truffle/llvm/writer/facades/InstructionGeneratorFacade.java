@@ -30,8 +30,8 @@
 package com.oracle.truffle.llvm.writer.facades;
 
 import com.oracle.truffle.llvm.parser.api.datalayout.DataLayoutConverter;
+import com.oracle.truffle.llvm.parser.api.model.Model;
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
-import com.oracle.truffle.llvm.parser.api.model.blocks.MetadataBlock;
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
@@ -49,15 +49,21 @@ public class InstructionGeneratorFacade {
     private static final String x86TargetDataLayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128";
     public static final DataLayoutConverter.DataSpecConverter targetDataLayout = DataLayoutConverter.getConverter(x86TargetDataLayout);
 
+    private final Model model = new Model();
     private final FunctionDefinition def;
     private InstructionBlock gen;
 
     public InstructionGeneratorFacade(String name, int blocks, Type retType, boolean isVarArg) {
         FunctionType func = new FunctionType(retType, new Type[]{}, isVarArg);
-        this.def = new FunctionDefinition(func, new MetadataBlock());
+        model.createModule().createFunction(func, false);
+        this.def = (FunctionDefinition) model.createModule().generateFunction();
         def.setName(name);
         this.def.allocateBlocks(blocks);
         this.gen = (InstructionBlock) this.def.generateBlock();
+    }
+
+    public Model getModel() {
+        return model;
     }
 
     public FunctionDefinition getFunctionDefinition() {

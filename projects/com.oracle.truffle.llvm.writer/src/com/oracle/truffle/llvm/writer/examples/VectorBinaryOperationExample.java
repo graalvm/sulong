@@ -34,7 +34,7 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.Intege
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.VectorType;
-import com.oracle.truffle.llvm.writer.facades.FunctionV32Writer;
+import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 
 public class VectorBinaryOperationExample {
@@ -88,7 +88,7 @@ public class VectorBinaryOperationExample {
         curSymbol = facade.createExtractelement(curSymbol, 0);
         facade.createReturn(curSymbol);
 
-        System.out.println(FunctionV32Writer.generateLLVM(facade));
+        System.out.println(ModelToIRVisitor.getIRString(facade.getModel()));
     }
     // Checkstyle: resume magic number name check
 
