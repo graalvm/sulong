@@ -33,6 +33,10 @@ import com.oracle.truffle.llvm.parser.api.datalayout.DataLayoutConverter;
 import com.oracle.truffle.llvm.parser.api.model.Model;
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
+import com.oracle.truffle.llvm.parser.api.model.enums.CastOperator;
+import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
+import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
+import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
@@ -117,33 +121,16 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
-    public Instruction createBranch(int block) {
-        gen.createBranch(block);
-        return getLastInstruction();
-    }
-
-    public Instruction createBranch(Symbol condition, int ifBlock, int elseBlock) {
-        int conditionIdx = addSymbol(condition);
-        gen.createBranch(conditionIdx, ifBlock, elseBlock);
-        return getLastInstruction();
-    }
-
-    public Instruction createLoad(Instruction source) {
-        Type type = ((PointerType) source.getType()).getPointeeType();
+    public Instruction createAtomicLoad(Type type, Instruction source, int align, boolean isVolatile, long atomicOrdering, long synchronizationScope) {
         int sourceIdx = addSymbol(source);
-        int alignIdx = addSymbol(createI32Constant(type.getAlignment(targetDataLayout)));
-        // because we don't have any optimizations, we can set isVolatile to false
-        boolean isVolatile = false;
-        gen.createLoad(type, sourceIdx, alignIdx, isVolatile);
+        gen.createAtomicLoad(type, sourceIdx, align, isVolatile, atomicOrdering, synchronizationScope);
         return getLastInstruction();
     }
 
-    public Instruction createInsertelement(Instruction vector, Constant value, int index) {
-        Type type = vector.getType();
-        int vectorIdx = addSymbol(vector);
-        int valueIdx = addSymbol(value);
-        int indexIdx = addSymbol(new IntegerConstant(IntegerType.INTEGER, index));
-        gen.createInsertElement(type, vectorIdx, indexIdx, valueIdx);
+    public Instruction createAtomicStore(Instruction destination, Instruction source, int align, boolean isVolatile, long atomicOrdering, long synchronizationScope) {
+        int destinationIdx = addSymbol(destination);
+        int sourceIdx = addSymbol(source);
+        gen.createAtomicStore(destinationIdx, sourceIdx, align, isVolatile, atomicOrdering, synchronizationScope);
         return getLastInstruction();
     }
 
@@ -156,11 +143,84 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
+    public Instruction createBranch(int block) {
+        gen.createBranch(block);
+        return getLastInstruction();
+    }
+
+    public Instruction createBranch(Symbol condition, int ifBlock, int elseBlock) {
+        int conditionIdx = addSymbol(condition);
+
+        gen.createBranch(conditionIdx, ifBlock, elseBlock);
+        return getLastInstruction();
+    }
+
+    public Instruction createCall(FunctionType target, int[] arguments) {
+        int targetIdx = addSymbol(target);
+        gen.createCall(target.getReturnType(), targetIdx, arguments, Visibility.DEFAULT.ordinal(), Linkage.EXTERNAL.ordinal());
+        return getLastInstruction();
+    }
+
+    public Instruction createCast(Type type, CastOperator op, Symbol value) {
+        int valueIdx = addSymbol(value);
+        gen.createCast(type, op.ordinal(), valueIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createCompare(CompareOperator op, Symbol lhs, Symbol rhs) {
+        Type type = lhs.getType();
+        int lhsIdx = addSymbol(lhs);
+        int rhsIdx = addSymbol(rhs);
+        gen.createCompare(type, op.ordinal(), lhsIdx, rhsIdx);
+        return getLastInstruction();
+    }
+
     public Instruction createExtractelement(Instruction vector, int index) {
         Type type = vector.getType().getIndexType(index);
         int vectorIdx = addSymbol(vector);
         int indexIdx = addSymbol(createI32Constant(index));
         gen.createExtractElement(type, vectorIdx, indexIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createInsertelement(Instruction vector, Constant value, int index) {
+        Type type = vector.getType();
+        int vectorIdx = addSymbol(vector);
+        int valueIdx = addSymbol(value);
+        int indexIdx = addSymbol(new IntegerConstant(IntegerType.INTEGER, index));
+        gen.createInsertElement(type, vectorIdx, indexIdx, valueIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createExtractValue(Type type, Symbol aggregate, int index) {
+        int aggregateIdx = addSymbol(aggregate);
+        gen.createExtractValue(type, aggregateIdx, index);
+        return getLastInstruction();
+    }
+
+    public Instruction createGetElementPointer(Type type, Symbol base, Symbol[] indices, boolean isInbounds) {
+        int pointerIdx = addSymbol(base);
+        int indicesIdx[] = new int[indices.length];
+        for (int i = 0; i < indices.length; i++) {
+            indicesIdx[i] = addSymbol(indices[i]);
+        }
+        gen.createGetElementPointer(type, pointerIdx, indicesIdx, isInbounds);
+        return getLastInstruction();
+    }
+
+    public Instruction createIndirectBranch(Symbol address, int[] successors) {
+        int addressIdx = addSymbol(address);
+        gen.createIndirectBranch(addressIdx, successors);
+        return getLastInstruction();
+    }
+
+    public Instruction createLoad(Instruction source) {
+        Type type = ((PointerType) source.getType()).getPointeeType();
+        int sourceIdx = addSymbol(source);
+        int alignIdx = addSymbol(createI32Constant(type.getAlignment(targetDataLayout)));
+        // because we don't have any optimizations, we can set isVolatile to false
+        boolean isVolatile = false;
+        gen.createLoad(type, sourceIdx, alignIdx, isVolatile);
         return getLastInstruction();
     }
 
