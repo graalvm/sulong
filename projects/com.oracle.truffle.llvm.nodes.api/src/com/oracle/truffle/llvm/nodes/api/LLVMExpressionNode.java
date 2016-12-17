@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.nodes.api;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -157,6 +158,205 @@ public abstract class LLVMExpressionNode extends LLVMNode {
 
     public LLVMFunctionDescriptor executeLLVMFunctionDescriptor(VirtualFrame frame) throws UnexpectedResultException {
         return LLVMTypesGen.expectLLVMFunctionDescriptor(executeGeneric(frame));
+    }
+
+    // static executes
+    public static LLVM80BitFloat expectLLVM80BitFloat(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVM80BitFloat(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMAddress expectLLVMAddress(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMAddress(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMTruffleAddress expectLLVMTruffleAddress(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMTruffleAddress(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMTruffleObject expectLLVMTruffleObject(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMTruffleObject(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static TruffleObject expectTruffleObject(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeTruffleObject(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static byte[] expectByteArray(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeByteArray(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static double expectDouble(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeDouble(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static float expectFloat(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeFloat(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static short expectI16(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeI16(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static boolean expectI1(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeI1(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static int expectI32(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeI32(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static long expectI64(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeI64(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMIVarBit expectLLVMIVarBit(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMIVarBit(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static byte expectI8(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeI8(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMI8Vector expectLLVMI8Vector(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMI8Vector(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMI64Vector expectLLVMI64Vector(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMI64Vector(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMI32Vector expectLLVMI32Vector(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMI32Vector(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMI1Vector expectLLVMI1Vector(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMI1Vector(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMI16Vector expectLLVMI16Vector(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMI16Vector(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMFloatVector expectLLVMFloatVector(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMFloatVector(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMDoubleVector expectLLVMDoubleVector(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMDoubleVector(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
+    }
+
+    public static LLVMFunctionDescriptor expectLLVMFunctionDescriptor(LLVMExpressionNode node, VirtualFrame frame) {
+        try {
+            return node.executeLLVMFunctionDescriptor(frame);
+        } catch (UnexpectedResultException e) {
+            CompilerDirectives.transferToInterpreter();
+            throw new AssertionError(e);
+        }
     }
 
     protected boolean isLLVMAddress(Object object) {

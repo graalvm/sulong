@@ -29,9 +29,8 @@
  */
 package com.oracle.truffle.llvm.nodes.intrinsics.llvm.x86;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.llvm.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.nodes.func.LLVMCallNode;
 import com.oracle.truffle.llvm.types.LLVMAddress;
@@ -91,12 +90,7 @@ public class LLVMX86_64BitVAStart extends LLVMExpressionNode {
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         LLVMAddress address;
-        try {
-            address = target.executeLLVMAddress(frame);
-        } catch (UnexpectedResultException e) {
-            CompilerDirectives.transferToInterpreter();
-            throw new IllegalStateException(e);
-        }
+        address = LLVMExpressionNode.expectLLVMAddress(target, frame);
         initOffsets(address);
         int varArgsStartIndex = numberOfExplicitArguments;
         Object[] realArguments = getRealArguments(frame);
@@ -231,6 +225,7 @@ public class LLVMX86_64BitVAStart extends LLVMExpressionNode {
         return type;
     }
 
+    @ExplodeLoop
     static void allocateOverflowArgArea(LLVMRuntimeType type, VirtualFrame frame, LLVMAddress address, int varArgsStartIndex, int nrVarArgs, int typeLength, final int nrVarArgsInRegisterArea) {
         if (nrVarArgsInRegisterArea != nrVarArgs) {
             final int remainingVarArgs = nrVarArgs - nrVarArgsInRegisterArea;

@@ -61,7 +61,7 @@ import com.oracle.truffle.llvm.types.LLVMFunction;
 public class LLVMGlobalRootNode extends RootNode {
 
     protected final DirectCallNode main;
-    @CompilationFinal protected final Object[] arguments;
+    @CompilationFinal(dimensions = 1) protected final Object[] arguments;
     protected final LLVMContext context;
     // FIXME instead make the option system "PE safe"
     protected final boolean printNativeStats = LLVMOptions.DEBUG.printNativeCallStatistics();
@@ -91,7 +91,9 @@ public class LLVMGlobalRootNode extends RootNode {
                 frame.setObject(stackPointerSlot, stackPointer);
                 Object[] realArgs = new Object[arguments.length + LLVMCallNode.ARG_START_INDEX];
                 realArgs[0] = LLVMFrameUtil.getAddress(frame, stackPointerSlot);
-                System.arraycopy(arguments, 0, realArgs, LLVMCallNode.ARG_START_INDEX, arguments.length);
+                for (int j = LLVMCallNode.ARG_START_INDEX; j < arguments.length + LLVMCallNode.ARG_START_INDEX; j++) {
+                    realArgs[j] = arguments[j - LLVMCallNode.ARG_START_INDEX];
+                }
                 result = executeIteration(frame, i, realArgs);
 
                 context.awaitThreadTermination();
@@ -120,7 +122,7 @@ public class LLVMGlobalRootNode extends RootNode {
         }
 
         if (printExecutionTime) {
-            startExecutionTime = System.currentTimeMillis();
+            startExecutionTime = getTime();
         }
 
         int returnCode = 0;
@@ -138,7 +140,7 @@ public class LLVMGlobalRootNode extends RootNode {
         }
 
         if (printExecutionTime) {
-            endExecutionTime = System.currentTimeMillis();
+            endExecutionTime = getTime();
             printExecutionTime();
         }
 
@@ -146,6 +148,11 @@ public class LLVMGlobalRootNode extends RootNode {
             executeDestructorFunctions();
         }
         return result;
+    }
+
+    @TruffleBoundary
+    private static long getTime() {
+        return System.currentTimeMillis();
     }
 
     @TruffleBoundary

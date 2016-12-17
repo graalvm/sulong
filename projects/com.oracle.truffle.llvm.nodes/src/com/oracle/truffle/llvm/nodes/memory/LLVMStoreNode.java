@@ -44,8 +44,8 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.llvm.nodes.api.LLVMExpressionNode;
+import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMCMathsIntrinsics.LLVMExp;
 import com.oracle.truffle.llvm.nodes.others.LLVMGlobalVariableDescriptorGuards;
 import com.oracle.truffle.llvm.types.LLVMAddress;
 import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
@@ -338,14 +338,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeI8(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    boolean currentValue = values[i].executeI1(frame);
-                    LLVMMemory.putI1(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                boolean currentValue = LLVMExpressionNode.expectI1(values[i], frame);
+                LLVMMemory.putI1(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -368,14 +363,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeI8(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    byte currentValue = values[i].executeI8(frame);
-                    LLVMMemory.putI8(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                byte currentValue = LLVMExpressionNode.expectI8(values[i], frame);
+                LLVMMemory.putI8(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -398,14 +388,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeI8(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    short currentValue = values[i].executeI16(frame);
-                    LLVMMemory.putI16(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                short currentValue = LLVMExpressionNode.expectI16(values[i], frame);
+                LLVMMemory.putI16(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -428,14 +413,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeI32(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    int currentValue = values[i].executeI32(frame);
-                    LLVMMemory.putI32(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                int currentValue = LLVMExpressionNode.expectI32(values[i], frame);
+                LLVMMemory.putI32(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -458,14 +438,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeI64(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    long currentValue = values[i].executeI64(frame);
-                    LLVMMemory.putI64(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                long currentValue = LLVMExpressionNode.expectI64(values[i], frame);
+                LLVMMemory.putI64(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -488,14 +463,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeI64(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    float currentValue = values[i].executeFloat(frame);
-                    LLVMMemory.putFloat(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                float currentValue = LLVMExpressionNode.expectFloat(values[i], frame);
+                LLVMMemory.putFloat(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -518,14 +488,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeDouble(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    double currentValue = values[i].executeDouble(frame);
-                    LLVMMemory.putDouble(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                double currentValue = LLVMExpressionNode.expectDouble(values[i], frame);
+                LLVMMemory.putDouble(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -548,14 +513,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress write80BitFloat(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    LLVM80BitFloat currentValue = values[i].executeLLVM80BitFloat(frame);
-                    LLVMMemory.put80BitFloat(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                LLVM80BitFloat currentValue = LLVMExpressionNode.expectLLVM80BitFloat(values[i], frame);
+                LLVMMemory.put80BitFloat(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -578,14 +538,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeDouble(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    LLVMAddress currentValue = values[i].executeLLVMAddress(frame);
-                    LLVMMemory.putAddress(currentAddress, currentValue);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                LLVMAddress currentValue = LLVMExpressionNode.expectLLVMAddress(values[i], frame);
+                LLVMMemory.putAddress(currentAddress, currentValue);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -608,14 +563,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeDouble(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    LLVMFunctionDescriptor currentValue = (LLVMFunctionDescriptor) values[i].executeTruffleObject(frame);
-                    LLVMHeap.putFunctionIndex(currentAddress, currentValue.getFunctionIndex());
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                LLVMFunctionDescriptor currentValue = (LLVMFunctionDescriptor) LLVMExpressionNode.expectTruffleObject(values[i], frame);
+                LLVMHeap.putFunctionIndex(currentAddress, currentValue.getFunctionIndex());
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
@@ -638,14 +588,9 @@ public abstract class LLVMStoreNode extends LLVMExpressionNode {
         protected LLVMAddress writeDouble(VirtualFrame frame, LLVMAddress addr) {
             LLVMAddress currentAddress = addr;
             for (int i = 0; i < values.length; i++) {
-                try {
-                    LLVMAddress currentValue = values[i].executeLLVMAddress(frame);
-                    LLVMHeap.memCopy(currentAddress, currentValue, stride);
-                    currentAddress = currentAddress.increment(stride);
-                } catch (UnexpectedResultException e) {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException(e);
-                }
+                LLVMAddress currentValue = LLVMExp.expectLLVMAddress(values[i], frame);
+                LLVMHeap.memCopy(currentAddress, currentValue, stride);
+                currentAddress = currentAddress.increment(stride);
             }
             return addr;
         }
