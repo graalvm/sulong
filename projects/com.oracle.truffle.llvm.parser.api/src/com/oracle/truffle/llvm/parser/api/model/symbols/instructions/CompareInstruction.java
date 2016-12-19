@@ -32,7 +32,9 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
+import com.oracle.truffle.llvm.parser.api.model.types.VectorType;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class CompareInstruction extends ValueInstruction {
@@ -42,12 +44,16 @@ public final class CompareInstruction extends ValueInstruction {
 
     private final CompareOperator operator;
 
+    private Type baseType;
+
     private Symbol lhs;
 
     private Symbol rhs;
 
     private CompareInstruction(Type type, CompareOperator operator) {
-        super(type);
+        // The comparison performed always yields either an i1 or vector of i1 result
+        super(type instanceof VectorType ? new VectorType(IntegerType.BOOLEAN, ((VectorType) type).getLength()) : IntegerType.BOOLEAN);
+        this.baseType = type;
         this.operator = operator;
     }
 
@@ -58,6 +64,10 @@ public final class CompareInstruction extends ValueInstruction {
 
     public Symbol getLHS() {
         return lhs;
+    }
+
+    public Type getBaseType() {
+        return baseType;
     }
 
     public CompareOperator getOperator() {
@@ -89,11 +99,11 @@ public final class CompareInstruction extends ValueInstruction {
     public String toString() {
         if (operator.isFloatingPoint()) {
             // <result> = fcmp <cond> <ty> <op1>, <op2>
-            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL_FP, operator, lhs.getType(),
+            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL_FP, operator, baseType,
                             lhs.getName(), rhs.getName());
         } else {
             // <result> = icmp <cond> <ty> <op1>, <op2>
-            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL, operator, lhs.getType(),
+            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL, operator, baseType,
                             lhs.getName(), rhs.getName());
         }
     }
