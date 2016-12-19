@@ -200,7 +200,7 @@ public class InstructionGeneratorFacade {
 
     public Instruction createGetElementPointer(Type type, Symbol base, Symbol[] indices, boolean isInbounds) {
         int pointerIdx = addSymbol(base);
-        int indicesIdx[] = new int[indices.length];
+        int[] indicesIdx = new int[indices.length];
         for (int i = 0; i < indices.length; i++) {
             indicesIdx[i] = addSymbol(indices[i]);
         }
