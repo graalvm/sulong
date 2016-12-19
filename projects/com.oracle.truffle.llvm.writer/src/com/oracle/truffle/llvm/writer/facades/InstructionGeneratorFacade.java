@@ -175,26 +175,19 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
-    public Instruction createExtractelement(Instruction vector, int index) {
-        Type type = vector.getType().getIndexType(index);
+    public Instruction createExtractValue(Instruction struct, Symbol vector, int index) {
+        Type type = struct.getType().getIndexType(index); // TODO: correct?
         int vectorIdx = addSymbol(vector);
         int indexIdx = addSymbol(createI32Constant(index));
         gen.createExtractElement(type, vectorIdx, indexIdx);
         return getLastInstruction();
     }
 
-    public Instruction createInsertelement(Instruction vector, Constant value, int index) {
-        Type type = vector.getType();
+    public Instruction createExtractElement(Instruction vector, int index) {
+        Type type = vector.getType().getIndexType(index);
         int vectorIdx = addSymbol(vector);
-        int valueIdx = addSymbol(value);
-        int indexIdx = addSymbol(new IntegerConstant(IntegerType.INTEGER, index));
-        gen.createInsertElement(type, vectorIdx, indexIdx, valueIdx);
-        return getLastInstruction();
-    }
-
-    public Instruction createExtractValue(Type type, Symbol aggregate, int index) {
-        int aggregateIdx = addSymbol(aggregate);
-        gen.createExtractValue(type, aggregateIdx, index);
+        int indexIdx = addSymbol(createI32Constant(index));
+        gen.createExtractElement(type, vectorIdx, indexIdx);
         return getLastInstruction();
     }
 
@@ -214,6 +207,23 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
+    public Instruction createInsertElement(Instruction vector, Constant value, int index) {
+        Type type = vector.getType();
+        int vectorIdx = addSymbol(vector);
+        int valueIdx = addSymbol(value);
+        int indexIdx = addSymbol(new IntegerConstant(IntegerType.INTEGER, index));
+        gen.createInsertElement(type, vectorIdx, indexIdx, valueIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createInsertValue(Instruction struct, Symbol aggregate, int index, Symbol value) {
+        Type type = struct.getType(); // TODO: correct?
+        int valueIdx = addSymbol(value);
+        int aggregateIdx = addSymbol(aggregate);
+        gen.createInsertValue(type, aggregateIdx, index, valueIdx);
+        return getLastInstruction();
+    }
+
     public Instruction createLoad(Instruction source) {
         Type type = ((PointerType) source.getType()).getPointeeType();
         int sourceIdx = addSymbol(source);
@@ -221,6 +231,19 @@ public class InstructionGeneratorFacade {
         // because we don't have any optimizations, we can set isVolatile to false
         boolean isVolatile = false;
         gen.createLoad(type, sourceIdx, alignIdx, isVolatile);
+        return getLastInstruction();
+    }
+
+    public Instruction createPhi(Type type, int[] values, InstructionBlock[] blocks) {
+        assert values.length == blocks.length;
+
+        int[] valuesIdx = new int[values.length];
+        int[] blocksIdx = new int[blocks.length];
+        for (int i = 0; i < blocks.length; i++) {
+            valuesIdx[i] = addSymbol(createI32Constant(values[i]));
+            blocksIdx[i] = addSymbol(blocks[i]);
+        }
+        gen.createPhi(type, values, blocksIdx);
         return getLastInstruction();
     }
 
@@ -232,6 +255,68 @@ public class InstructionGeneratorFacade {
     public Instruction createReturn(Symbol value) {
         int valueIdx = addSymbol(value);
         gen.createReturn(valueIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createSelect(Type type, Symbol condition, Symbol trueValue, Symbol falseValue) {
+        int conditionIdx = addSymbol(condition);
+        int trueValueIdx = addSymbol(trueValue);
+        int falseValueIdx = addSymbol(falseValue);
+        gen.createSelect(type, conditionIdx, trueValueIdx, falseValueIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createShuffleVector(Type type, Symbol vector1, Symbol vector2, Symbol mask) {
+        int vector1Idx = addSymbol(vector1);
+        int vector2Idx = addSymbol(vector2);
+        int maskIdx = addSymbol(mask);
+        gen.createShuffleVector(type, vector1Idx, vector2Idx, maskIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createStore(Symbol destination, Symbol source, int align) {
+        int destinationIdx = addSymbol(destination);
+        int sourceIdx = addSymbol(source);
+        // because we don't have any optimizations, we can set isVolatile to false
+        boolean isVolatile = false;
+        gen.createStore(destinationIdx, sourceIdx, align, isVolatile);
+        return getLastInstruction();
+    }
+
+    public Instruction createSwitch(Symbol condition, InstructionBlock defaultBlock, Symbol[] caseValues, InstructionBlock[] caseBlocks) {
+        assert caseValues.length == caseBlocks.length;
+
+        int conditionIdx = addSymbol(condition);
+        int defaultBlockIdx = defaultBlock.getBlockIndex();
+
+        int[] caseValuesIdx = new int[caseValues.length];
+        int[] caseBlocksIdx = new int[caseBlocks.length];
+        for (int i = 0; i < caseBlocks.length; i++) {
+            caseValuesIdx[i] = addSymbol(caseValues[i]);
+            caseBlocksIdx[i] = caseBlocks[i].getBlockIndex();
+        }
+
+        gen.createSwitch(conditionIdx, defaultBlockIdx, caseValuesIdx, caseBlocksIdx);
+        return getLastInstruction();
+    }
+
+    public Instruction createSwitchOld(Symbol condition, InstructionBlock defaultBlock, long[] caseConstants, InstructionBlock[] caseBlocks) {
+        assert caseConstants.length == caseBlocks.length;
+
+        int conditionIdx = addSymbol(condition);
+        int defaultBlockIdx = defaultBlock.getBlockIndex();
+
+        int[] caseBlocksIdx = new int[caseBlocks.length];
+        for (int i = 0; i < caseBlocks.length; i++) {
+            caseBlocksIdx[i] = caseBlocks[i].getBlockIndex();
+        }
+
+        gen.createSwitchOld(conditionIdx, defaultBlockIdx, caseConstants, caseBlocksIdx); // TODO
+        return getLastInstruction();
+    }
+
+    public Instruction createUnreachable() {
+        gen.createUnreachable();
         return getLastInstruction();
     }
 }

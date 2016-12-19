@@ -80,12 +80,12 @@ public class VectorBinaryOperationExample {
         Instruction curSymbol;
         curSymbol = facade.createAllocate(new VectorType(type, 4));
         curSymbol = facade.createLoad(curSymbol);
-        curSymbol = facade.createInsertelement(curSymbol, new IntegerConstant(type, 2), 0);
-        curSymbol = facade.createInsertelement(curSymbol, new IntegerConstant(type, 3), 1);
-        curSymbol = facade.createInsertelement(curSymbol, new IntegerConstant(type, 7), 2);
-        curSymbol = facade.createInsertelement(curSymbol, new IntegerConstant(type, 17), 3);
+        curSymbol = facade.createInsertElement(curSymbol, new IntegerConstant(type, 2), 0);
+        curSymbol = facade.createInsertElement(curSymbol, new IntegerConstant(type, 3), 1);
+        curSymbol = facade.createInsertElement(curSymbol, new IntegerConstant(type, 7), 2);
+        curSymbol = facade.createInsertElement(curSymbol, new IntegerConstant(type, 17), 3);
         curSymbol = facade.createBinaryOperation(curSymbol, curSymbol, op);
-        curSymbol = facade.createExtractelement(curSymbol, 0);
+        curSymbol = facade.createExtractElement(curSymbol, 0);
         facade.createReturn(curSymbol);
 
         System.out.println(ModelToIRVisitor.getIRString(facade.getModel()));
