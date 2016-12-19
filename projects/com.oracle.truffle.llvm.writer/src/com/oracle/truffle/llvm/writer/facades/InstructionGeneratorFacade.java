@@ -113,24 +113,30 @@ public class InstructionGeneratorFacade {
         return lastInstr;
     }
 
+    private static int calculateAlign(int align) {
+        assert Integer.highestOneBit(align) == align;
+
+        return align == 0 ? 0 : Integer.numberOfTrailingZeros(align) + 1;
+    }
+
     public Instruction createAllocate(Type type) {
         Type pointerType = new PointerType(type);
         int count = addSymbol(createI32Constant(1));
         int align = type.getAlignment(targetDataLayout);
-        gen.createAllocation(pointerType, count, align);
+        gen.createAllocation(pointerType, count, calculateAlign(align));
         return getLastInstruction();
     }
 
     public Instruction createAtomicLoad(Type type, Instruction source, int align, boolean isVolatile, long atomicOrdering, long synchronizationScope) {
         int sourceIdx = addSymbol(source);
-        gen.createAtomicLoad(type, sourceIdx, align, isVolatile, atomicOrdering, synchronizationScope);
+        gen.createAtomicLoad(type, sourceIdx, calculateAlign(align), isVolatile, atomicOrdering, synchronizationScope);
         return getLastInstruction();
     }
 
     public Instruction createAtomicStore(Instruction destination, Instruction source, int align, boolean isVolatile, long atomicOrdering, long synchronizationScope) {
         int destinationIdx = addSymbol(destination);
         int sourceIdx = addSymbol(source);
-        gen.createAtomicStore(destinationIdx, sourceIdx, align, isVolatile, atomicOrdering, synchronizationScope);
+        gen.createAtomicStore(destinationIdx, sourceIdx, calculateAlign(align), isVolatile, atomicOrdering, synchronizationScope);
         return getLastInstruction();
     }
 
@@ -230,7 +236,7 @@ public class InstructionGeneratorFacade {
         int align = type.getAlignment(targetDataLayout);
         // because we don't have any optimizations, we can set isVolatile to false
         boolean isVolatile = false;
-        gen.createLoad(type, sourceIdx, align, isVolatile);
+        gen.createLoad(type, sourceIdx, calculateAlign(align), isVolatile);
         return getLastInstruction();
     }
 
@@ -279,7 +285,7 @@ public class InstructionGeneratorFacade {
         int sourceIdx = addSymbol(source);
         // because we don't have any optimizations, we can set isVolatile to false
         boolean isVolatile = false;
-        gen.createStore(destinationIdx, sourceIdx, align, isVolatile);
+        gen.createStore(destinationIdx, sourceIdx, calculateAlign(align), isVolatile);
         return getLastInstruction();
     }
 
