@@ -110,7 +110,8 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
         final List<RootCallTarget> constructorFunctions = visitor.getConstructors();
         final List<RootCallTarget> destructorFunctions = visitor.getDestructors();
 
-        if (LLVMOptions.DEBUG.printLLVMIR()) {
+        // TODO: improve detection of library code (which shouldn't be printed out)
+        if (LLVMOptions.DEBUG.printLLVMIR() && !context.haveLoadedDynamicBitcodeLibraries()) {
             IRUtil.printIR(System.out, model);
         }
 
