@@ -72,6 +72,10 @@ public enum BinaryOperator {
         return fpmap < 0 ? null : values()[fpmap];
     }
 
+    public boolean isFloatingPoint() {
+        return this.ordinal() > INT_XOR.ordinal();
+    }
+
     @Override
     public String toString() {
         return name;

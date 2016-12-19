@@ -89,6 +89,15 @@ public enum CompareOperator {
         return fp;
     }
 
+    public int getIndex() {
+        long fpops = FP_TRUE.ordinal() + 1;
+        if (this.ordinal() >= 0 && this.ordinal() < fpops) {
+            return this.ordinal();
+        } else {
+            return (int) (this.ordinal() + INTEGER_OPERATOR_FLAG - fpops);
+        }
+    }
+
     @Override
     public String toString() {
         return name;

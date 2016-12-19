@@ -115,8 +115,8 @@ public class InstructionGeneratorFacade {
 
     public Instruction createAllocate(Type type) {
         Type pointerType = new PointerType(type);
-        int count = addSymbol(createI32Constant(0));
-        int align = addSymbol(createI32Constant(type.getAlignment(targetDataLayout)));
+        int count = addSymbol(createI32Constant(1));
+        int align = type.getAlignment(targetDataLayout);
         gen.createAllocation(pointerType, count, align);
         return getLastInstruction();
     }
@@ -171,7 +171,7 @@ public class InstructionGeneratorFacade {
         Type type = lhs.getType();
         int lhsIdx = addSymbol(lhs);
         int rhsIdx = addSymbol(rhs);
-        gen.createCompare(type, op.ordinal(), lhsIdx, rhsIdx);
+        gen.createCompare(type, op.getIndex(), lhsIdx, rhsIdx);
         return getLastInstruction();
     }
 
@@ -227,10 +227,10 @@ public class InstructionGeneratorFacade {
     public Instruction createLoad(Instruction source) {
         Type type = ((PointerType) source.getType()).getPointeeType();
         int sourceIdx = addSymbol(source);
-        int alignIdx = addSymbol(createI32Constant(type.getAlignment(targetDataLayout)));
+        int align = type.getAlignment(targetDataLayout);
         // because we don't have any optimizations, we can set isVolatile to false
         boolean isVolatile = false;
-        gen.createLoad(type, sourceIdx, alignIdx, isVolatile);
+        gen.createLoad(type, sourceIdx, align, isVolatile);
         return getLastInstruction();
     }
 
