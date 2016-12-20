@@ -88,6 +88,16 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
 
     public static LLVMParserResult parse(Source source, LLVMContext context, NodeFactoryFacade factoryFacade) {
         final BitcodeParserResult parserResult = BitcodeParserResult.getFromSource(source);
+        return parse(parserResult, source, context, factoryFacade);
+    }
+
+    public static LLVMParserResult parse(Model model, LLVMContext context, NodeFactoryFacade factoryFacade) {
+        final BitcodeParserResult parserResult = BitcodeParserResult.getFromModel(model);
+        Source source = Source.newBuilder("").mimeType("").name("").build(); // create empty source
+        return parse(parserResult, source, context, factoryFacade);
+    }
+
+    public static LLVMParserResult parse(final BitcodeParserResult parserResult, Source source, LLVMContext context, NodeFactoryFacade factoryFacade) {
         final Model model = parserResult.getModel();
         final StackAllocation stackAllocation = parserResult.getStackAllocation();
         final TargetDataLayout layout = ((ModelModule) model.createModule()).getTargetDataLayout();

@@ -51,6 +51,7 @@ import com.oracle.truffle.llvm.context.LLVMLanguage;
 import com.oracle.truffle.llvm.parser.api.LLVMParserResult;
 import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacade;
 import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacadeProvider;
+import com.oracle.truffle.llvm.parser.api.model.Model;
 import com.oracle.truffle.llvm.parser.bc.LLVMBitcodeVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
@@ -64,7 +65,7 @@ public class LLVM {
         LLVMLanguage.provider = getProvider();
     }
 
-    private static NodeFactoryFacade getNodeFactoryFacade() {
+    public static NodeFactoryFacade getNodeFactoryFacade() {
         ServiceLoader<NodeFactoryFacadeProvider> loader = ServiceLoader.load(NodeFactoryFacadeProvider.class);
         if (!loader.iterator().hasNext()) {
             throw new AssertionError("Could not find a " + NodeFactoryFacadeProvider.class.getSimpleName() + " for the creation of the Truffle nodes");
@@ -236,6 +237,10 @@ public class LLVM {
 
     public static LLVMParserResult parseBitcodeFile(Source source, LLVMContext context) {
         return LLVMBitcodeVisitor.parse(source, context, getNodeFactoryFacade());
+    }
+
+    public static LLVMParserResult parseModel(Model model, LLVMContext context) {
+        return LLVMBitcodeVisitor.parse(model, context, getNodeFactoryFacade());
     }
 
     public static int executeMain(File file, Object... args) {

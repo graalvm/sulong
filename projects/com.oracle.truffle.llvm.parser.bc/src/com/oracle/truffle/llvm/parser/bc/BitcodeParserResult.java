@@ -71,6 +71,10 @@ public final class BitcodeParserResult {
         final Model model = new Model();
         new LLVMParser(model).parse(ModuleVersion.getModuleVersion(LLVMOptions.ENGINE.llvmVersion()), source);
 
+        return getFromModel(model);
+    }
+
+    public static BitcodeParserResult getFromModel(Model model) {
         final LLVMPhiManager phis = LLVMPhiManager.generate(model);
         final StackAllocation stackAllocation = StackAllocation.generate(model);
         final LLVMLabelList labels = LLVMLabelList.generate(model);

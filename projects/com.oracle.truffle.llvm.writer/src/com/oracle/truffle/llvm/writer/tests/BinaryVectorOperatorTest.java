@@ -42,13 +42,28 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.impl.DefaultTruffleRuntime;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.vm.PolyglotEngine;
+import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.llvm.LLVM;
+import com.oracle.truffle.llvm.context.LLVMContext;
+import com.oracle.truffle.llvm.context.LLVMLanguage;
+import com.oracle.truffle.llvm.parser.api.LLVMParserResult;
+import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacade;
+import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacadeAdapter;
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.VectorType;
+import com.oracle.truffle.llvm.parser.bc.LLVMBitcodeVisitor;
 import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
+import com.oracle.truffle.llvm.parser.factories.NodeFactoryFacadeImpl;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 
 @SuppressWarnings("unused")
@@ -172,7 +187,7 @@ public class BinaryVectorOperatorTest {
 
         Instruction retVec = facade.createBinaryOperation(vec1, vec2, operator);
 
-        // // TODO: this version doesn't work yet, so we evaluate the result in another way
+        // // TODO: this approach doesn't work yet, so we evaluate the result in another way
         // vec_res = facade.createLoad(vec_res);
         // vec_res = facade.createInsertElement(vec_res, new IntegerConstant(type, result1), 0);
         // vec_res = facade.createInsertElement(vec_res, new IntegerConstant(type, result2), 1);
@@ -193,5 +208,23 @@ public class BinaryVectorOperatorTest {
         // Checkstyle: resume magic number name check
 
         System.out.println(ModelToIRVisitor.getIRString(facade.getModel()));
+
+        // TODO: execute
+        // NodeFactoryFacade factoryFacade = NodeFactoryFacadeProviderImpl.getNodeFactoryFacade();
+        // TODO: NodeFactoryFacadeProviderImpl.get;
+        // Node findContext = LLVMLanguage.INSTANCE.createFindContextNode0();
+        // LLVMContext context = LLVMLanguage.INSTANCE.findContext0(findContext);
+
+        // vm.eval(fileSource).as(Integer.class);
+
+        // LLVMContext context = new LLVMContext(LLVM.getNodeFactoryFacade());
+        LLVMContext context = new LLVMContext(new NodeFactoryFacadeImpl());
+
+        LLVMParserResult parserResult = LLVM.parseModel(facade.getModel(), context);
+
+        RootCallTarget callTarget = Truffle.getRuntime().createCallTarget(parserResult.getMainFunction().getRootNode());
+
+        Object result = callTarget.call();
+        System.out.println("result: " + result);
     }
 }
