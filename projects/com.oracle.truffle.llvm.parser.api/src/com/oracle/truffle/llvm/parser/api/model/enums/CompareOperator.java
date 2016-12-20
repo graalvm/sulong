@@ -77,16 +77,16 @@ public enum CompareOperator {
         return null;
     }
 
-    private final boolean fp;
+    private final boolean isFloatingPoint;
     private final String name;
 
     CompareOperator(boolean fp, String name) {
-        this.fp = fp;
+        this.isFloatingPoint = fp;
         this.name = name;
     }
 
     public boolean isFloatingPoint() {
-        return fp;
+        return isFloatingPoint;
     }
 
     public int getIndex() {
