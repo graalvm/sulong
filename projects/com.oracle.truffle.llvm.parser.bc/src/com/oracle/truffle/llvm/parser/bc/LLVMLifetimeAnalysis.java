@@ -36,9 +36,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.llvm.parser.api.model.ModelModule;
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalValueSymbol;
@@ -75,6 +81,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractTerminatingInst
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ValueSymbolVisitor;
 import com.oracle.truffle.llvm.parser.api.util.LLVMParserAsserts;
+import com.oracle.truffle.llvm.parser.bc.util.Pair;
+import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 
 public final class LLVMLifetimeAnalysis {
@@ -96,7 +104,37 @@ public final class LLVMLifetimeAnalysis {
         return nullableAfter;
     }
 
-    public static LLVMLifetimeAnalysis getResult(FunctionDefinition functionDefinition, FrameDescriptor frameDescriptor, Map<InstructionBlock, List<LLVMPhiManager.Phi>> phiRefs) {
+    public static Map<String, LLVMLifetimeAnalysis> getResults(BitcodeParserResult parserResult) {
+        final List<FunctionDefinition> definedFunctions = ((ModelModule) parserResult.getModel().createModule()).getDefinedFunctions();
+
+        if (definedFunctions.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        final ExecutorService executorService = Executors.newFixedThreadPool(definedFunctions.size());
+        final List<Future<Pair<String, LLVMLifetimeAnalysis>>> lifetimeFutures = new ArrayList<>(definedFunctions.size());
+        for (final FunctionDefinition f : definedFunctions) {
+            final String name = f.getName();
+            final FrameDescriptor frame = parserResult.getStackAllocation().getFrame(name);
+            final Map<InstructionBlock, List<LLVMPhiManager.Phi>> phiRefs = parserResult.getPhis().getPhiMap(name);
+            lifetimeFutures.add(executorService.submit(() -> new Pair<>(name, getResult(f, frame, phiRefs))));
+        }
+
+        final Map<String, LLVMLifetimeAnalysis> results = lifetimeFutures.stream().map(f -> {
+            try {
+                return f.get();
+            } catch (InterruptedException | ExecutionException e) {
+                LLVMLogger.error("Concurrent Execution of Lifetime Analysis failed!");
+                return new Pair<>("", new LLVMLifetimeAnalysis(Collections.emptyMap(), Collections.emptyMap()));
+            }
+        }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
+
+        executorService.shutdown();
+
+        return results;
+    }
+
+    private static LLVMLifetimeAnalysis getResult(FunctionDefinition functionDefinition, FrameDescriptor frameDescriptor, Map<InstructionBlock, List<LLVMPhiManager.Phi>> phiRefs) {
         LLVMParserAsserts.assertNoNullElement(frameDescriptor.getSlots());
         final LLVMLifetimeAnalysisVisitor visitor = new LLVMLifetimeAnalysisVisitor(frameDescriptor, functionDefinition, phiRefs);
         final LLVMLifetimeAnalysis lifetimes = visitor.visit();

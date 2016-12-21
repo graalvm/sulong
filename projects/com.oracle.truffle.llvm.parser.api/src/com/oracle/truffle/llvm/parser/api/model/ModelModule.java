@@ -103,6 +103,10 @@ public final class ModelModule implements ModuleGenerator {
         declares.forEach(visitor::visit);
     }
 
+    public List<FunctionDefinition> getDefinedFunctions() {
+        return defines;
+    }
+
     @Override
     public void createAlias(Type type, int aliasedValue, long linkage) {
         GlobalAlias alias = new GlobalAlias(type, aliasedValue, linkage);
