@@ -337,8 +337,6 @@ suite = {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.truffle.llvm.parser.bc",
-        "com.oracle.truffle.llvm.parser.api",
         "com.oracle.truffle.llvm",
         "mx:JUNIT",
        ],
