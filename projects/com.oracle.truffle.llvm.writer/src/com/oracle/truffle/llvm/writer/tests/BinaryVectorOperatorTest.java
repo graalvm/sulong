@@ -111,66 +111,8 @@ public class BinaryVectorOperatorTest {
         long vector21 = VECTOR2_1 % maxValue;
         long vector22 = VECTOR2_2 % maxValue;
 
-        long result1 = 0, result2 = 0;
-
-        // TODO: signed/unsigned?
-        switch (operator) {
-            case INT_ADD:
-                result1 = (vector11 + vector21) % maxValue;
-                result2 = (vector12 + vector22) % maxValue;
-                break;
-            case INT_SUBTRACT:
-                result1 = (vector11 - vector21) % maxValue;
-                result2 = (vector12 - vector22) % maxValue;
-                break;
-            case INT_MULTIPLY:
-                result1 = (vector11 * vector21) % maxValue;
-                result2 = (vector12 * vector22) % maxValue;
-                break;
-            case INT_UNSIGNED_DIVIDE:
-                result1 = (vector11 / vector21) % maxValue;
-                result2 = (vector12 / vector22) % maxValue;
-                break;
-            case INT_SIGNED_DIVIDE:
-                result1 = (vector11 / vector21) % maxValue;
-                result2 = (vector12 / vector22) % maxValue;
-                break;
-            case INT_UNSIGNED_REMAINDER:
-                result1 = (vector11 % vector21) % maxValue;
-                result2 = (vector12 % vector22) % maxValue;
-                break;
-            case INT_SIGNED_REMAINDER:
-                result1 = (vector11 % vector21) % maxValue;
-                result2 = (vector12 % vector22) % maxValue;
-                break;
-            case INT_SHIFT_LEFT:
-                result1 = (vector11 << vector21) % maxValue;
-                result2 = (vector12 << vector22) % maxValue;
-                break;
-            case INT_LOGICAL_SHIFT_RIGHT:
-                result1 = (vector11 >> vector21) % maxValue;
-                result2 = (vector12 >> vector22) % maxValue;
-                break;
-            case INT_ARITHMETIC_SHIFT_RIGHT:
-                result1 = (vector11 >>> vector21) % maxValue;
-                result2 = (vector12 >>> vector22) % maxValue;
-                break;
-            case INT_AND:
-                result1 = (vector11 & vector21) % maxValue;
-                result2 = (vector12 & vector22) % maxValue;
-                break;
-            case INT_OR:
-                result1 = (vector11 | vector21) % maxValue;
-                result2 = (vector12 | vector22) % maxValue;
-                break;
-            case INT_XOR:
-                result1 = (vector11 ^ vector21) % maxValue;
-                result2 = (vector12 ^ vector22) % maxValue;
-                break;
-            default:
-                fail("unexpected operator");
-                break;
-        }
+        long result1 = calculateResultValue(vector11, vector21, maxValue);
+        long result2 = calculateResultValue(vector12, vector22, maxValue);
 
         ModelModuleFacade model = new ModelModuleFacade();
 
@@ -220,13 +162,51 @@ public class BinaryVectorOperatorTest {
         // vm.eval(fileSource).as(Integer.class);
 
         // LLVMContext context = new LLVMContext(LLVM.getNodeFactoryFacade());
-        LLVMContext context = new LLVMContext(new NodeFactoryFacadeImpl());
 
-        LLVMParserResult parserResult = LLVM.parseModel(facade.getModel(), context);
-
-        RootCallTarget callTarget = Truffle.getRuntime().createCallTarget(parserResult.getMainFunction().getRootNode());
-
-        Object result = callTarget.call();
-        System.out.println("result: " + result);
+        // LLVMContext context = new LLVMContext(new NodeFactoryFacadeImpl());
+        //
+        // LLVMParserResult parserResult = LLVM.parseModel(facade.getModel(), context);
+        //
+        // RootCallTarget callTarget =
+        // Truffle.getRuntime().createCallTarget(parserResult.getMainFunction().getRootNode());
+        //
+        // Object result = callTarget.call();
+        // System.out.println("result: " + result);
     }
+
+    private long calculateResultValue(long vector1, long vector2, long maxValue) {
+        // TODO: signed/unsigned?
+        switch (operator) {
+            case INT_ADD:
+                return (vector1 + vector2) % maxValue;
+            case INT_SUBTRACT:
+                return (vector1 - vector2) % maxValue;
+            case INT_MULTIPLY:
+                return (vector1 * vector2) % maxValue;
+            case INT_UNSIGNED_DIVIDE:
+                return (vector1 / vector2) % maxValue;
+            case INT_SIGNED_DIVIDE:
+                return (vector1 / vector2) % maxValue;
+            case INT_UNSIGNED_REMAINDER:
+                return (vector1 % vector2) % maxValue;
+            case INT_SIGNED_REMAINDER:
+                return (vector1 % vector2) % maxValue;
+            case INT_SHIFT_LEFT:
+                return (vector1 << vector2) % maxValue;
+            case INT_LOGICAL_SHIFT_RIGHT:
+                return (vector1 >> vector2) % maxValue;
+            case INT_ARITHMETIC_SHIFT_RIGHT:
+                return (vector1 >>> vector2) % maxValue;
+            case INT_AND:
+                return (vector1 & vector2) % maxValue;
+            case INT_OR:
+                return (vector1 | vector2) % maxValue;
+            case INT_XOR:
+                return (vector1 ^ vector2) % maxValue;
+            default:
+                fail("unexpected operator");
+                return 0;
+        }
+    }
+
 }
