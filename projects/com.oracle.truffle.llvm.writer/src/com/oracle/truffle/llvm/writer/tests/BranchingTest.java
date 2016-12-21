@@ -43,6 +43,8 @@ public class BranchingTest {
     public void test() {
         ModelModuleFacade model = new ModelModuleFacade();
 
+        // Checkstyle: stop magic number name check
+
         InstructionGeneratorFacade facade = model.createFunctionDefinition("main", 3, IntegerType.INTEGER, new Type[]{}, false);
 
         facade.createBranch(new IntegerConstant(IntegerType.BOOLEAN, 0), 1, 2);
@@ -52,6 +54,8 @@ public class BranchingTest {
 
         facade.nextBlock();
         facade.createReturn(new IntegerConstant(IntegerType.INTEGER, 0));
+
+        // Checkstyle: resume magic number name check
 
         System.out.println(model);
     }
