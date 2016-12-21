@@ -64,7 +64,6 @@ public class FunctionCallTestCase {
 
         Instruction fooRet = mainFacade.createCall(fooFacade.getFunctionDefinition(), new Symbol[]{});
 
-        // TODO: creaate global string constant
         Instruction strPtr = mainFacade.createGetElementPointer(new PointerType(IntegerType.BYTE),
                         str,
                         new Symbol[]{new IntegerConstant(IntegerType.INTEGER, 0),

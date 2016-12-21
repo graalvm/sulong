@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.generators;
 
+import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
@@ -43,9 +44,11 @@ public interface ModuleGenerator extends SymbolGenerator {
 
     void createType(Type type);
 
-    void createGlobal(Type type, boolean isConstant, int initialiser, int align, long linkage, long visibility);
+    ValueSymbol createGlobal(Type type, boolean isConstant, int initialiser, int align, long linkage, long visibility);
 
     void exitModule();
+
+    int getSymbolCount();
 
     FunctionGenerator generateFunction();
 }

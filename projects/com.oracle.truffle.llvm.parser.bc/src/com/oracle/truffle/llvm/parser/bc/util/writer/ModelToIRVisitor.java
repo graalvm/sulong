@@ -60,18 +60,18 @@ public final class ModelToIRVisitor implements ModelVisitor {
 
     @Override
     public void visit(GlobalAlias alias) {
-        builder.append(alias.toString()).append(NEWLINE);
+        builder.append(alias.toString()).append(NEWLINE).append(NEWLINE);
     }
 
     @Override
     public void visit(GlobalConstant constant) {
-        builder.append(constant.toString()).append(NEWLINE);
+        builder.append(constant.toString()).append(NEWLINE).append(NEWLINE);
 
     }
 
     @Override
     public void visit(GlobalVariable variable) {
-        builder.append(variable.toString()).append(NEWLINE);
+        builder.append(variable.toString()).append(NEWLINE).append(NEWLINE);
     }
 
     @Override

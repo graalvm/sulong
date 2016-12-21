@@ -30,10 +30,10 @@
 package com.oracle.truffle.llvm.writer.facades;
 
 import com.oracle.truffle.llvm.parser.api.model.Model;
-import com.oracle.truffle.llvm.parser.api.model.ModelModule;
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
+import com.oracle.truffle.llvm.parser.api.model.generators.ModuleGenerator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.types.ArrayType;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
@@ -70,13 +70,12 @@ public class ModelModuleFacade {
     }
 
     public ValueSymbol createGlobalStringConstant(String name, String value) {
-        ModelModule module = (ModelModule) model.createModule();
+        ModuleGenerator module = model.createModule();
 
         Type strType = new PointerType(new ArrayType(IntegerType.BYTE, value.length()));
 
         module.creatFromString(strType, value, false);
-        module.createGlobal(strType, true, module.getSymbolCount(), 0, Linkage.INTERNAL.ordinal(), Visibility.DEFAULT.ordinal());
-        ValueSymbol str = (ValueSymbol) module.getSymbol(module.getSymbolCount() - 1);
+        ValueSymbol str = module.createGlobal(strType, true, module.getSymbolCount(), 0, Linkage.INTERNAL.ordinal(), Visibility.DEFAULT.ordinal());
         str.setName(name);
 
         module.exitModule();
