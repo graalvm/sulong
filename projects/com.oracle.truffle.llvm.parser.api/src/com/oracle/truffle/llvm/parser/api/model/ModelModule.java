@@ -250,6 +250,14 @@ public final class ModelModule implements ModuleGenerator {
         symbols.setSymbolName(index, name);
     }
 
+    public int getSymbolCount() {
+        return symbols.getSize();
+    }
+
+    public Symbol getSymbol(int index) {
+        return symbols.getSymbol(index);
+    }
+
     @Override
     public String toString() {
         return "ModelModule [types=" + types + ", globals=" + globals + ", declares=" + declares + ", defines=" + defines + ", symbols=" + symbols + ", currentFunction=" + currentFunction + "]";

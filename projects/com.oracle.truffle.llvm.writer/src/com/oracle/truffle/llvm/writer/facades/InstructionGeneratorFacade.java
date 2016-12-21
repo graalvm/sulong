@@ -54,19 +54,24 @@ public class InstructionGeneratorFacade {
     private static final String x86TargetDataLayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128";
     public static final DataLayoutConverter.DataSpecConverter targetDataLayout = DataLayoutConverter.getConverter(x86TargetDataLayout);
 
-    private final Model model = new Model();
+    private final Model model;
     private final FunctionDefinition def;
     private InstructionBlock gen;
 
     private int counter = 1;
 
-    public InstructionGeneratorFacade(String name, int blocks, Type retType, boolean isVarArg) {
+    public InstructionGeneratorFacade(Model model, String name, int blocks, Type retType, boolean isVarArg) {
+        this.model = model;
         FunctionType func = new FunctionType(retType, new Type[]{}, isVarArg);
         model.createModule().createFunction(func, false);
         this.def = (FunctionDefinition) model.createModule().generateFunction();
         def.setName(name);
         this.def.allocateBlocks(blocks);
         this.gen = (InstructionBlock) this.def.generateBlock();
+    }
+
+    public InstructionGeneratorFacade(String name, int blocks, Type retType, boolean isVarArg) {
+        this(new Model(), name, blocks, retType, isVarArg);
     }
 
     public Model getModel() {
@@ -161,9 +166,13 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
-    public Instruction createCall(FunctionType target, int[] arguments) {
+    public Instruction createCall(FunctionType target, Symbol[] arguments) {
         int targetIdx = addSymbol(target);
-        gen.createCall(target.getReturnType(), targetIdx, arguments, Visibility.DEFAULT.ordinal(), Linkage.EXTERNAL.ordinal());
+        int[] argumentsIdx = new int[arguments.length];
+        for (int i = 0; i < arguments.length; i++) {
+            argumentsIdx[i] = addSymbol(arguments[i]);
+        }
+        gen.createCall(target.getReturnType(), targetIdx, argumentsIdx, Visibility.DEFAULT.ordinal(), Linkage.EXTERNAL.ordinal());
         return getLastInstruction();
     }
 
