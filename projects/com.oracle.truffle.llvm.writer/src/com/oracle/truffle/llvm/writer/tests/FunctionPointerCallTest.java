@@ -29,43 +29,22 @@
  */
 package com.oracle.truffle.llvm.writer.tests;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
+import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
-import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
+import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
-@RunWith(Parameterized.class)
-public class FunctionCallTestCase {
+public class FunctionPointerCallTest {
 
-    private final IntegerType functionType;
-
-    public FunctionCallTestCase(IntegerType functionType) {
-        this.functionType = functionType;
-    }
-
-    @Parameters(name = "{index}: FunctionCallTestCase[type={0}]")
-    public static Collection<Object[]> data() {
-        List<Object[]> parameters = new LinkedList<>();
-
-        for (IntegerType type : IntegerType.values()) {
-            parameters.add(new Object[]{type});
-        }
-
-        return parameters;
-    }
+    private final IntegerType functionType = IntegerType.INTEGER;
 
     @Test
     public void test() {
@@ -73,13 +52,33 @@ public class FunctionCallTestCase {
 
         // Checkstyle: stop magic number name check
 
-        InstructionGeneratorFacade fooFacade = model.createFunctionDefinition("foo", 1, functionType, new Type[]{functionType}, false);
-        ValueSymbol parameter = fooFacade.createParameter(functionType);
-        fooFacade.createReturn(parameter);
+        BinaryOperator[] operators = new BinaryOperator[]{BinaryOperator.INT_ADD,
+                        BinaryOperator.INT_SUBTRACT,
+                        BinaryOperator.INT_MULTIPLY,
+                        BinaryOperator.INT_SIGNED_DIVIDE};
 
-        InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, functionType, new Type[]{}, false);
+        InstructionGeneratorFacade[] functions = new InstructionGeneratorFacade[operators.length];
 
-        Instruction fooRet = mainFacade.createCall(fooFacade.getFunctionDefinition(), new Symbol[]{new IntegerConstant(functionType, 0)});
+        FunctionType callType = new FunctionType(functionType, new Type[]{functionType, functionType}, false);
+
+        for (int i = 0; i < functions.length; i++) {
+            functions[i] = model.createFunctionDefinition("foo_" + operators[i].toString(), 1, callType);
+            Symbol lhs = functions[i].createParameter(functionType);
+            Symbol rhs = functions[i].createParameter(functionType);
+            Symbol result = functions[i].createBinaryOperation(lhs, rhs, operators[i]);
+            functions[i].createReturn(result);
+        }
+
+        InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, IntegerType.INTEGER, new Type[]{}, false);
+
+        Instruction fp = mainFacade.createAllocate(new PointerType(callType));
+        mainFacade.createStore(fp, functions[0].getFunctionDefinition(), 8);
+
+        fp = mainFacade.createLoad(fp);
+
+        // Instruction fooRet = mainFacade.createCall(fp,
+        // new Symbol[]{new IntegerConstant(functionType, 0), new IntegerConstant(functionType,
+        // 0)});
 
         mainFacade.createReturn(fooRet);
 

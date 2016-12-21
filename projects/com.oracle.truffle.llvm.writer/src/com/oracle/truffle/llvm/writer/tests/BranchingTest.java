@@ -27,32 +27,33 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.writer.examples;
+package com.oracle.truffle.llvm.writer.tests;
+
+import org.junit.Test;
 
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
-import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
+import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
-public class BranchOperationExample {
+public class BranchingTest {
 
-    // Checkstyle: stop magic number name check
-    public static void main(String[] args) {
-        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 3, IntegerType.INTEGER, new Type[]{}, false);
+    @Test
+    public void test() {
+        ModelModuleFacade model = new ModelModuleFacade();
+
+        InstructionGeneratorFacade facade = model.createFunctionDefinition("main", 3, IntegerType.INTEGER, new Type[]{}, false);
 
         facade.createBranch(new IntegerConstant(IntegerType.BOOLEAN, 0), 1, 2);
 
         facade.nextBlock();
-        facade.createReturn(new IntegerConstant(IntegerType.INTEGER, 101));
+        facade.createReturn(new IntegerConstant(IntegerType.INTEGER, 1));
 
         facade.nextBlock();
-        facade.createReturn(new IntegerConstant(IntegerType.INTEGER, 102));
+        facade.createReturn(new IntegerConstant(IntegerType.INTEGER, 0));
 
-        System.out.println("######################");
-        System.out.println(ModelToIRVisitor.getIRString(facade.getModel()));
-        System.out.println("######################");
+        System.out.println(model);
     }
-    // Checkstyle: resume magic number name check
 
 }

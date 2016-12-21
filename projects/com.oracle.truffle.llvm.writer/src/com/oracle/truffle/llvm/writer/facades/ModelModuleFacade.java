@@ -61,6 +61,10 @@ public class ModelModuleFacade {
         return new InstructionGeneratorFacade(model, name, blocks, retType, args, isVarArg);
     }
 
+    public InstructionGeneratorFacade createFunctionDefinition(String name, int blocks, FunctionType type) {
+        return new InstructionGeneratorFacade(model, name, blocks, type);
+    }
+
     public FunctionDeclaration createFunctionDeclaration(String name, Type retType, Type[] args, boolean isVarArg) {
         FunctionType functionType = new FunctionType(retType, args, isVarArg);
         FunctionDeclaration decl = new FunctionDeclaration(functionType);

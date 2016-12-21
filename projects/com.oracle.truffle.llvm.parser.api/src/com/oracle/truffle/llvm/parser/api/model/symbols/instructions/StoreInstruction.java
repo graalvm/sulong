@@ -33,6 +33,7 @@ import com.oracle.truffle.llvm.parser.api.model.enums.AtomicOrdering;
 import com.oracle.truffle.llvm.parser.api.model.enums.SynchronizationScope;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class StoreInstruction implements VoidInstruction {
@@ -127,7 +128,7 @@ public final class StoreInstruction implements VoidInstruction {
             }
 
             // <ty> <value>, <ty>* <pointer>
-            sb.append(String.format(" %s %s, %s %s", source.getType(), source.getName(),
+            sb.append(String.format(" %s %s, %s %s", ((PointerType) destination.getType()).getPointeeType(), source.getName(),
                             destination.getType(), destination.getName()));
 
             // [, align <alignment>]
@@ -147,7 +148,7 @@ public final class StoreInstruction implements VoidInstruction {
             }
 
             // <ty> <value>, <ty>* <pointer>
-            sb.append(String.format(" %s %s, %s %s", source.getType(), source.getName(),
+            sb.append(String.format(" %s %s, %s %s", ((PointerType) destination.getType()).getPointeeType(), source.getName(),
                             destination.getType(), destination.getName()));
 
             // [singlethread]

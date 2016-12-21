@@ -41,6 +41,7 @@ import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
@@ -134,10 +135,20 @@ public final class CallInstruction extends ValueInstruction implements Call {
                 argumentStream = Stream.concat(argumentStream, Stream.of("..."));
             }
             sb.append(String.format(" (%s)*", argumentStream.collect(Collectors.joining(", "))));
+        } else if (target instanceof LoadInstruction) {
+            Type targetType = ((LoadInstruction) target).getSource().getType();
+            while (targetType instanceof PointerType) {
+                targetType = ((PointerType) targetType).getPointeeType();
+            }
+            if (targetType instanceof FunctionType) {
+                sb.append(String.format(" %s", ((FunctionType) targetType).getReturnType()));
+            } else {
+                throw new AssertionError("unexpected target type: " + targetType.getClass().getName());
+            }
         } else if (target instanceof FunctionParameter) {
             sb.append(String.format(" %s", target.getType()));
         } else {
-            throw new AssertionError("unexpected target type");
+            throw new AssertionError("unexpected target type: " + target.getClass().getName());
         }
 
         // <fnptrval>(<function args>)
