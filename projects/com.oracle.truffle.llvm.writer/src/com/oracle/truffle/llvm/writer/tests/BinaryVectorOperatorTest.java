@@ -65,6 +65,7 @@ import com.oracle.truffle.llvm.parser.bc.LLVMBitcodeVisitor;
 import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
 import com.oracle.truffle.llvm.parser.factories.NodeFactoryFacadeImpl;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
+import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
 @SuppressWarnings("unused")
 @RunWith(Parameterized.class)
@@ -171,11 +172,12 @@ public class BinaryVectorOperatorTest {
                 break;
         }
 
-        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 1, IntegerType.BOOLEAN, false);
+        ModelModuleFacade model = new ModelModuleFacade();
+
+        InstructionGeneratorFacade facade = model.createFunctionDefinition("main", 1, IntegerType.BOOLEAN, false);
 
         Instruction vec1 = facade.createAllocate(new VectorType(type, 2)); // TODO: wrong align
         Instruction vec2 = facade.createAllocate(new VectorType(type, 2));
-        Instruction vec_res = facade.createAllocate(new VectorType(type, 2));
 
         vec1 = facade.createLoad(vec1);
         vec1 = facade.createInsertElement(vec1, new IntegerConstant(type, vector11), 0);
@@ -207,7 +209,7 @@ public class BinaryVectorOperatorTest {
         facade.createReturn(ret); // 0=OK, 1=ERROR
         // Checkstyle: resume magic number name check
 
-        System.out.println(ModelToIRVisitor.getIRString(facade.getModel()));
+        System.out.println(model);
 
         // TODO: execute
         // NodeFactoryFacade factoryFacade = NodeFactoryFacadeProviderImpl.getNodeFactoryFacade();

@@ -31,22 +31,15 @@ package com.oracle.truffle.llvm.writer.tests;
 
 import org.junit.Test;
 
-import com.oracle.truffle.llvm.parser.api.model.Model;
-import com.oracle.truffle.llvm.parser.api.model.ModelModule;
-import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
-import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
-import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
-import com.oracle.truffle.llvm.parser.api.model.types.ArrayType;
-import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
-import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
+import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
 public class FunctionCallTestCase {
 
@@ -58,25 +51,16 @@ public class FunctionCallTestCase {
 
     @Test
     public void test() {
+        ModelModuleFacade model = new ModelModuleFacade();
+
         // Checkstyle: stop magic number name check
-        Model model = new Model();
 
-        ModelModule module = (ModelModule) model.createModule();
+        Symbol str = model.createGlobalStringConstant(".str", "test\n\0");
 
-        module.creatFromString(new PointerType(new ArrayType(IntegerType.BYTE, 6)), "test\n\0", false);
-        module.createGlobal(new PointerType(new ArrayType(IntegerType.BYTE, 6)), true, 1, module.getSymbolCount() - 1, Linkage.INTERNAL.ordinal(), Visibility.DEFAULT.ordinal());
-        ValueSymbol str = (ValueSymbol) module.getSymbol(module.getSymbolCount() - 1);
-        str.setName(".str");
+        FunctionDeclaration printfDecl = model.createFunctionDeclaration("printf", IntegerType.INTEGER, new Type[]{new PointerType(IntegerType.BYTE)}, true);
 
-        module.exitModule();
-
-        FunctionType printfType = new FunctionType(IntegerType.INTEGER, new Type[]{new PointerType(IntegerType.BYTE)}, true);
-        FunctionDeclaration printfDecl = new FunctionDeclaration(printfType);
-        printfDecl.setName("printf");
-        model.createModule().createFunction(printfDecl, true);
-
-        InstructionGeneratorFacade mainFacade = new InstructionGeneratorFacade(model, "main", 1, IntegerType.INTEGER, false);
-        InstructionGeneratorFacade fooFacade = new InstructionGeneratorFacade(model, "foo", 1, IntegerType.INTEGER, false);
+        InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, IntegerType.INTEGER, false);
+        InstructionGeneratorFacade fooFacade = model.createFunctionDefinition("foo", 1, IntegerType.INTEGER, false);
 
         Instruction fooRet = mainFacade.createCall(fooFacade.getFunctionDefinition(), new Symbol[]{});
 
@@ -91,9 +75,10 @@ public class FunctionCallTestCase {
         mainFacade.createReturn(fooRet);
 
         fooFacade.createReturn(new IntegerConstant(IntegerType.INTEGER, 123));
+
         // Checkstyle: resume magic number name check
 
-        System.out.println(ModelToIRVisitor.getIRString(model));
+        System.out.println(model);
     }
 
 }
