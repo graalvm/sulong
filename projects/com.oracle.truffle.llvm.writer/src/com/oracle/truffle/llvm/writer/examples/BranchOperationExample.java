@@ -31,6 +31,7 @@ package com.oracle.truffle.llvm.writer.examples;
 
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
+import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 
@@ -38,7 +39,7 @@ public class BranchOperationExample {
 
     // Checkstyle: stop magic number name check
     public static void main(String[] args) {
-        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 3, IntegerType.INTEGER, false);
+        InstructionGeneratorFacade facade = new InstructionGeneratorFacade("main", 3, IntegerType.INTEGER, new Type[]{}, false);
 
         facade.createBranch(new IntegerConstant(IntegerType.BOOLEAN, 0), 1, 2);
 

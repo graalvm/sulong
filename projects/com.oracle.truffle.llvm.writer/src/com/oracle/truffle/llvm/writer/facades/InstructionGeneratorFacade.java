@@ -60,9 +60,9 @@ public class InstructionGeneratorFacade {
 
     private int counter = 1;
 
-    public InstructionGeneratorFacade(Model model, String name, int blocks, Type retType, boolean isVarArg) {
+    public InstructionGeneratorFacade(Model model, String name, int blocks, Type retType, Type[] args, boolean isVarArg) {
         this.model = model;
-        FunctionType func = new FunctionType(retType, new Type[]{}, isVarArg);
+        FunctionType func = new FunctionType(retType, args, isVarArg);
         model.createModule().createFunction(func, false);
         this.def = (FunctionDefinition) model.createModule().generateFunction();
         def.setName(name);
@@ -70,8 +70,8 @@ public class InstructionGeneratorFacade {
         this.gen = (InstructionBlock) this.def.generateBlock();
     }
 
-    public InstructionGeneratorFacade(String name, int blocks, Type retType, boolean isVarArg) {
-        this(new Model(), name, blocks, retType, isVarArg);
+    public InstructionGeneratorFacade(String name, int blocks, Type retType, Type[] args, boolean isVarArg) {
+        this(new Model(), name, blocks, retType, args, isVarArg);
     }
 
     public Model getModel() {

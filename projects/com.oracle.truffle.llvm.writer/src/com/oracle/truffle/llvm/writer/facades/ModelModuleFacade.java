@@ -57,8 +57,8 @@ public class ModelModuleFacade {
         return model;
     }
 
-    public InstructionGeneratorFacade createFunctionDefinition(String name, int blocks, Type retType, boolean isVarArg) {
-        return new InstructionGeneratorFacade(model, name, blocks, retType, isVarArg);
+    public InstructionGeneratorFacade createFunctionDefinition(String name, int blocks, Type retType, Type[] args, boolean isVarArg) {
+        return new InstructionGeneratorFacade(model, name, blocks, retType, args, isVarArg);
     }
 
     public FunctionDeclaration createFunctionDeclaration(String name, Type retType, Type[] args, boolean isVarArg) {

@@ -31,22 +31,21 @@ package com.oracle.truffle.llvm.writer.tests;
 
 import org.junit.Test;
 
-import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
-import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
 public class FunctionCallTestCase {
 
-    @SuppressWarnings("unused") private final Type functionReturnType;
+    private final IntegerType functionType;
 
     public FunctionCallTestCase() {
-        functionReturnType = IntegerType.INTEGER;
+        functionType = IntegerType.INTEGER;
     }
 
     @Test
@@ -55,25 +54,15 @@ public class FunctionCallTestCase {
 
         // Checkstyle: stop magic number name check
 
-        Symbol str = model.createGlobalStringConstant(".str", "test\n\0");
+        InstructionGeneratorFacade fooFacade = model.createFunctionDefinition("foo", 1, functionType, new Type[]{functionType}, false);
+        ValueSymbol parameter = fooFacade.createParameter(functionType);
+        fooFacade.createReturn(parameter);
 
-        FunctionDeclaration printfDecl = model.createFunctionDeclaration("printf", IntegerType.INTEGER, new Type[]{new PointerType(IntegerType.BYTE)}, true);
+        InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, IntegerType.INTEGER, new Type[]{}, false);
 
-        InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, IntegerType.INTEGER, false);
-        InstructionGeneratorFacade fooFacade = model.createFunctionDefinition("foo", 1, IntegerType.INTEGER, false);
-
-        Instruction fooRet = mainFacade.createCall(fooFacade.getFunctionDefinition(), new Symbol[]{});
-
-        Instruction strPtr = mainFacade.createGetElementPointer(new PointerType(IntegerType.BYTE),
-                        str,
-                        new Symbol[]{new IntegerConstant(IntegerType.INTEGER, 0),
-                                        new IntegerConstant(IntegerType.INTEGER, 0)},
-                        false);
-        mainFacade.createCall(printfDecl, new Symbol[]{strPtr});
+        Instruction fooRet = mainFacade.createCall(fooFacade.getFunctionDefinition(), new Symbol[]{new IntegerConstant(functionType, 0)});
 
         mainFacade.createReturn(fooRet);
-
-        fooFacade.createReturn(new IntegerConstant(IntegerType.INTEGER, 123));
 
         // Checkstyle: resume magic number name check
 

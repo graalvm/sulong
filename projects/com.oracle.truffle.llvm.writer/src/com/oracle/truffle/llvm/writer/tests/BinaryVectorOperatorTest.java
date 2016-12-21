@@ -60,6 +60,7 @@ import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
+import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.types.VectorType;
 import com.oracle.truffle.llvm.parser.bc.LLVMBitcodeVisitor;
 import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
@@ -116,7 +117,7 @@ public class BinaryVectorOperatorTest {
 
         ModelModuleFacade model = new ModelModuleFacade();
 
-        InstructionGeneratorFacade facade = model.createFunctionDefinition("main", 1, IntegerType.BOOLEAN, false);
+        InstructionGeneratorFacade facade = model.createFunctionDefinition("main", 1, IntegerType.BOOLEAN, new Type[]{}, false);
 
         Instruction vec1 = facade.createAllocate(new VectorType(type, 2)); // TODO: wrong align
         Instruction vec2 = facade.createAllocate(new VectorType(type, 2));
