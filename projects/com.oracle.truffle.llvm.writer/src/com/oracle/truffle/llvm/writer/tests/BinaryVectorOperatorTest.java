@@ -31,7 +31,6 @@ package com.oracle.truffle.llvm.writer.tests;
 
 import static org.junit.Assert.fail;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,22 +38,8 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.impl.DefaultTruffleRuntime;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.llvm.LLVM;
-import com.oracle.truffle.llvm.context.LLVMContext;
-import com.oracle.truffle.llvm.context.LLVMLanguage;
-import com.oracle.truffle.llvm.parser.api.LLVMParserResult;
-import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacade;
-import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacadeAdapter;
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
@@ -62,13 +47,9 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.types.VectorType;
-import com.oracle.truffle.llvm.parser.bc.LLVMBitcodeVisitor;
-import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
-import com.oracle.truffle.llvm.parser.factories.NodeFactoryFacadeImpl;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
-@SuppressWarnings("unused")
 @RunWith(Parameterized.class)
 public class BinaryVectorOperatorTest {
 

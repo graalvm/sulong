@@ -29,7 +29,14 @@
  */
 package com.oracle.truffle.llvm.writer.tests;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
@@ -40,12 +47,24 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
+@RunWith(Parameterized.class)
 public class FunctionCallTestCase {
 
     private final IntegerType functionType;
 
-    public FunctionCallTestCase() {
-        functionType = IntegerType.INTEGER;
+    public FunctionCallTestCase(IntegerType functionType) {
+        this.functionType = functionType;
+    }
+
+    @Parameters(name = "{index}: FunctionCallTestCase[type={0}]")
+    public static Collection<Object[]> data() {
+        List<Object[]> parameters = new LinkedList<>();
+
+        for (IntegerType type : IntegerType.values()) {
+            parameters.add(new Object[]{type});
+        }
+
+        return parameters;
     }
 
     @Test
@@ -58,7 +77,7 @@ public class FunctionCallTestCase {
         ValueSymbol parameter = fooFacade.createParameter(functionType);
         fooFacade.createReturn(parameter);
 
-        InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, IntegerType.INTEGER, new Type[]{}, false);
+        InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, functionType, new Type[]{}, false);
 
         Instruction fooRet = mainFacade.createCall(fooFacade.getFunctionDefinition(), new Symbol[]{new IntegerConstant(functionType, 0)});
 
