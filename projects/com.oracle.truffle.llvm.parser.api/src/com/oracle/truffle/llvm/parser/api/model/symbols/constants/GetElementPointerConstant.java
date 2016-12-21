@@ -87,9 +87,9 @@ public final class GetElementPointerConstant extends AbstractConstant {
     }
 
     @Override
-    public String toString() {
+    public String getStringValue() {
         // <result> = getelementptr <ptr vector> ptrval, <vector index type> idx
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         // <result> = getelementptr
         sb.append(LLVMIR_LABEL);
@@ -104,10 +104,15 @@ public final class GetElementPointerConstant extends AbstractConstant {
 
         // {, <ty> <idx>}*
         for (Symbol sym : indices) {
-            sb.append(String.format(", %s %s", sym.getType(), sym.getName()));
+            if (sym instanceof Constant) {
+                sb.append(", ").append(sym.toString());
+            } else {
+                sb.append(", ").append(sym.getType().toString());
+                sb.append(' ').append(sym.getName());
+            }
         }
 
-        sb.append(")");
+        sb.append(')');
 
         return sb.toString();
     }

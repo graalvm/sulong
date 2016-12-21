@@ -48,4 +48,9 @@ public abstract class AbstractConstant implements Constant {
     public Type getType() {
         return type;
     }
+
+    @Override
+    public String toString() {
+        return getStringValue();
+    }
 }

@@ -73,6 +73,29 @@ public final class BinaryOperationConstant extends AbstractConstant {
         }
     }
 
+    @Override
+    public String getStringValue() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(operator.toString());
+        sb.append(' ').append(getType().toString());
+        if (lhs instanceof Constant) {
+            sb.append(' ').append(((Constant) lhs).getStringValue());
+        } else {
+            sb.append(' ').append(lhs.getType());
+            sb.append(' ').append(lhs.getName());
+        }
+        sb.append(',');
+        if (rhs instanceof Constant) {
+            sb.append(' ').append(((Constant) rhs).getStringValue());
+        } else {
+            sb.append(' ').append(rhs.getType());
+            sb.append(' ').append(rhs.getName());
+        }
+        sb.append(String.format(" %s %s, %s", getType(), lhs.getName(), rhs.getName()));
+
+        return sb.toString();
+    }
+
     public static BinaryOperationConstant fromSymbols(Symbols symbols, Type type, int opcode, int lhs, int rhs) {
         final boolean isFloatingPoint = type instanceof FloatingPointType || (type instanceof VectorType && ((VectorType) type).getElementType() instanceof FloatingPointType);
         final BinaryOperator operator = BinaryOperator.decode(opcode, isFloatingPoint);

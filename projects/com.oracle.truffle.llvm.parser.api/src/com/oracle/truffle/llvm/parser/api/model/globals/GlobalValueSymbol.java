@@ -34,6 +34,7 @@ import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.NullConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
@@ -133,7 +134,9 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
 
         builder.append(((PointerType) getType()).getPointeeType().toString());
 
-        if (getValue() != null) {
+        if (getValue() != null && getValue() instanceof NullConstant) {
+            builder.append(" zeroinitializer");
+        } else if (getValue() != null) {
             builder.append(' ').append(getValue().toString());
         }
 

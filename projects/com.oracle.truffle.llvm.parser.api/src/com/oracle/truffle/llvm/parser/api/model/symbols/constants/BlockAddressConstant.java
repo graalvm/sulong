@@ -55,6 +55,11 @@ public final class BlockAddressConstant extends AbstractConstant {
     }
 
     @Override
+    public String getStringValue() {
+        return String.format("label %s", getInstructionBlock().getName());
+    }
+
+    @Override
     public void replace(Symbol original, Symbol replacement) {
         if (function == original) {
             if (replacement instanceof FunctionDefinition) {

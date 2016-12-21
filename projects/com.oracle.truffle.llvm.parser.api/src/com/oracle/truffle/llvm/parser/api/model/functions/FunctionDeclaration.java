@@ -52,12 +52,17 @@ public final class FunctionDeclaration extends FunctionType implements Constant 
     }
 
     @Override
-    public String toString() {
+    public String getStringValue() {
         Stream<String> argumentStream = Arrays.stream(getArgumentTypes()).map(Type::toString);
         if (isVarArg()) {
             argumentStream = Stream.concat(argumentStream, Stream.of("..."));
         }
         return String.format("declare %s %s(%s)", getReturnType().toString(), getName(),
                         argumentStream.collect(Collectors.joining(", ")));
+    }
+
+    @Override
+    public String toString() {
+        return getStringValue();
     }
 }

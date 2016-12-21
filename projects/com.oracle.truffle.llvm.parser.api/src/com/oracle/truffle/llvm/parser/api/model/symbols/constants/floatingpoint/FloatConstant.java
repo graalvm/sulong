@@ -48,7 +48,7 @@ public final class FloatConstant extends FloatingPointConstant {
 
     @Override
     public String toString() {
-        return String.format(Locale.ROOT, "%.6f", value);
+        return String.format(Locale.ROOT, "%s, %.6f", getType().toString(), value);
     }
 
     public static FloatConstant create(float value) {

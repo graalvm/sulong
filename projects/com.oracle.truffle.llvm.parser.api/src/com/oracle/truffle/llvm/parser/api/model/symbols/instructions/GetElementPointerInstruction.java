@@ -36,6 +36,7 @@ import java.util.List;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.GetElementPointerConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
@@ -133,7 +134,12 @@ public final class GetElementPointerInstruction extends ValueInstruction {
 
         // {, <ty> <idx>}*
         for (Symbol sym : indices) {
-            sb.append(String.format(", %s %s", sym.getType(), sym.getName()));
+            if (sym instanceof Constant) {
+                sb.append(", ").append(sym.toString());
+            } else {
+                sb.append(", ").append(sym.getType().toString());
+                sb.append(' ').append(sym.getName());
+            }
         }
 
         return sb.toString();

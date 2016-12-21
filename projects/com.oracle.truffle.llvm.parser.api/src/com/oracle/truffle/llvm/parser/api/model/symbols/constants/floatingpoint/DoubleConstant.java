@@ -48,7 +48,7 @@ public final class DoubleConstant extends FloatingPointConstant {
 
     @Override
     public String toString() {
-        return String.format(Locale.ROOT, "%.15f", value);
+        return String.format(Locale.ROOT, "%s %.15f", getType().toString(), value);
     }
 
     public static DoubleConstant create(double value) {

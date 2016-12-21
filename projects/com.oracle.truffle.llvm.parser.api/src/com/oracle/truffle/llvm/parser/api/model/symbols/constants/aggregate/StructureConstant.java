@@ -32,6 +32,8 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.constants.aggregate;
 import com.oracle.truffle.llvm.parser.api.model.types.StructureType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
+import java.util.StringJoiner;
+
 public final class StructureConstant extends AggregateConstant {
 
     StructureConstant(StructureType type, int valueCount) {
@@ -47,7 +49,14 @@ public final class StructureConstant extends AggregateConstant {
     }
 
     @Override
-    public String toString() {
-        return String.format("{%s}", super.toString());
+    public String getStringValue() {
+        final StringJoiner joiner = new StringJoiner(", ", "{", "}");
+        if (getElementCount() == 0) {
+            joiner.setEmptyValue("");
+        }
+        for (int i = 0; i < getElementCount(); i++) {
+            joiner.add(getElement(i).toString());
+        }
+        return joiner.toString();
     }
 }

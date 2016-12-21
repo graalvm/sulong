@@ -60,9 +60,12 @@ public interface Constant extends Symbol {
         return AggregateConstant.fromSymbols(symbols, type, valueIndices);
     }
 
+    String getStringValue();
+
     // TODO: should be moved inside various constant types
     @Override
     default String getName() {
         return toString();
     }
+
 }

@@ -30,16 +30,16 @@
 package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.InlineAsmConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
@@ -127,14 +127,13 @@ public final class CallInstruction extends ValueInstruction implements Call {
         if (target instanceof FunctionType) {
             // <ty>
             FunctionType decl = (FunctionType) target;
-            sb.append(String.format(" %s", decl.getReturnType()));
 
-            // [<fnty>*]
-            Stream<String> argumentStream = Arrays.stream(decl.getArgumentTypes()).map(Type::toString);
-            if (decl.isVarArg()) {
-                argumentStream = Stream.concat(argumentStream, Stream.of("..."));
+            sb.append(' ').append(decl.getReturnType().toString());
+
+            if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
+                sb.append(' ').append(decl.getTypeSignature()).append('*');
             }
-            sb.append(String.format(" (%s)*", argumentStream.collect(Collectors.joining(", "))));
+            sb.append(' ').append(target.getName());
         } else if (target instanceof LoadInstruction) {
             Type targetType = ((LoadInstruction) target).getSource().getType();
             while (targetType instanceof PointerType) {
@@ -146,24 +145,30 @@ public final class CallInstruction extends ValueInstruction implements Call {
                 throw new AssertionError("unexpected target type: " + targetType.getClass().getName());
             }
         } else if (target instanceof FunctionParameter) {
-            sb.append(String.format(" %s", target.getType()));
+            sb.append(' ').append(target.getType().toString());
+
+        } else if (target instanceof InlineAsmConstant) {
+            sb.append(' ').append(target.toString());
+
         } else {
             throw new AssertionError("unexpected target type: " + target.getClass().getName());
         }
 
-        // <fnptrval>(<function args>)
-        sb.append(" " + target.getName());
-        sb.append('(');
-        // @formatter:off
-        sb.append(arguments.stream().map(s ->
-            String.format("%s %s", s.getType(), s.getName())
-        ).collect(Collectors.joining(", ")));
-        // @formatter:on
-        sb.append(')');
+        sb.append(argsToString());
 
         // [fn attrs]
         // TODO: implement
 
         return sb.toString();
+    }
+
+    private String argsToString() {
+        return arguments.stream().map(s -> {
+            if (s instanceof Constant) {
+                return s.toString();
+            } else {
+                return String.format("%s %s", s.getType().toString(), s.getName());
+            }
+        }).collect(Collectors.joining(", ", "(", ")"));
     }
 }

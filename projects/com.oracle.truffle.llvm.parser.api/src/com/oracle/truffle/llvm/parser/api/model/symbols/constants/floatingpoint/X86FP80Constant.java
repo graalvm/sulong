@@ -29,8 +29,6 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint;
 
-import java.util.Arrays;
-
 import com.oracle.truffle.llvm.parser.api.model.types.FloatingPointType;
 
 public final class X86FP80Constant extends FloatingPointConstant {
@@ -44,11 +42,6 @@ public final class X86FP80Constant extends FloatingPointConstant {
 
     public byte[] getValue() {
         return value;
-    }
-
-    @Override
-    public String toString() {
-        return Arrays.toString(value);
     }
 
     public static X86FP80Constant create(byte[] value) {

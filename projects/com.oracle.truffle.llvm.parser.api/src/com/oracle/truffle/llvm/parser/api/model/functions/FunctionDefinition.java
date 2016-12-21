@@ -282,7 +282,7 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
     }
 
     @Override
-    public String toString() {
+    public String getStringValue() {
         Stream<String> parameterStream = getParameters().stream().map(FunctionParameter::toString);
         if (isVarArg()) {
             parameterStream = Stream.concat(parameterStream, Stream.of("..."));
@@ -290,5 +290,10 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
 
         return String.format("define %s %s(%s)", getReturnType().toString(), getName(),
                         parameterStream.collect(Collectors.joining(", ")));
+    }
+
+    @Override
+    public String toString() {
+        return getStringValue();
     }
 }

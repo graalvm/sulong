@@ -36,12 +36,12 @@ import com.oracle.truffle.llvm.types.LLVMFunctionDescriptor;
 
 public enum FloatingPointType implements Type {
 
-    HALF(16, 2, LLVMBaseType.HALF),
-    FLOAT(32, 4, LLVMBaseType.FLOAT),
-    DOUBLE(64, 8, LLVMBaseType.DOUBLE),
-    X86_FP80(80, 16, LLVMBaseType.X86_FP80),
-    FP128(128, 16, LLVMBaseType.F128),
-    PPC_FP128(128, 16, LLVMBaseType.PPC_FP128);
+    HALF(16, 2, LLVMBaseType.HALF, "half"),
+    FLOAT(32, 4, LLVMBaseType.FLOAT, "float"),
+    DOUBLE(64, 8, LLVMBaseType.DOUBLE, "double"),
+    X86_FP80(80, 16, LLVMBaseType.X86_FP80, "x86_fp80"),
+    FP128(128, 16, LLVMBaseType.F128, "fp128"),
+    PPC_FP128(128, 16, LLVMBaseType.PPC_FP128, "ppc_fp128");
 
     private final int alignment;
 
@@ -49,10 +49,13 @@ public enum FloatingPointType implements Type {
 
     private final LLVMBaseType llvmBaseType;
 
-    FloatingPointType(int width, int alignment, LLVMBaseType llvmBaseType) {
+    private final String irString;
+
+    FloatingPointType(int width, int alignment, LLVMBaseType llvmBaseType, String irString) {
         this.alignment = alignment;
         this.width = width;
         this.llvmBaseType = llvmBaseType;
+        this.irString = irString;
     }
 
     @Override
@@ -113,7 +116,7 @@ public enum FloatingPointType implements Type {
 
     @Override
     public String toString() {
-        return name().toLowerCase();
+        return irString;
     }
 
 }

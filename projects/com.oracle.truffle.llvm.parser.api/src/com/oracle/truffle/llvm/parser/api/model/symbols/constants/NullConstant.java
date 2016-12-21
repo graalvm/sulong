@@ -40,14 +40,18 @@ public final class NullConstant extends AbstractConstant {
     }
 
     @Override
-    public String toString() {
-        // TODO: why do we don't get the correct type in the first place?
+    public String getStringValue() {
         if (getType() instanceof IntegerType) {
-            return "0";
+            return String.valueOf(0);
         } else if (getType() instanceof FloatingPointType) {
-            return "0.0";
+            return String.valueOf(0.0);
+        } else {
+            return "null";
         }
+    }
 
-        return "null";
+    @Override
+    public String toString() {
+        return String.format("%s %s", getType().toString(), getStringValue());
     }
 }
