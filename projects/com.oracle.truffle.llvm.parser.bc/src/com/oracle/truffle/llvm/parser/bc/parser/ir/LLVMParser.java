@@ -59,21 +59,21 @@ public final class LLVMParser {
         BitcodeStreamInformation bcStreamInfo = getStreamInformation(stream, parser);
         parser = new Parser(stream, module, bcStreamInfo.offset);
 
-        ParserResult result = parser.read(Integer.SIZE);
+        ParserResult result = parser.read(Integer.SIZE, null, 0);
         if (result.getValue() != MAGIC_WORD) {
             generator.error("Illegal file (does not exist or contains no magic word)");
         }
         parser = result.getParser();
 
         while (parser.getOffset() < bcStreamInfo.totalStreamSize()) {
-            result = parser.readId();
+            result = parser.readId(null, 0);
             Operation operation = parser.getOperation(result.getValue());
             parser = operation.apply(result.getParser());
         }
     }
 
     private static BitcodeStreamInformation getStreamInformation(Bitstream stream, Parser parser) {
-        ParserResult first32bit = parser.read(Integer.SIZE);
+        ParserResult first32bit = parser.read(Integer.SIZE, null, 0);
         if (first32bit.getValue() == WRAPPER_MAGIC_WORD) {
             // offset and size of bitcode stream are specified in bitcode wrapper
             return parseWrapperFormatPrefix(first32bit.getParser());
@@ -89,18 +89,18 @@ public final class LLVMParser {
     private static BitcodeStreamInformation parseWrapperFormatPrefix(Parser parser) {
         Parser p = parser;
         // Version32
-        ParserResult value32Bit = p.read(Integer.SIZE);
+        ParserResult value32Bit = p.read(Integer.SIZE, null, 0);
         p = value32Bit.getParser();
         // Offset32
-        value32Bit = p.read(Integer.SIZE);
+        value32Bit = p.read(Integer.SIZE, null, 0);
         long offset = value32Bit.getValue() * Byte.SIZE;
         p = value32Bit.getParser();
         // Size32
-        value32Bit = p.read(Integer.SIZE);
+        value32Bit = p.read(Integer.SIZE, null, 0);
         long size = value32Bit.getValue() * Byte.SIZE;
         p = value32Bit.getParser();
         // CPUType32
-        p.read(Integer.SIZE);
+        p.read(Integer.SIZE, null, 0);
         // End of Wrapper Prefix
 
         return new BitcodeStreamInformation(offset, size);

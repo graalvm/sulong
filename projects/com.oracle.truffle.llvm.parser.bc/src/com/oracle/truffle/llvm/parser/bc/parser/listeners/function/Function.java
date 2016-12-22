@@ -103,7 +103,7 @@ public class Function implements ParserListener {
     }
 
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         FunctionRecord record = FunctionRecord.decode(id);
 
         if (record == FunctionRecord.DECLAREBLOCKS) {
@@ -148,7 +148,7 @@ public class Function implements ParserListener {
 
         switch (record) {
             case BINOP:
-                createBinaryOperation(args);
+                createBinaryOperation(args, argCount);
                 break;
 
             case CAST:
@@ -156,7 +156,7 @@ public class Function implements ParserListener {
                 break;
 
             case GEP_OLD:
-                createGetElementPointerOld(args, false);
+                createGetElementPointerOld(args, argCount, false);
                 break;
 
             case EXTRACTELT:
@@ -172,15 +172,15 @@ public class Function implements ParserListener {
                 break;
 
             case RET:
-                createReturn(args);
+                createReturn(args, argCount);
                 break;
 
             case BR:
-                createBranch(args);
+                createBranch(args, argCount);
                 break;
 
             case SWITCH:
-                createSwitch(args);
+                createSwitch(args, argCount);
                 break;
 
             case UNREACHABLE:
@@ -188,7 +188,7 @@ public class Function implements ParserListener {
                 break;
 
             case PHI:
-                createPhi(args);
+                createPhi(args, argCount);
                 break;
 
             case ALLOCA:
@@ -204,11 +204,11 @@ public class Function implements ParserListener {
                 break;
 
             case EXTRACTVAL:
-                createExtractValue(args);
+                createExtractValue(args, argCount);
                 break;
 
             case INSERTVAL:
-                createInsertValue(args);
+                createInsertValue(args, argCount);
                 break;
 
             case CMP2:
@@ -220,19 +220,19 @@ public class Function implements ParserListener {
                 break;
 
             case INBOUNDS_GEP_OLD:
-                createGetElementPointerOld(args, true);
+                createGetElementPointerOld(args, argCount, true);
                 break;
 
             case INDIRECTBR:
-                createIndirectBranch(args);
+                createIndirectBranch(args, argCount);
                 break;
 
             case CALL:
-                createCall(args);
+                createCall(args, argCount);
                 break;
 
             case GEP:
-                createGetElementPointer(args);
+                createGetElementPointer(args, argCount);
                 break;
 
             case STORE:
@@ -299,7 +299,7 @@ public class Function implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createBinaryOperation(long[] args) {
+    protected void createBinaryOperation(long[] args, int argCount) {
         int i = 0;
         Type type;
         int lhs = getIndex(args[i++]);
@@ -310,15 +310,15 @@ public class Function implements ParserListener {
         }
         int rhs = getIndex(args[i++]);
         int opcode = (int) args[i++];
-        int flags = i < args.length ? (int) args[i] : 0;
+        int flags = i < argCount ? (int) args[i] : 0;
 
         code.createBinaryOperation(type, opcode, flags, lhs, rhs);
 
         symbols.add(type);
     }
 
-    protected void createBranch(long[] args) {
-        if (args.length == 1) {
+    protected void createBranch(long[] args, int argCount) {
+        if (argCount == 1) {
             code.createBranch((int) args[0]);
         } else {
             code.createBranch(getIndex(args[2]), (int) args[0], (int) args[1]);
@@ -328,7 +328,7 @@ public class Function implements ParserListener {
         code = null;
     }
 
-    protected void createCall(long[] args) {
+    protected void createCall(long[] args, int argCount) {
         int i = 0;
         final long linkage = args[i++];
         final long visibility = args[i++];
@@ -336,7 +336,7 @@ public class Function implements ParserListener {
         final int target = getIndex(args[i++]);
 
         final int[] arguments = new int[args.length - i];
-        for (int j = 0; i < args.length; i++, j++) {
+        for (int j = 0; i < argCount; i++, j++) {
             arguments[j] = getIndex(args[i]);
         }
 
@@ -394,11 +394,11 @@ public class Function implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createExtractValue(long[] args) {
+    protected void createExtractValue(long[] args, int argCount) {
         int aggregate = getIndex(args[0]);
         int index = (int) args[1];
 
-        if (args.length != 2) {
+        if (argCount != 2) {
             // This is supported in neither parser.
             throw new UnsupportedOperationException("Multiple indices are not yet supported!");
         }
@@ -410,12 +410,12 @@ public class Function implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createGetElementPointer(long[] args) {
+    protected void createGetElementPointer(long[] args, int argCount) {
         int i = 0;
         boolean isInbounds = args[i++] != 0;
         i++; // Unused parameter
         int pointer = getIndex(args[i++]);
-        int[] indices = getIndices(args, i);
+        int[] indices = getIndices(args, i, argCount);
 
         Type type = new PointerType(getElementPointerType(symbols.get(pointer).getType(), indices));
 
@@ -428,7 +428,7 @@ public class Function implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createGetElementPointerOld(long[] args, boolean isInbounds) {
+    protected void createGetElementPointerOld(long[] args, int argCount, boolean isInbounds) {
         int i = 0;
         int pointer = getIndex(args[i++]);
         Type base;
@@ -437,7 +437,7 @@ public class Function implements ParserListener {
         } else {
             base = types.get(args[i++]);
         }
-        int[] indices = getIndices(args, i);
+        int[] indices = getIndices(args, i, argCount);
 
         Type type = new PointerType(getElementPointerType(base, indices));
 
@@ -450,9 +450,9 @@ public class Function implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createIndirectBranch(long[] args) {
+    protected void createIndirectBranch(long[] args, int argCount) {
         int address = getIndex(args[1]);
-        int[] successors = new int[args.length - 2];
+        int[] successors = new int[argCount - 2];
         for (int i = 0; i < successors.length; i++) {
             successors[i] = (int) args[i + 2];
         }
@@ -475,12 +475,12 @@ public class Function implements ParserListener {
         symbols.add(symbol);
     }
 
-    protected void createInsertValue(long[] args) {
+    protected void createInsertValue(long[] args, int argCount) {
         int aggregate = getIndex(args[0]);
         int index = (int) args[2];
         int value = getIndex(args[1]);
 
-        if (args.length != INSERT_VALUE_MAX_ARGS) {
+        if (argCount != INSERT_VALUE_MAX_ARGS) {
             // This is supported in neither parser.
             throw new UnsupportedOperationException("Multiple indices are not yet supported!");
         }
@@ -504,9 +504,9 @@ public class Function implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createPhi(long[] args) {
+    protected void createPhi(long[] args, int argCount) {
         Type type = types.get(args[0]);
-        int count = (args.length) - 1 >> 1;
+        int count = (argCount) - 1 >> 1;
         int[] values = new int[count];
         int[] blocks = new int[count];
         for (int i = 0, j = 1; i < count; i++) {
@@ -519,8 +519,8 @@ public class Function implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createReturn(long[] args) {
-        if (args.length == 0 || args[0] == 0) {
+    protected void createReturn(long[] args, int argCount) {
+        if (argCount == 0 || args[0] == 0) {
             code.createReturn();
         } else {
             code.createReturn(getIndex(args[0]));
@@ -595,11 +595,11 @@ public class Function implements ParserListener {
         code.createStore(destination, source, align, isVolatile);
     }
 
-    protected void createSwitch(long[] args) {
+    protected void createSwitch(long[] args, int argCount) {
         int i = 1;
         int condition = getIndex(args[i++]);
         int defaultBlock = (int) args[i++];
-        int count = (args.length - i) >> 1;
+        int count = (argCount - i) >> 1;
         int[] caseValues = new int[count];
         int[] caseBlocks = new int[count];
         for (int j = 0; j < count; j++) {
@@ -651,10 +651,6 @@ public class Function implements ParserListener {
         } else {
             return getIndexV1(index);
         }
-    }
-
-    protected int[] getIndices(long[] arguments, int from) {
-        return getIndices(arguments, from, arguments.length);
     }
 
     protected int[] getIndices(long[] arguments, int from, int to) {

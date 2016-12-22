@@ -42,7 +42,7 @@ public interface ParserListener {
     default void exit() {
     }
 
-    void record(long id, long[] args);
+    void record(long id, long[] args, int argCount);
 
-    ParserListener DEFAULT = (id, args) -> LLVMLogger.info("Unknown Record: " + Records.describe(id, args));
+    ParserListener DEFAULT = (id, args, argCount) -> LLVMLogger.info("Unknown Record: " + Records.describe(id, args, argCount));
 }

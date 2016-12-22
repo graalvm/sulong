@@ -33,6 +33,8 @@ import com.oracle.truffle.llvm.parser.bc.parser.bc.Parser;
 import com.oracle.truffle.llvm.parser.bc.parser.bc.ParserResult;
 import com.oracle.truffle.llvm.parser.bc.parser.bc.Primitive;
 
+import java.util.Arrays;
+
 public final class UserRecordArrayOperand extends UserRecordOperand {
 
     private final UserRecordOperand type;
@@ -43,18 +45,24 @@ public final class UserRecordArrayOperand extends UserRecordOperand {
     }
 
     @Override
-    protected ParserResult get(Parser parser) {
-        ParserResult result = parser.read(Primitive.USER_OPERAND_ARRAY_LENGTH);
+    protected ParserResult get(Parser parser, long[] buffer, int bufferIndex) {
+        ParserResult result = parser.read(Primitive.USER_OPERAND_ARRAY_LENGTH, buffer, bufferIndex);
         int length = (int) result.getValue();
 
-        long[] values = new long[length];
-
-        for (int i = 0; i < length; i++) {
-            result = type.get(result.getParser());
-            values[i] = result.getValue();
+        long[] curBuffer = buffer;
+        int curbufferIndex = bufferIndex;
+        while (curBuffer.length < curbufferIndex + length) {
+            curBuffer = Arrays.copyOf(curBuffer, curBuffer.length * 2);
         }
 
-        return new ParserResult(result.getParser(), values);
+        for (int i = 0; i < length; i++) {
+            result = type.get(result.getParser(), curBuffer, curbufferIndex);
+            curBuffer = result.getBuffer();
+            curbufferIndex = result.getBufferIndex();
+            curBuffer[curbufferIndex++] = result.getValue();
+        }
+
+        return new ParserResult(result.getParser(), curBuffer, curbufferIndex);
     }
 
     @Override

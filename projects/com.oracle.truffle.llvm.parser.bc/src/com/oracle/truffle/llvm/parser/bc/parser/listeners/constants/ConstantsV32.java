@@ -42,8 +42,8 @@ public class ConstantsV32 extends ConstantsV38 {
     }
 
     @Override
-    protected void createGetElementPointerExpression(long[] args, boolean isInbounds) {
-        int[] indices = new int[(args.length >> 1) - 1];
+    protected void createGetElementPointerExpression(long[] args, int argCount, boolean isInbounds) {
+        int[] indices = new int[(argCount >> 1) - 1];
 
         for (int i = 0; i < indices.length; i++) {
             indices[i] = (int) args[((i + 1) << 1) + 1];

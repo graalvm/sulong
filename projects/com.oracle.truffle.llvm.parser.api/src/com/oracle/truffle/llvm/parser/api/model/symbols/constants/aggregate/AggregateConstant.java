@@ -76,22 +76,22 @@ public abstract class AggregateConstant extends AbstractConstant {
         return sb.toString();
     }
 
-    public static AggregateConstant fromData(Type type, long[] data) {
+    public static AggregateConstant fromData(Type type, long[] data, int dataLength) {
         final AggregateConstant aggregateConstant;
         final Type elementType;
         if (type instanceof ArrayType) {
             final ArrayType arrayType = (ArrayType) type;
             elementType = arrayType.getElementType();
-            aggregateConstant = new ArrayConstant(arrayType, data.length);
+            aggregateConstant = new ArrayConstant(arrayType, dataLength);
         } else if (type instanceof VectorType) {
             final VectorType vectorType = (VectorType) type;
             elementType = vectorType.getElementType();
-            aggregateConstant = new VectorConstant((VectorType) type, data.length);
+            aggregateConstant = new VectorConstant((VectorType) type, dataLength);
         } else {
             throw new RuntimeException("Cannot create constant from data: " + type);
         }
 
-        for (int i = 0; i < data.length; i++) {
+        for (int i = 0; i < dataLength; i++) {
             aggregateConstant.replaceElement(i, Constant.createFromData(elementType, data[i]));
         }
 

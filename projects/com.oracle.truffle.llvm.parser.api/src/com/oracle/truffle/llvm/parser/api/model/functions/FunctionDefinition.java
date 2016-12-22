@@ -213,8 +213,8 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
     }
 
     @Override
-    public void createFromData(Type type, long[] data) {
-        symbols.addSymbol(Constant.createFromData(type, data));
+    public void createFromData(Type type, long[] data, int dataLength) {
+        symbols.addSymbol(Constant.createFromData(type, data, dataLength));
     }
 
     @Override

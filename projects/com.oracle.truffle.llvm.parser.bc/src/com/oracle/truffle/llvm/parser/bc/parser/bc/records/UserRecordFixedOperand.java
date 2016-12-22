@@ -42,8 +42,8 @@ public final class UserRecordFixedOperand extends UserRecordOperand {
     }
 
     @Override
-    protected ParserResult get(Parser parser) {
-        return parser.read(width);
+    protected ParserResult get(Parser parser, long[] buffer, int bufferIndex) {
+        return parser.read(width, buffer, bufferIndex);
     }
 
     @Override

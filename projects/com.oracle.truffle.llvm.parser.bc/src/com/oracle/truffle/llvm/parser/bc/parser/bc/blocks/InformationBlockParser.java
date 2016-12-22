@@ -60,12 +60,12 @@ public final class InformationBlockParser extends Parser {
     }
 
     @Override
-    public Parser handleRecord(long id, long[] operands) {
+    public Parser handleRecord(long id, long[] operands, int operandsCount) {
         if (id == 1) {
             // SETBID selects which block subsequent abbreviations are assigned
             return new InformationBlockParser(stream, block, listener, parent, operations, idsize, offset, operands[0]);
         } else {
-            return super.handleRecord(id, operands);
+            return super.handleRecord(id, operands, operandsCount);
         }
     }
 }

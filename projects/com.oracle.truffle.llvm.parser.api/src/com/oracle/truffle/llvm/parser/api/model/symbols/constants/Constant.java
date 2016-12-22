@@ -52,8 +52,8 @@ public interface Constant extends Symbol {
         }
     }
 
-    static Constant createFromData(Type type, long[] data) {
-        return AggregateConstant.fromData(type, data);
+    static Constant createFromData(Type type, long[] data, int dataLength) {
+        return AggregateConstant.fromData(type, data, dataLength);
     }
 
     static Constant createFromValues(Type type, Symbols symbols, int[] valueIndices) {

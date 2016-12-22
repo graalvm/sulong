@@ -119,7 +119,7 @@ public class Module implements ParserListener {
     }
 
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         final ModuleRecord record = ModuleRecord.decode(id);
         switch (record) {
             case VERSION:
@@ -127,11 +127,11 @@ public class Module implements ParserListener {
                 break;
 
             case TARGET_TRIPLE:
-                info.add(new TargetTriple(Records.toString(args)));
+                info.add(new TargetTriple(Records.toString(args, 0, argCount)));
                 break;
 
             case TARGET_DATALAYOUT:
-                final TargetDataLayout layout = TargetDataLayout.fromString(Records.toString(args));
+                final TargetDataLayout layout = TargetDataLayout.fromString(Records.toString(args, 0, argCount));
                 info.add(layout);
                 generator.createTargetDataLayout(layout);
                 break;
@@ -149,7 +149,7 @@ public class Module implements ParserListener {
                 break;
 
             default:
-                LLVMLogger.info("Unknown Top-Level Record: " + Records.describe(id, args));
+                LLVMLogger.info("Unknown Top-Level Record: " + Records.describe(id, args, argCount));
                 break;
         }
     }

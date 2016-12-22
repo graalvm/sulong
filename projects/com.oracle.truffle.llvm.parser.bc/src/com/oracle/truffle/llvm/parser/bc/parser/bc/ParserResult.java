@@ -36,16 +36,23 @@ public final class ParserResult {
 
     private final Parser parser;
 
-    private final long[] values;
+    private final long[] buffer;
 
-    public ParserResult(Parser parser, long value) {
+    private long value;
+
+    private final int bufferIndex;
+
+    public ParserResult(Parser parser, long value, long[] buffer, int bufferIndex) {
         this.parser = parser;
-        values = new long[]{value};
+        this.buffer = buffer;
+        this.value = value;
+        this.bufferIndex = bufferIndex;
     }
 
-    public ParserResult(Parser parser, long[] values) {
+    public ParserResult(Parser parser, long[] buffer, int bufferIndex) {
         this.parser = parser;
-        this.values = values;
+        this.buffer = buffer;
+        this.bufferIndex = bufferIndex;
     }
 
     public Parser getParser() {
@@ -53,15 +60,19 @@ public final class ParserResult {
     }
 
     public long getValue() {
-        return values[0];
+        return value;
     }
 
-    public long[] getValues() {
-        return values;
+    public long[] getBuffer() {
+        return buffer;
+    }
+
+    public int getBufferIndex() {
+        return bufferIndex;
     }
 
     @Override
     public String toString() {
-        return Arrays.stream(values).mapToObj(l -> String.format("%05X ", l)).collect(Collectors.joining(" "));
+        return Arrays.stream(buffer).mapToObj(l -> String.format("%05X ", l)).collect(Collectors.joining(" "));
     }
 }

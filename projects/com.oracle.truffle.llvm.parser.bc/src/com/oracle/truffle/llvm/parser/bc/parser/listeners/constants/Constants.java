@@ -61,7 +61,7 @@ public class Constants implements ParserListener {
     }
 
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         ConstantsRecord record = ConstantsRecord.decode(id);
 
         switch (record) {
@@ -90,7 +90,7 @@ public class Constants implements ParserListener {
             case WIDE_INTEGER: {
                 BigInteger value = BigInteger.ZERO;
 
-                for (int i = 0; i < args.length; i++) {
+                for (int i = 0; i < argCount; i++) {
                     BigInteger temp = BigInteger.valueOf(Records.toSignedValue(args[i]));
                     temp = temp.and(WIDE_INTEGER_MASK);
                     temp = temp.shiftLeft(i * Long.SIZE);
@@ -105,15 +105,15 @@ public class Constants implements ParserListener {
                 break;
 
             case AGGREGATE: {
-                generator.createFromValues(type, Records.toIntegers(args));
+                generator.createFromValues(type, Records.toIntegers(args, argCount));
                 break;
             }
             case STRING:
-                generator.creatFromString(type, Records.toString(args), false);
+                generator.creatFromString(type, Records.toString(args, 0, argCount), false);
                 break;
 
             case CSTRING:
-                generator.creatFromString(type, Records.toString(args), true);
+                generator.creatFromString(type, Records.toString(args, 0, argCount), true);
                 break;
 
             case CE_BINOP:
@@ -134,11 +134,11 @@ public class Constants implements ParserListener {
                 break;
             }
             case CE_GEP:
-                createGetElementPointerExpression(args, false);
+                createGetElementPointerExpression(args, argCount, false);
                 break;
 
             case CE_INBOUNDS_GEP:
-                createGetElementPointerExpression(args, true);
+                createGetElementPointerExpression(args, argCount, true);
                 break;
 
             case BLOCKADDRESS:
@@ -146,7 +146,7 @@ public class Constants implements ParserListener {
                 break;
 
             case DATA:
-                generator.createFromData(type, args);
+                generator.createFromData(type, args, argCount);
                 break;
 
             case INLINEASM:
@@ -159,8 +159,8 @@ public class Constants implements ParserListener {
         symbols.add(type);
     }
 
-    protected void createGetElementPointerExpression(long[] args, boolean isInbounds) {
-        int[] indices = new int[((args.length - 1) >> 1) - 1];
+    protected void createGetElementPointerExpression(long[] args, int argCount, boolean isInbounds) {
+        int[] indices = new int[((argCount - 1) >> 1) - 1];
 
         for (int i = 0; i < indices.length; i++) {
             indices[i] = (int) args[(i + 2) << 1];

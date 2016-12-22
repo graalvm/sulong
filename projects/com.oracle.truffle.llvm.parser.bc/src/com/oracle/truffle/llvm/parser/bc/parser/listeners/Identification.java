@@ -39,9 +39,9 @@ public final class Identification implements ParserListener {
     }
 
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         if (id == 1) {
-            version = Records.toString(args);
+            version = Records.toString(args, 0, argCount);
         }
     }
 

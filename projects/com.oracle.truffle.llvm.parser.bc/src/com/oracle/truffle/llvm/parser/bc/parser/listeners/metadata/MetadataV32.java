@@ -79,20 +79,20 @@ public class MetadataV32 extends Metadata {
     }
 
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         MetadataRecord record = MetadataRecord.decode(id);
 
         switch (record) {
             case OLD_NODE:
-                createOldNode(args);
+                createOldNode(args, argCount);
                 break;
 
             case OLD_FN_NODE:
-                createOldFnNode(args);
+                createOldFnNode(args, argCount);
                 break;
 
             default:
-                super.record(id, args);
+                super.record(id, args, argCount);
                 return;
         }
 
@@ -101,8 +101,8 @@ public class MetadataV32 extends Metadata {
         }
     }
 
-    protected void createOldNode(long[] args) {
-        MetadataArgumentParser parsedArgs = new MetadataArgumentParser(types, symbols, args);
+    protected void createOldNode(long[] args, int argCount) {
+        MetadataArgumentParser parsedArgs = new MetadataArgumentParser(types, symbols, args, argCount);
 
         if (parsedArgs.peek() instanceof MetadataConstantType) {
             createDwNode(parsedArgs);
@@ -204,8 +204,8 @@ public class MetadataV32 extends Metadata {
         }
     }
 
-    protected void createOldFnNode(long[] args) {
-        MetadataArgumentParser parsedArgs = new MetadataArgumentParser(types, symbols, args);
+    protected void createOldFnNode(long[] args, int argCount) {
+        MetadataArgumentParser parsedArgs = new MetadataArgumentParser(types, symbols, args, argCount);
 
         metadata.add(new MetadataFnNode((MetadataConstantPointerType) parsedArgs.next()));
     }

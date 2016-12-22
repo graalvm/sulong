@@ -32,25 +32,25 @@ package com.oracle.truffle.llvm.parser.bc.parser.bc.records;
 import com.oracle.truffle.llvm.parser.bc.parser.bc.Parser;
 import com.oracle.truffle.llvm.parser.bc.parser.bc.ParserResult;
 import com.oracle.truffle.llvm.parser.bc.parser.bc.Primitive;
-import com.oracle.truffle.llvm.parser.bc.parser.util.Pair;
+import com.oracle.truffle.llvm.parser.bc.util.Pair;
 
 public abstract class UserRecordOperand {
 
     public static Pair<ParserResult, UserRecordOperand> parse(Parser parser) {
-        ParserResult result = parser.read(1);
+        ParserResult result = parser.read(1, null, 0);
         if (result.getValue() == 1) {
-            result = result.getParser().read(Primitive.USER_OPERAND_LITERAL);
+            result = result.getParser().read(Primitive.USER_OPERAND_LITERAL, null, 0);
             return new Pair<>(result, new UserRecordLiteral(result.getValue()));
         } else {
-            result = result.getParser().read(Primitive.USER_OPERAND_TYPE);
+            result = result.getParser().read(Primitive.USER_OPERAND_TYPE, null, 0);
             UserRecordOperandType type = UserRecordOperandType.decode(result.getValue());
             switch (type) {
                 case FIXED:
-                    result = result.getParser().read(Primitive.USER_OPERAND_DATA);
+                    result = result.getParser().read(Primitive.USER_OPERAND_DATA, null, 0);
                     return new Pair<>(result, new UserRecordFixedOperand(result.getValue()));
 
                 case VBR:
-                    result = result.getParser().read(Primitive.USER_OPERAND_DATA);
+                    result = result.getParser().read(Primitive.USER_OPERAND_DATA, null, 0);
                     return new Pair<>(result, new UserRecordVariableOperand(result.getValue()));
 
                 case ARRAY:
@@ -72,5 +72,5 @@ public abstract class UserRecordOperand {
     protected UserRecordOperand() {
     }
 
-    protected abstract ParserResult get(Parser parser);
+    protected abstract ParserResult get(Parser parser, long[] buffer, int bufferIndex);
 }

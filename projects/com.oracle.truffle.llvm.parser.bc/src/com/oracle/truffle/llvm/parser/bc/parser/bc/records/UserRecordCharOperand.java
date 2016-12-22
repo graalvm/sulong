@@ -39,8 +39,8 @@ public final class UserRecordCharOperand extends UserRecordOperand {
     }
 
     @Override
-    protected ParserResult get(Parser parser) {
-        return parser.readChar();
+    protected ParserResult get(Parser parser, long[] buffer, int bufferIndex) {
+        return parser.readChar(buffer, bufferIndex);
     }
 
     @Override
