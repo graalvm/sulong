@@ -140,7 +140,7 @@ public class FunctionType implements Type, ValueSymbol {
         if (isVarArg()) {
             argTypeStream = Stream.concat(argTypeStream, Stream.of("..."));
         }
-        builder.append(argTypeStream.collect(Collectors.joining(", ", " (", ")")));
+        builder.append(argTypeStream.collect(Collectors.joining(", ", "(", ")")));
 
         return builder.toString();
     }

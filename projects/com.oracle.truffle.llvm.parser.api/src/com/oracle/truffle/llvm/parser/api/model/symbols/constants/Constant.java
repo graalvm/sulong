@@ -65,7 +65,7 @@ public interface Constant extends Symbol {
     // TODO: should be moved inside various constant types
     @Override
     default String getName() {
-        return toString();
+        return getStringValue();
     }
 
 }
