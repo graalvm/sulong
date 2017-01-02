@@ -167,7 +167,7 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
-    public Instruction createCall(Instruction target, Symbol[] arguments) {
+    public Instruction createCall(Symbol target, Symbol[] arguments) {
         Type returnType;
         if (target instanceof FunctionType) {
             returnType = ((FunctionType) target).getReturnType();
