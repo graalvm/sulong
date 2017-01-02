@@ -60,7 +60,7 @@ public class InstructionGeneratorFacade {
     private InstructionBlock gen;
 
     private int counter = 1;
-    private int arg_counter = 1;
+    private int argCounter = 1;
 
     public InstructionGeneratorFacade(Model model, String name, int blocks, FunctionType type) {
         this.model = model;
@@ -86,7 +86,7 @@ public class InstructionGeneratorFacade {
     public FunctionParameter createParameter(Type type) {
         def.createParameter(type);
         FunctionParameter newParam = def.getParameters().get(def.getParameters().size() - 1);
-        newParam.setName("arg_" + Integer.toString(arg_counter++));
+        newParam.setName("arg_" + Integer.toString(argCounter++));
         return newParam;
     }
 
