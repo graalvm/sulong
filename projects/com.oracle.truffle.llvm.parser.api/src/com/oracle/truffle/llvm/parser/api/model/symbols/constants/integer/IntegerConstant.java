@@ -47,18 +47,16 @@ public final class IntegerConstant extends AbstractConstant {
 
     @Override
     public String getStringValue() {
-        return String.valueOf(value);
+        if (getType().getBits() == 1) {
+            return value == 0 ? "false" : "true";
+        } else {
+            return String.valueOf(value);
+        }
     }
 
     @Override
     public String toString() {
-        final String strVal;
-        if (getType().getBits() == 1) {
-            strVal = value == 0 ? "false" : "true";
-        } else {
-            strVal = String.valueOf(value);
-        }
-        return String.format("%s %s", getType().toString(), strVal);
+        return String.format("%s %s", getType().toString(), getStringValue());
     }
 
     public static IntegerConstant fromDatum(IntegerType type, long datum) {

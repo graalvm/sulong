@@ -49,17 +49,15 @@ public final class BigIntegerConstant extends AbstractConstant {
 
     @Override
     public String toString() {
-        final String strVal;
-        if (getType().getBits() == 1) {
-            strVal = value.equals(BigInteger.ZERO) ? "false" : "true";
-        } else {
-            strVal = value.toString();
-        }
-        return String.format("%s %s", getType().toString(), strVal);
+        return String.format("%s %s", getType().toString(), getStringValue());
     }
 
     @Override
     public String getStringValue() {
-        return value.toString();
+        if (getType().getBits() == 1) {
+            return value.equals(BigInteger.ZERO) ? "false" : "true";
+        } else {
+            return value.toString();
+        }
     }
 }
