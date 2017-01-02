@@ -44,6 +44,7 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.LoadInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ValueInstruction;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
@@ -59,6 +60,7 @@ public class InstructionGeneratorFacade {
     private InstructionBlock gen;
 
     private int counter = 1;
+    private int arg_counter = 1;
 
     public InstructionGeneratorFacade(Model model, String name, int blocks, FunctionType type) {
         this.model = model;
@@ -84,7 +86,7 @@ public class InstructionGeneratorFacade {
     public FunctionParameter createParameter(Type type) {
         def.createParameter(type);
         FunctionParameter newParam = def.getParameters().get(def.getParameters().size() - 1);
-        newParam.setName(Integer.toString(counter++));
+        newParam.setName("arg_" + Integer.toString(arg_counter++));
         return newParam;
     }
 
@@ -165,13 +167,31 @@ public class InstructionGeneratorFacade {
         return getLastInstruction();
     }
 
-    public Instruction createCall(FunctionType target, Symbol[] arguments) {
+    public Instruction createCall(Instruction target, Symbol[] arguments) {
+        Type returnType;
+        if (target instanceof FunctionType) {
+            returnType = ((FunctionType) target).getReturnType();
+        } else if (target.getType() instanceof FunctionType) {
+            returnType = ((FunctionType) target.getType()).getReturnType();
+        } else if (target instanceof LoadInstruction) {
+            Type pointeeType = ((LoadInstruction) target).getSource().getType();
+            while (pointeeType instanceof PointerType) {
+                pointeeType = ((PointerType) pointeeType).getPointeeType();
+            }
+            if (pointeeType instanceof FunctionType) {
+                returnType = ((FunctionType) pointeeType).getReturnType();
+            } else {
+                throw new RuntimeException("cannot handle target type: " + pointeeType.getClass().getName());
+            }
+        } else {
+            throw new RuntimeException("cannot handle target type: " + target.getClass().getName());
+        }
         int targetIdx = addSymbol(target);
         int[] argumentsIdx = new int[arguments.length];
         for (int i = 0; i < arguments.length; i++) {
             argumentsIdx[i] = addSymbol(arguments[i]);
         }
-        gen.createCall(target.getReturnType(), targetIdx, argumentsIdx, Visibility.DEFAULT.ordinal(), Linkage.EXTERNAL.ordinal());
+        gen.createCall(returnType, targetIdx, argumentsIdx, Visibility.DEFAULT.ordinal(), Linkage.EXTERNAL.ordinal());
         return getLastInstruction();
     }
 

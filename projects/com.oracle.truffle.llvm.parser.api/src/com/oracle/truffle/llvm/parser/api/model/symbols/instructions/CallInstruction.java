@@ -140,7 +140,7 @@ public final class CallInstruction extends ValueInstruction implements Call {
                 targetType = ((PointerType) targetType).getPointeeType();
             }
             if (targetType instanceof FunctionType) {
-                sb.append(String.format(" %s", ((FunctionType) targetType).getReturnType()));
+                sb.append(String.format(" %s %s", ((FunctionType) targetType).getReturnType(), target.getName()));
             } else {
                 throw new AssertionError("unexpected target type: " + targetType.getClass().getName());
             }

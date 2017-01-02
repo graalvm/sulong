@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
@@ -75,11 +76,9 @@ public class FunctionPointerCallTest {
 
         fp = mainFacade.createLoad(fp);
 
-        // Instruction fooRet = mainFacade.createCall(fp,
-        // new Symbol[]{new IntegerConstant(functionType, 0), new IntegerConstant(functionType,
-        // 0)});
+        Instruction fooRet = mainFacade.createCall(fp, new Symbol[]{new IntegerConstant(functionType, 0), new IntegerConstant(functionType, 0)});
 
-        // mainFacade.createReturn(fooRet);
+        mainFacade.createReturn(fooRet);
 
         // Checkstyle: resume magic number name check
 
