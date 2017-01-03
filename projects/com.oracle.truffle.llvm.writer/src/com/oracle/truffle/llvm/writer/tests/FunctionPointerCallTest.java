@@ -67,6 +67,7 @@ public class FunctionPointerCallTest extends TestExecutor {
             Symbol rhs = functions[i].createParameter(functionType);
             Symbol result = functions[i].createBinaryOperation(lhs, rhs, operators[i]);
             functions[i].createReturn(result);
+            functions[i].exitFunction();
         }
 
         InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, IntegerType.INTEGER, new Type[]{}, false);
@@ -79,6 +80,7 @@ public class FunctionPointerCallTest extends TestExecutor {
         Instruction fooRet = mainFacade.createCall(fp, new Symbol[]{new IntegerConstant(functionType, 0), new IntegerConstant(functionType, 0)});
 
         mainFacade.createReturn(fooRet);
+        mainFacade.exitFunction();
 
         // Checkstyle: resume magic number name check
 

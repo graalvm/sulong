@@ -95,6 +95,10 @@ public class InstructionGeneratorFacade {
         this.gen.setName(Integer.toString(counter++));
     }
 
+    public void exitFunction() {
+        this.def.exitFunction();
+    }
+
     private static Symbol createI32Constant(int value) {
         return new IntegerConstant(IntegerType.INTEGER, value);
     }

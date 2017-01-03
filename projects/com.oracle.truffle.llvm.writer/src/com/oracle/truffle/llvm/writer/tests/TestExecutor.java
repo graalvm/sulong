@@ -60,21 +60,14 @@ public class TestExecutor {
         LLVMLogger.error(ModelToIRVisitor.getIRString(model));
         LLVMLogger.error("######################################\033[0m");
 
-        // TODO: execute
-        // NodeFactoryFacade factoryFacade = NodeFactoryFacadeProviderImpl.getNodeFactoryFacade();
-        // TODO: NodeFactoryFacadeProviderImpl.get;
-        // LLVMLanguage.INSTANCE = new LLVMTestLanguage(); // .createContext(null);
         LLVMLanguage.provider = new LLVMTestLanguageProvider();
-        // LLVMLanguage.context = LLVMLanguage.provider.createContext(null);
-        // LLVMLanguage.INSTANCE.createContext(null);
+        LLVMLanguage.contextOverwrite = LLVMLanguage.provider.createContext(null);
+
         LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
 
-        // vm.eval(fileSource).as(Integer.class);
+        // context.getFunctionRegistry().createFunctionDescriptor(name, returnType, paramTypes,
+        // varArgs)
 
-        // LLVMContext context = new LLVMContext(LLVM.getNodeFactoryFacade());
-
-        // LLVMContext context = new LLVMContext(new NodeFactoryFacadeImpl());
-        //
         LLVMParserResult parserResult = LLVM.parseModel(model, context);
 
         RootCallTarget callTarget = Truffle.getRuntime().createCallTarget(parserResult.getMainFunction().getRootNode());

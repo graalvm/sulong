@@ -79,6 +79,7 @@ public final class LLVMLanguage extends TruffleLanguage<LLVMContext> {
     }
 
     public static LLVMLanguageProvider provider;
+    public static LLVMContext contextOverwrite = null; // TODO: only required for some tests
 
     public static final String MAIN_ARGS_KEY = "Sulong Main Args";
     public static final String LLVM_SOURCE_FILE_KEY = "Sulong Source File";
@@ -130,11 +131,20 @@ public final class LLVMLanguage extends TruffleLanguage<LLVMContext> {
     }
 
     public LLVMContext findContext0() {
-        return findContext0(createFindContextNode0());
+        if (contextOverwrite == null) {
+            return findContext0(createFindContextNode0());
+        } else {
+            return contextOverwrite;
+        }
+
     }
 
     public LLVMContext findContext0(Node node) {
-        return findContext(node);
+        if (contextOverwrite == null) {
+            return findContext(node);
+        } else {
+            return contextOverwrite;
+        }
     }
 
     public Node createFindContextNode0() {

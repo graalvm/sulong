@@ -54,10 +54,11 @@ public class BranchingTest extends TestExecutor {
 
         facade.nextBlock();
         facade.createReturn(new IntegerConstant(IntegerType.INTEGER, 0));
+        facade.exitFunction();
 
         // Checkstyle: resume magic number name check
 
-        testModel(model, 1);
+        testModel(model, 0);
     }
 
 }

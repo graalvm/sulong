@@ -74,14 +74,18 @@ public class FunctionCallTest extends TestExecutor {
         // Checkstyle: stop magic number name check
 
         InstructionGeneratorFacade fooFacade = model.createFunctionDefinition("foo", 1, functionType, new Type[]{functionType}, false);
+
         ValueSymbol parameter = fooFacade.createParameter(functionType);
+
         fooFacade.createReturn(parameter);
+        fooFacade.exitFunction();
 
         InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, functionType, new Type[]{}, false);
 
         Instruction fooRet = mainFacade.createCall(fooFacade.getFunctionDefinition(), new Symbol[]{new IntegerConstant(functionType, 0)});
 
         mainFacade.createReturn(fooRet);
+        mainFacade.exitFunction();
 
         // Checkstyle: resume magic number name check
 

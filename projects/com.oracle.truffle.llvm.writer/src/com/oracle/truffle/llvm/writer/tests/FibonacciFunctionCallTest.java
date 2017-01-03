@@ -55,6 +55,7 @@ public class FibonacciFunctionCallTest extends TestExecutor {
         Instruction fib_res = mainFacade.createCall(fibFacade.getFunctionDefinition(),
                         new Symbol[]{new IntegerConstant(IntegerType.INTEGER, 10)});
         mainFacade.createReturn(fib_res);
+        mainFacade.exitFunction();
 
         FunctionParameter param1 = fibFacade.createParameter(IntegerType.INTEGER);
 
@@ -74,6 +75,7 @@ public class FibonacciFunctionCallTest extends TestExecutor {
         Instruction res = fibFacade.createBinaryOperation(fib1, fib2, BinaryOperator.INT_ADD);
 
         fibFacade.createReturn(res);
+        fibFacade.exitFunction();
 
         testModel(model, 55);
     }

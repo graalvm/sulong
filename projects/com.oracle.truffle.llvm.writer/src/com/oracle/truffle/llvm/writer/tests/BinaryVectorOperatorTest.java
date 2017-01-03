@@ -131,6 +131,7 @@ public class BinaryVectorOperatorTest extends TestExecutor {
 
         Instruction ret = facade.createBinaryOperation(retVec1, retVec2, BinaryOperator.INT_OR);
         facade.createReturn(ret); // 0=OK, 1=ERROR
+        facade.exitFunction();
         // Checkstyle: resume magic number name check
 
         testModel(model, 0);
