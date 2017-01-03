@@ -31,20 +31,12 @@ package com.oracle.truffle.llvm.writer.tests;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.TruffleLanguage.Env;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.llvm.LLVM;
 import com.oracle.truffle.llvm.context.LLVMContext;
 import com.oracle.truffle.llvm.context.LLVMLanguage;
-import com.oracle.truffle.llvm.context.LLVMLanguage.LLVMLanguageProvider;
 import com.oracle.truffle.llvm.parser.api.LLVMParserResult;
-import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacade;
 import com.oracle.truffle.llvm.parser.api.model.Model;
 import com.oracle.truffle.llvm.parser.bc.util.writer.ModelToIRVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
@@ -60,40 +52,16 @@ public class TestExecutor {
         LLVMLogger.error(ModelToIRVisitor.getIRString(model));
         LLVMLogger.error("######################################\033[0m");
 
-        LLVMLanguage.provider = new LLVMTestLanguageProvider();
         LLVMLanguage.contextOverwrite = LLVMLanguage.provider.createContext(null);
 
         LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
-
-        // context.getFunctionRegistry().createFunctionDescriptor(name, returnType, paramTypes,
-        // varArgs)
 
         LLVMParserResult parserResult = LLVM.parseModel(model, context);
 
         RootCallTarget callTarget = Truffle.getRuntime().createCallTarget(parserResult.getMainFunction().getRootNode());
 
         Object result = callTarget.call();
-        System.out.println("result: " + result);
+
         assertEquals(expectedRetVal, result);
-    }
-
-    static final class LLVMTestLanguageProvider implements LLVMLanguageProvider {
-        @Override
-        public LLVMContext createContext(Env env) {
-            NodeFactoryFacade facade = LLVM.getNodeFactoryFacade();
-            LLVMContext context = new LLVMContext(facade);
-            context.getStack().allocate();
-            return context;
-        }
-
-        @Override
-        public CallTarget parse(Source code, Node context, String... argumentNames) throws IOException {
-            return null;
-        }
-
-        @Override
-        public void disposeContext(LLVMContext context) {
-        }
-
     }
 }

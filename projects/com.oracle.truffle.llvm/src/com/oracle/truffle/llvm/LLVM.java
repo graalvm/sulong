@@ -65,7 +65,7 @@ public class LLVM {
         LLVMLanguage.provider = getProvider();
     }
 
-    public static NodeFactoryFacade getNodeFactoryFacade() {
+    private static NodeFactoryFacade getNodeFactoryFacade() {
         ServiceLoader<NodeFactoryFacadeProvider> loader = ServiceLoader.load(NodeFactoryFacadeProvider.class);
         if (!loader.iterator().hasNext()) {
             throw new AssertionError("Could not find a " + NodeFactoryFacadeProvider.class.getSimpleName() + " for the creation of the Truffle nodes");
@@ -166,28 +166,6 @@ public class LLVM {
                 }
             }
 
-            private void handleParserResult(LLVMContext context, LLVMParserResult result) {
-                context.getFunctionRegistry().register(result.getParsedFunctions());
-                context.registerGlobalVarInit(result.getGlobalVarInits());
-                context.registerGlobalVarDealloc(result.getGlobalVarDeallocs());
-                if (result.getConstructorFunctions() != null) {
-                    for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
-                        context.registerConstructorFunction(constructorFunction);
-                    }
-                }
-                if (result.getDestructorFunctions() != null) {
-                    for (RootCallTarget destructorFunction : result.getDestructorFunctions()) {
-                        context.registerDestructorFunction(destructorFunction);
-                    }
-                }
-                if (!context.isParseOnly()) {
-                    result.getGlobalVarInits().call();
-                    for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
-                        constructorFunction.call(result.getConstructorFunctions());
-                    }
-                }
-            }
-
             @Override
             public LLVMContext createContext(Env env) {
                 NodeFactoryFacade facade = getNodeFactoryFacade();
@@ -223,6 +201,28 @@ public class LLVM {
         };
     }
 
+    private static void handleParserResult(LLVMContext context, LLVMParserResult result) {
+        context.getFunctionRegistry().register(result.getParsedFunctions());
+        context.registerGlobalVarInit(result.getGlobalVarInits());
+        context.registerGlobalVarDealloc(result.getGlobalVarDeallocs());
+        if (result.getConstructorFunctions() != null) {
+            for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
+                context.registerConstructorFunction(constructorFunction);
+            }
+        }
+        if (result.getDestructorFunctions() != null) {
+            for (RootCallTarget destructorFunction : result.getDestructorFunctions()) {
+                context.registerDestructorFunction(destructorFunction);
+            }
+        }
+        if (!context.isParseOnly()) {
+            result.getGlobalVarInits().call();
+            for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
+                constructorFunction.call(result.getConstructorFunctions());
+            }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             throw new IllegalArgumentException("please provide a file to execute!");
@@ -239,7 +239,11 @@ public class LLVM {
     }
 
     public static LLVMParserResult parseModel(Model model, LLVMContext context) {
-        return LLVMBitcodeVisitor.parse(model, context, getNodeFactoryFacade());
+        LLVMParserResult result = LLVMBitcodeVisitor.parse(model, context, getNodeFactoryFacade());
+
+        handleParserResult(context, result);
+
+        return result;
     }
 
     public static int executeMain(File file, Object... args) {

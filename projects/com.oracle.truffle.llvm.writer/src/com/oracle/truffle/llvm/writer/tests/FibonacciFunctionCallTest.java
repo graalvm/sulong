@@ -48,13 +48,15 @@ public class FibonacciFunctionCallTest extends TestExecutor {
     public void test() {
         ModelModuleFacade model = new ModelModuleFacade();
 
+        // Checkstyle: stop magic number name check
+
         InstructionGeneratorFacade fibFacade = model.createFunctionDefinition("fibonacci", 3, IntegerType.INTEGER,
                         new Type[]{IntegerType.INTEGER}, false);
         InstructionGeneratorFacade mainFacade = model.createFunctionDefinition("main", 1, IntegerType.INTEGER, new Type[]{}, false);
 
-        Instruction fib_res = mainFacade.createCall(fibFacade.getFunctionDefinition(),
+        Instruction fibRes = mainFacade.createCall(fibFacade.getFunctionDefinition(),
                         new Symbol[]{new IntegerConstant(IntegerType.INTEGER, 10)});
-        mainFacade.createReturn(fib_res);
+        mainFacade.createReturn(fibRes);
         mainFacade.exitFunction();
 
         FunctionParameter param1 = fibFacade.createParameter(IntegerType.INTEGER);
@@ -78,6 +80,8 @@ public class FibonacciFunctionCallTest extends TestExecutor {
         fibFacade.exitFunction();
 
         testModel(model, 55);
+
+        // Checkstyle: resume magic number name check
     }
 
 }
