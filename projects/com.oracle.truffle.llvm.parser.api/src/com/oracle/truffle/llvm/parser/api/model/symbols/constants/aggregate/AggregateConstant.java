@@ -63,19 +63,6 @@ public abstract class AggregateConstant extends AbstractConstant {
         elements[index] = replacement;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < getElementCount(); i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            Symbol value = getElement(i);
-            sb.append(value.getType()).append(" ").append(value);
-        }
-        return sb.toString();
-    }
-
     public static AggregateConstant fromData(Type type, long[] data) {
         final AggregateConstant aggregateConstant;
         final Type elementType;
@@ -115,5 +102,10 @@ public abstract class AggregateConstant extends AbstractConstant {
         }
 
         return aggregateConstant;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s %s", getType().toString(), getStringValue());
     }
 }

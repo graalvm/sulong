@@ -32,6 +32,8 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
@@ -40,6 +42,8 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class SwitchInstruction implements VoidInstruction, TerminatingInstruction {
+
+    public static final String LLVMIR_LABEL = "switch";
 
     private Symbol condition;
 
@@ -111,5 +115,38 @@ public final class SwitchInstruction implements VoidInstruction, TerminatingInst
         }
 
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+
+        // switch <intty> <value>, label <defaultdest>
+        sb.append(LLVMIR_LABEL).append(' ');
+        sb.append(condition.getType().toString()).append(' ');
+        sb.append(condition.getName());
+        sb.append(", label ").append(defaultBlock.getName());
+
+        // [ <intty> <val>, label <dest> ... ]
+        // @formatter:off
+        sb.append(" [");
+        final String indent = buildIndent(sb.length());
+        sb.append(IntStream.range(0, getCaseCount()).mapToObj(i -> {
+            final Symbol val = values[i];
+            final Symbol blk = blocks[i];
+            return String.format("%s %s, label %s", val.getType().toString(), val.getName(), blk.getName());
+        }).collect(Collectors.joining(indent)));
+        // @formatter:on
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private static String buildIndent(int length) {
+        final StringBuilder builder = new StringBuilder(length + 1);
+        builder.append('\n');
+        for (int i = 0; i < length; i++) {
+            builder.append(' ');
+        }
+        return builder.toString();
     }
 }

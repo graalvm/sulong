@@ -29,6 +29,8 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
+import com.oracle.truffle.llvm.parser.api.model.types.FloatingPointType;
+import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public final class NullConstant extends AbstractConstant {
@@ -38,7 +40,18 @@ public final class NullConstant extends AbstractConstant {
     }
 
     @Override
+    public String getStringValue() {
+        if (getType() instanceof IntegerType) {
+            return String.valueOf(0);
+        } else if (getType() instanceof FloatingPointType) {
+            return String.valueOf(0.0);
+        } else {
+            return "null";
+        }
+    }
+
+    @Override
     public String toString() {
-        return "null";
+        return String.format("%s %s", getType().toString(), getStringValue());
     }
 }

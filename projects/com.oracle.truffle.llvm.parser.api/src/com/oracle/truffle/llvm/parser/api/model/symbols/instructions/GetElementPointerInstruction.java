@@ -36,11 +36,14 @@ import java.util.List;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.GetElementPointerConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class GetElementPointerInstruction extends ValueInstruction {
+
+    public static final String LLVMIR_LABEL = "getelementptr";
 
     private Symbol base;
 
@@ -111,5 +114,34 @@ public final class GetElementPointerInstruction extends ValueInstruction {
             inst.indices.add(symbols.getSymbol(index, inst));
         }
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        // <result> = getelementptr <ptr vector> ptrval, <vector index type> idx
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = getelementptr
+        sb.append(String.format("%s = %s", getName(), LLVMIR_LABEL));
+
+        // [inbounds]
+        if (isInbounds) {
+            sb.append(" inbounds");
+        }
+
+        // <pty>* <ptrval>
+        sb.append(String.format(" %s %s", base.getType(), base.getName()));
+
+        // {, <ty> <idx>}*
+        for (Symbol sym : indices) {
+            if (sym instanceof Constant) {
+                sb.append(", ").append(sym.toString());
+            } else {
+                sb.append(", ").append(sym.getType().toString());
+                sb.append(' ').append(sym.getName());
+            }
+        }
+
+        return sb.toString();
     }
 }

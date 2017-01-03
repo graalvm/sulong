@@ -29,6 +29,8 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint;
 
+import java.util.Locale;
+
 import com.oracle.truffle.llvm.parser.api.model.types.FloatingPointType;
 
 public final class FloatConstant extends FloatingPointConstant {
@@ -46,7 +48,7 @@ public final class FloatConstant extends FloatingPointConstant {
 
     @Override
     public String toString() {
-        return String.format("%.6f", value);
+        return String.format(Locale.ROOT, "%s, %.6f", getType().toString(), value);
     }
 
     public static FloatConstant create(float value) {

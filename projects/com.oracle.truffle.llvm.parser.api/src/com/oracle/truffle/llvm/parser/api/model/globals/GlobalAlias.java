@@ -29,13 +29,18 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.globals;
 
+import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
+import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
+import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 
 public final class GlobalAlias extends GlobalValueSymbol {
 
-    public GlobalAlias(Type type, int aliasedValue, long linkage) {
-        super(type, aliasedValue, 0, linkage);
+    private static final String IR_KEYWORD = "alias";
+
+    private GlobalAlias(Type type, int aliasedValue, Linkage linkage, Visibility visibility) {
+        super(type, aliasedValue, 0, linkage, visibility);
     }
 
     @Override
@@ -49,8 +54,45 @@ public final class GlobalAlias extends GlobalValueSymbol {
     }
 
     @Override
+    public String getIRKeyword() {
+        return IR_KEYWORD;
+    }
+
+    @Override
     public int getInitialiser() {
         // aliases always have a value so compensate for zero test is super class
         return super.getInitialiser() + 1;
+    }
+
+    public static GlobalAlias create(Type type, int aliasedValue, long linkage, long visibility) {
+        return new GlobalAlias(type, aliasedValue, Linkage.decode(linkage), Visibility.decode(visibility));
+    }
+
+    private static final String UNRESOLVED_FORWARD_REFERENCE = "<unresolved>";
+
+    @Override
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
+
+        builder.append(getName()).append(" = ");
+
+        builder.append(getIRKeyword()).append(' ');
+
+        builder.append(getLinkage().getIrString()).append(' ');
+
+        if (getVisibility() != Visibility.DEFAULT) {
+            builder.append(getVisibility().getIrString()).append(' ');
+        }
+
+        builder.append(getType().toString()).append(' ');
+
+        final Symbol value = getValue();
+        if (value != null) {
+            builder.append(value.toString());
+        } else {
+            builder.append(UNRESOLVED_FORWARD_REFERENCE);
+        }
+
+        return builder.toString();
     }
 }

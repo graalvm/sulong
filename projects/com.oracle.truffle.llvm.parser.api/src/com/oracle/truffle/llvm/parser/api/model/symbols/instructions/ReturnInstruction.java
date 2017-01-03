@@ -39,6 +39,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class ReturnInstruction implements VoidInstruction, TerminatingInstruction {
 
+    public static final String LLVMIR_LABEL = "ret";
+
     private Symbol value;
 
     private ReturnInstruction() {
@@ -73,5 +75,16 @@ public final class ReturnInstruction implements VoidInstruction, TerminatingInst
 
     public static ReturnInstruction generate() {
         return new ReturnInstruction();
+    }
+
+    @Override
+    public String toString() {
+        if (value == null) {
+            // ret void
+            return String.format("%s void", LLVMIR_LABEL);
+        } else {
+            // ret <type> <value>
+            return String.format("%s %s %s", LLVMIR_LABEL, value.getType(), value.getName());
+        }
     }
 }

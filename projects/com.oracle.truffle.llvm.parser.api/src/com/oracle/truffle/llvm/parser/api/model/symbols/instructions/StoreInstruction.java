@@ -33,11 +33,14 @@ import com.oracle.truffle.llvm.parser.api.model.enums.AtomicOrdering;
 import com.oracle.truffle.llvm.parser.api.model.enums.SynchronizationScope;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class StoreInstruction implements VoidInstruction {
 
-    private final int align;
+    public static final String LLVMIR_LABEL = "store";
+
+    private final int align; // TODO: currently this tells us the position of the 1 bit
     private final AtomicOrdering atomicOrdering;
     private final boolean isVolatile;
     private final SynchronizationScope synchronizationScope;
@@ -109,5 +112,54 @@ public final class StoreInstruction implements VoidInstruction {
         if (source == original) {
             source = replacement;
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = load
+        sb.append(String.format("%s", LLVMIR_LABEL));
+
+        if (atomicOrdering == AtomicOrdering.NOT_ATOMIC) {
+            // [volatile]
+            if (isVolatile) {
+                sb.append(" volatile");
+            }
+
+            // <ty> <value>, <ty>* <pointer>
+            sb.append(String.format(" %s %s, %s %s", ((PointerType) destination.getType()).getPointeeType(), source.getName(),
+                            destination.getType(), destination.getName()));
+
+            // [, align <alignment>]
+            if (align != 0) {
+                sb.append(String.format(", align %d", 1 << (align - 1)));
+            }
+
+            // [, !nontemporal !<index>][, !invariant.load !<index>]
+            // TODO: implement
+        } else {
+            // atomic
+            sb.append(" atomic");
+
+            // [volatile]
+            if (isVolatile) {
+                sb.append(" volatile");
+            }
+
+            // <ty> <value>, <ty>* <pointer>
+            sb.append(String.format(" %s %s, %s %s", ((PointerType) destination.getType()).getPointeeType(), source.getName(),
+                            destination.getType(), destination.getName()));
+
+            // [singlethread]
+            if (synchronizationScope == SynchronizationScope.SINGLE_THREAD) {
+                sb.append(" singlethread");
+            }
+
+            // <ordering>, align <alignment>
+            sb.append(String.format(" %s, align %d", atomicOrdering, 1 << (align - 1)));
+        }
+
+        return sb.toString();
     }
 }

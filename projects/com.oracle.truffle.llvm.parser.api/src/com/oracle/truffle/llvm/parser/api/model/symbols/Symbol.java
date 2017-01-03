@@ -33,9 +33,15 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public interface Symbol {
 
+    String UNKNOWN = "<anon>";
+
     Type getType();
 
     boolean hasName();
+
+    default String getName() {
+        return UNKNOWN;
+    }
 
     @SuppressWarnings("unused")
     default void replace(Symbol original, Symbol replacement) {

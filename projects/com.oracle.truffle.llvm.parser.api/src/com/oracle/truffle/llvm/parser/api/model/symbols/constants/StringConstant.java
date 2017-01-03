@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
+import com.oracle.truffle.llvm.parser.api.model.types.ArrayType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public final class StringConstant extends AbstractConstant {
@@ -47,13 +48,9 @@ public final class StringConstant extends AbstractConstant {
         return value;
     }
 
-    public boolean isCString() {
-        return isCString;
-    }
-
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
+    public String getStringValue() {
+        final StringBuilder sb = new StringBuilder();
 
         sb.append("c\"");
         for (int i = 0; i < value.length(); i++) {
@@ -64,8 +61,15 @@ public final class StringConstant extends AbstractConstant {
                 sb.append((char) b);
             }
         }
+        if (getType() instanceof ArrayType && ((ArrayType) getType()).getLength() > value.length()) {
+            sb.append("\\00");
+        }
         sb.append("\"");
 
         return sb.toString();
+    }
+
+    public boolean isCString() {
+        return isCString;
     }
 }

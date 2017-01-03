@@ -60,6 +60,11 @@ public final class CastConstant extends AbstractConstant {
         }
     }
 
+    @Override
+    public String getStringValue() {
+        return String.format("%s %s %s to %s", operator, value.getType(), value.getName(), getType());
+    }
+
     public static CastConstant fromSymbols(Symbols symbols, Type type, int opcode, int value) {
         final CastConstant constant = new CastConstant(type, CastOperator.decode(opcode));
         constant.value = symbols.getSymbol(value, constant);

@@ -93,4 +93,22 @@ public final class BinaryOperationInstruction extends ValueInstruction {
         inst.rhs = symbols.getSymbol(rhs, inst);
         return inst;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = <op>
+        sb.append(String.format("%s = %s", getName(), operator));
+
+        // { <flag>}*
+        for (Flag flag : flags) {
+            sb.append(" " + flag);
+        }
+
+        // <ty> <op1>, <op2>
+        sb.append(String.format(" %s %s, %s", getType(), lhs.getName(), rhs.getName()));
+
+        return sb.toString();
+    }
 }

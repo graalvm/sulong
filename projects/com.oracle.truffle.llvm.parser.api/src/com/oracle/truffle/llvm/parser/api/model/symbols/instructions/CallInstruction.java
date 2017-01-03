@@ -31,16 +31,23 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
-import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.InlineAsmConstant;
+import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class CallInstruction extends ValueInstruction implements Call {
+
+    public static final String LLVMIR_LABEL = "call";
 
     private final Linkage linkage;
 
@@ -110,19 +117,58 @@ public final class CallInstruction extends ValueInstruction implements Call {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (target instanceof FunctionDeclaration) {
-            sb.append(((FunctionDeclaration) target).getName());
-        } else {
-            sb.append(target);
-        }
-        sb.append('(');
-        for (int i = 0; i < arguments.size(); i++) {
-            if (i != 0) {
-                sb.append(", ");
+
+        // <result> = [tail] call
+        sb.append(String.format("%s = %s", getName(), LLVMIR_LABEL)); // TODO: [tail]
+
+        // [cconv] [ret attrs]
+        // TODO: implement
+
+        if (target instanceof FunctionType) {
+            // <ty>
+            FunctionType decl = (FunctionType) target;
+
+            sb.append(' ').append(decl.getReturnType().toString());
+
+            if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
+                sb.append(' ').append(decl.getTypeSignature()).append('*');
             }
-            sb.append(arguments.get(i));
+            sb.append(' ').append(target.getName());
+        } else if (target instanceof LoadInstruction) {
+            Type targetType = ((LoadInstruction) target).getSource().getType();
+            while (targetType instanceof PointerType) {
+                targetType = ((PointerType) targetType).getPointeeType();
+            }
+            if (targetType instanceof FunctionType) {
+                sb.append(String.format(" %s %s", ((FunctionType) targetType).getReturnType(), target.getName()));
+            } else {
+                throw new AssertionError("unexpected target type: " + targetType.getClass().getName());
+            }
+        } else if (target instanceof FunctionParameter) {
+            sb.append(' ').append(target.getType().toString());
+
+        } else if (target instanceof InlineAsmConstant) {
+            sb.append(' ').append(target.toString());
+
+        } else {
+            throw new AssertionError("unexpected target type: " + target.getClass().getName());
         }
-        sb.append(')');
+
+        sb.append(argsToString());
+
+        // [fn attrs]
+        // TODO: implement
+
         return sb.toString();
+    }
+
+    private String argsToString() {
+        return arguments.stream().map(s -> {
+            if (s instanceof Constant) {
+                return s.toString();
+            } else {
+                return String.format("%s %s", s.getType().toString(), s.getName());
+            }
+        }).collect(Collectors.joining(", ", "(", ")"));
     }
 }

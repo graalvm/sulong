@@ -170,7 +170,7 @@ public abstract class LLVMSignal extends LLVMExpressionNode {
             this.signal = signal;
             this.function = function;
 
-            this.context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+            this.context = LLVMLanguage.INSTANCE.findContext0();
 
             lock.lock();
             try {

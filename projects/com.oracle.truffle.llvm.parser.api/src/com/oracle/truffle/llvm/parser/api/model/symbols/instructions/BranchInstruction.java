@@ -37,6 +37,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class BranchInstruction implements VoidInstruction, TerminatingInstruction {
 
+    public static final String LLVMIR_LABEL = "br";
+
     private final InstructionBlock successor;
 
     private BranchInstruction(InstructionBlock successor) {
@@ -59,5 +61,11 @@ public final class BranchInstruction implements VoidInstruction, TerminatingInst
 
     public static BranchInstruction fromTarget(InstructionBlock block) {
         return new BranchInstruction(block);
+    }
+
+    @Override
+    public String toString() {
+        // br label <dest>
+        return String.format("%s label %s", LLVMIR_LABEL, successor.getName());
     }
 }

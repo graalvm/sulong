@@ -32,19 +32,28 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.types.IntegerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
+import com.oracle.truffle.llvm.parser.api.model.types.VectorType;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class CompareInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "icmp";
+    public static final String LLVMIR_LABEL_FP = "fcmp";
+
     private final CompareOperator operator;
+
+    private Type baseType;
 
     private Symbol lhs;
 
     private Symbol rhs;
 
     private CompareInstruction(Type type, CompareOperator operator) {
-        super(type);
+        // The comparison performed always yields either an i1 or vector of i1 result
+        super(type instanceof VectorType ? new VectorType(IntegerType.BOOLEAN, ((VectorType) type).getLength()) : IntegerType.BOOLEAN);
+        this.baseType = type;
         this.operator = operator;
     }
 
@@ -55,6 +64,10 @@ public final class CompareInstruction extends ValueInstruction {
 
     public Symbol getLHS() {
         return lhs;
+    }
+
+    public Type getBaseType() {
+        return baseType;
     }
 
     public CompareOperator getOperator() {
@@ -80,5 +93,18 @@ public final class CompareInstruction extends ValueInstruction {
         cmpInst.lhs = symbols.getSymbol(lhs, cmpInst);
         cmpInst.rhs = symbols.getSymbol(rhs, cmpInst);
         return cmpInst;
+    }
+
+    @Override
+    public String toString() {
+        if (operator.isFloatingPoint()) {
+            // <result> = fcmp <cond> <ty> <op1>, <op2>
+            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL_FP, operator, baseType,
+                            lhs.getName(), rhs.getName());
+        } else {
+            // <result> = icmp <cond> <ty> <op1>, <op2>
+            return String.format("%s = %s %s %s %s, %s", getName(), LLVMIR_LABEL, operator, baseType,
+                            lhs.getName(), rhs.getName());
+        }
     }
 }

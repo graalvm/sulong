@@ -53,7 +53,7 @@ public class LLVMRootNodeFactory {
                     Source sourceFile,
                     LLVMRuntimeType[] mainTypes) {
         return createGlobalRootNode(
-                        LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0()),
+                        LLVMLanguage.INSTANCE.findContext0(),
                         runtime.getStackPointerSlot(),
                         runtime.getGlobalFrameDescriptor(),
                         mainCallTarget,

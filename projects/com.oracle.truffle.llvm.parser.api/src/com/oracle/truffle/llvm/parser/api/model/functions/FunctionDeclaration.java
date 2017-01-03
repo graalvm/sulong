@@ -31,11 +31,19 @@ package com.oracle.truffle.llvm.parser.api.model.functions;
 
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
+import com.oracle.truffle.llvm.parser.api.model.types.Type;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class FunctionDeclaration extends FunctionType implements Constant {
 
     public FunctionDeclaration(FunctionType type) {
         super(type.getReturnType(), type.getArgumentTypes(), type.isVarArg());
+        if (type.getName().startsWith("@")) {
+            setName(type.getName().substring(1));
+        }
     }
 
     @Override
@@ -44,7 +52,17 @@ public final class FunctionDeclaration extends FunctionType implements Constant 
     }
 
     @Override
+    public String getStringValue() {
+        Stream<String> argumentStream = Arrays.stream(getArgumentTypes()).map(Type::toString);
+        if (isVarArg()) {
+            argumentStream = Stream.concat(argumentStream, Stream.of("..."));
+        }
+        return String.format("declare %s %s(%s)", getReturnType().toString(), getName(),
+                        argumentStream.collect(Collectors.joining(", ")));
+    }
+
+    @Override
     public String toString() {
-        return "FunctionDeclaration [name=" + getName() + ", types=" + super.toString() + "]";
+        return getStringValue();
     }
 }

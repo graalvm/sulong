@@ -66,6 +66,11 @@ public final class FunctionParameter implements ValueSymbol {
 
     @Override
     public String toString() {
-        return "FunctionParameter [type=" + type + ", index=" + index + ", name=" + name + "]";
+        final StringBuilder builder = new StringBuilder();
+        builder.append(type.toString());
+        if (!ValueSymbol.UNKNOWN.equals(name)) {
+            builder.append(' ').append(name);
+        }
+        return builder.toString();
     }
 }

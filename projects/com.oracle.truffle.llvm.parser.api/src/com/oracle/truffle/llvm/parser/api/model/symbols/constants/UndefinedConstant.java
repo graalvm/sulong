@@ -38,7 +38,7 @@ public final class UndefinedConstant extends AbstractConstant {
     }
 
     @Override
-    public String toString() {
+    public String getStringValue() {
         return "undef";
     }
 }

@@ -57,6 +57,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class ExtractElementInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "extractelement";
+
     private Symbol vector;
 
     private Symbol index;
@@ -93,5 +95,13 @@ public final class ExtractElementInstruction extends ValueInstruction {
         inst.vector = symbols.getSymbol(vector, inst);
         inst.index = symbols.getSymbol(index, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        // <result> = extractelement <n x <ty>> <val>, i32 <idx>
+        return String.format("%s = %s %s %s, %s %s", getName(), LLVMIR_LABEL,
+                        vector.getType(), vector.getName(),
+                        index.getType(), index.getName());
     }
 }

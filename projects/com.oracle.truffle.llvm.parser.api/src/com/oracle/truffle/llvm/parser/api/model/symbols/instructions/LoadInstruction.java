@@ -38,7 +38,9 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class LoadInstruction extends ValueInstruction {
 
-    private final int align;
+    public static final String LLVMIR_LABEL = "load";
+
+    private final int align; // TODO: currently this tells us the position of the 1 bit
     private final AtomicOrdering atomicOrdering;
     private final boolean isVolatile;
     private final SynchronizationScope synchronizationScope;
@@ -97,5 +99,52 @@ public final class LoadInstruction extends ValueInstruction {
         if (source == original) {
             source = replacement;
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = load
+        sb.append(String.format("%s = %s", getName(), LLVMIR_LABEL));
+
+        if (atomicOrdering == AtomicOrdering.NOT_ATOMIC) {
+            // [volatile]
+            if (isVolatile) {
+                sb.append(" volatile");
+            }
+
+            // <ty>* <pointer>
+            sb.append(String.format(" %s %s", source.getType(), source.getName()));
+
+            // [, align <alignment>]
+            if (align != 0) {
+                sb.append(String.format(", align %d", 1 << (align - 1)));
+            }
+
+            // [, !nontemporal !<index>][, !invariant.load !<index>]
+            // TODO: implement
+        } else {
+            // atomic
+            sb.append(" atomic");
+
+            // [volatile]
+            if (isVolatile) {
+                sb.append(" volatile");
+            }
+
+            // <ty>* <pointer>
+            sb.append(String.format(" %s %s", source.getType(), source.getName()));
+
+            // [singlethread]
+            if (synchronizationScope == SynchronizationScope.SINGLE_THREAD) {
+                sb.append(" singlethread");
+            }
+
+            // <ordering>, align <alignment>
+            sb.append(String.format(" %s, align %d", atomicOrdering, 1 << (align - 1)));
+        }
+
+        return sb.toString();
     }
 }

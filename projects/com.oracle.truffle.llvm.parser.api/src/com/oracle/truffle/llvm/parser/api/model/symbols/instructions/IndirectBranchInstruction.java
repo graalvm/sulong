@@ -40,6 +40,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class IndirectBranchInstruction implements VoidInstruction, TerminatingInstruction {
 
+    public static final String LLVMIR_LABEL = "indirectbr";
+
     private Symbol address;
 
     private final InstructionBlock[] successors;
@@ -85,5 +87,16 @@ public final class IndirectBranchInstruction implements VoidInstruction, Termina
         final IndirectBranchInstruction inst = new IndirectBranchInstruction(blocks);
         inst.address = function.getSymbols().getSymbol(address, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        // indirectbr <somety>* <address>, [ label <dest1>, label <dest2>, ... ]
+        // @formatter:off
+        return String.format("%s %s %s, [ %s ]", LLVMIR_LABEL, address.getType(), address.getName(),
+                        Arrays.stream(successors).map(s ->
+                            String.format("label %s", s.getName())
+                        ).collect(Collectors.joining(", ")));
+        // @formatter:on
     }
 }

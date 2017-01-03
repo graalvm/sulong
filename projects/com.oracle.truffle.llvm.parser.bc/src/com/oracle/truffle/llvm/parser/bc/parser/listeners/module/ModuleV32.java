@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.bc.parser.listeners.module;
 
+import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.generators.ModuleGenerator;
 import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
 import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
@@ -55,14 +56,20 @@ public class ModuleV32 extends Module {
 
     @Override
     protected void createGlobalVariable(long[] args) {
-        int i = 0;
-        Type type = types.get(args[i++]);
-        boolean isConstant = (args[i++] & 1) == 1;
-        int initialiser = (int) args[i++];
-        long linkage = args[i++];
-        int align = (int) args[i];
+        // Checkstyle: stop magic number name check
+        Type type = types.get(args[0]);
+        boolean isConstant = (args[1] & 1) == 1;
+        int initialiser = (int) args[2];
+        long linkage = args[3];
+        int align = (int) args[4];
 
-        generator.createGlobal(type, isConstant, initialiser, align, linkage);
+        long visibility = Visibility.DEFAULT.getEncodedValue();
+        if (args.length >= 7) {
+            visibility = args[6];
+        }
+        // Checkstyle: resume magic number name check
+
+        generator.createGlobal(type, isConstant, initialiser, align, linkage, visibility);
         symbols.add(type);
     }
 }

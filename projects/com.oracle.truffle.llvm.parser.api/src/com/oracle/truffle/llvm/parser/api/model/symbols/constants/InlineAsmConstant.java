@@ -30,9 +30,18 @@
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.AsmDialect;
+import com.oracle.truffle.llvm.parser.api.model.types.FunctionType;
+import com.oracle.truffle.llvm.parser.api.model.types.MetaType;
+import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public final class InlineAsmConstant extends AbstractConstant {
+
+    private static final String LLVMIR_KEYWORD = "asm";
+
+    private static final String LLVMIR_KEYWORD_SIDEEFFECT = "sideeffect";
+
+    private static final String LLVMIR_KEYWORD_ALIGNSTACK = "alignstack";
 
     private static final char DELIMITER = '\"';
 
@@ -76,8 +85,40 @@ public final class InlineAsmConstant extends AbstractConstant {
     }
 
     @Override
-    public String toString() {
-        return "asm";
+    public String getStringValue() {
+        final StringBuilder builder = new StringBuilder();
+
+        final FunctionType decl = (FunctionType) ((PointerType) getType()).getPointeeType();
+
+        if (decl.getReturnType() != MetaType.VOID) {
+            builder.append(decl.getReturnType().toString());
+            builder.append(' ');
+        }
+
+        final String typeSignature = decl.getTypeSignature();
+        if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
+            builder.append(typeSignature).append(' ');
+        }
+
+        builder.append(LLVMIR_KEYWORD);
+
+        if (hasSideEffects) {
+            builder.append(' ').append(LLVMIR_KEYWORD_SIDEEFFECT);
+        }
+
+        if (stackAlign) {
+            builder.append(' ').append(LLVMIR_KEYWORD_ALIGNSTACK);
+        }
+
+        if (dialect != AsmDialect.AT_T) {
+            builder.append(' ').append(dialect.getIrString());
+        }
+
+        builder.append(' ').append(asmExpression);
+
+        builder.append(", ").append(asmFlags);
+
+        return builder.toString();
     }
 
     public static InlineAsmConstant generate(Type type, long[] args) {

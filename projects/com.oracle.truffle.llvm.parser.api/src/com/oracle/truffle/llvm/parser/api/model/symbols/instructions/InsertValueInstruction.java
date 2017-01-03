@@ -36,6 +36,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class InsertValueInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "insertvalue";
+
     private Symbol aggregate;
 
     private Symbol value;
@@ -79,5 +81,13 @@ public final class InsertValueInstruction extends ValueInstruction {
         inst.aggregate = symbols.getSymbol(aggregate, inst);
         inst.value = symbols.getSymbol(value, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        // <result> = insertvalue <aggregate type> <val>, <ty> <elt>, <idx>{, <idx>}*
+        return String.format("%s = %s %s %s, %s %s, %d", getName(), LLVMIR_LABEL,
+                        aggregate.getType(), aggregate.getName(),
+                        value.getType(), value.getName(), index);
     }
 }

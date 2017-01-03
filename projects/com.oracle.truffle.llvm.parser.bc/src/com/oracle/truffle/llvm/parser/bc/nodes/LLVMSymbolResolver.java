@@ -150,13 +150,13 @@ public final class LLVMSymbolResolver {
     private LLVMExpressionNode toInteger(IntegerConstant constant) {
         final Type type = constant.getType();
         final LLVMBaseType baseType = type.getLLVMBaseType();
-        final String stringValue = constant.toString();
+        final String stringValue = constant.getStringValue();
         return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, stringValue, baseType, type);
     }
 
     private LLVMExpressionNode toBigInteger(BigIntegerConstant constant) {
         final Type type = constant.getType();
-        final String stringValue = constant.toString();
+        final String stringValue = constant.getStringValue();
         return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, stringValue, type.getLLVMBaseType(), type);
     }
 

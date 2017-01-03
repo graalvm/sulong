@@ -31,11 +31,14 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.types.PointerType;
 import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class AllocateInstruction extends ValueInstruction {
+
+    public static final String LLVMIR_LABEL = "alloca";
 
     private Symbol count;
 
@@ -43,7 +46,7 @@ public final class AllocateInstruction extends ValueInstruction {
 
     private AllocateInstruction(Type type, int align) {
         super(type);
-        this.align = align;
+        this.align = align; // TODO: currently this tells us the position of the 1 bit
     }
 
     @Override
@@ -80,5 +83,25 @@ public final class AllocateInstruction extends ValueInstruction {
         final AllocateInstruction inst = new AllocateInstruction(type, align);
         inst.count = symbols.getSymbol(count, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = alloca <type>
+        sb.append(String.format("%s = %s %s", getName(), LLVMIR_LABEL, getPointeeType()));
+
+        // [, <ty> <NumElements>]
+        if (!(count instanceof IntegerConstant && ((IntegerConstant) count).getValue() == 1)) {
+            sb.append(String.format(", %s %s", count.getType(), count));
+        }
+
+        // [, align <alignment>]
+        if (align != 0) {
+            sb.append(String.format(", align %d", 1 << (align - 1)));
+        }
+
+        return sb.toString();
     }
 }

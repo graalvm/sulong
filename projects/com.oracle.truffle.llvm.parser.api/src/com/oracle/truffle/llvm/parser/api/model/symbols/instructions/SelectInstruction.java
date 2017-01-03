@@ -36,6 +36,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class SelectInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "select";
+
     private Symbol condition;
 
     private Symbol trueValue;
@@ -82,5 +84,14 @@ public final class SelectInstruction extends ValueInstruction {
         inst.trueValue = symbols.getSymbol(trueValue, inst);
         inst.falseValue = symbols.getSymbol(falseValue, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        // <result> = select selty <cond>, <ty> <val1>, <ty> <val2>
+        return String.format("%s = %s %s %s, %s %s, %s %s", getName(), LLVMIR_LABEL,
+                        condition.getType(), condition.getName(),
+                        trueValue.getType(), trueValue.getName(),
+                        falseValue.getType(), falseValue.getName());
     }
 }

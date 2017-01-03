@@ -30,10 +30,14 @@
 package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbol;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.MetadataConstant;
@@ -43,6 +47,8 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class VoidCallInstruction implements Call, VoidInstruction {
+
+    public static final String LLVMIR_LABEL = "call";
 
     private final Linkage linkage;
 
@@ -124,5 +130,48 @@ public final class VoidCallInstruction implements Call, VoidInstruction {
             }
         }
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        // <result> = [tail] call
+        sb.append(String.format("%s", LLVMIR_LABEL)); // TODO: [tail]
+
+        // [cconv] [ret attrs]
+        // TODO: implement
+
+        if (target instanceof FunctionType) {
+            // <ty>
+            FunctionType decl = (FunctionType) target;
+            sb.append(String.format(" %s", decl.getReturnType()));
+
+            // [<fnty>*]
+            Stream<String> argumentStream = Arrays.stream(decl.getArgumentTypes()).map(Type::toString);
+            if (decl.isVarArg()) {
+                argumentStream = Stream.concat(argumentStream, Stream.of("..."));
+            }
+            sb.append(String.format(" (%s)*", argumentStream.collect(Collectors.joining(", "))));
+        } else if (target instanceof FunctionParameter) {
+            sb.append(String.format(" %s", target.getType()));
+        } else {
+            throw new AssertionError("unexpected target type");
+        }
+
+        // <fnptrval>(<function args>)
+        sb.append(" " + target.getName());
+        sb.append('(');
+        // @formatter:off
+        sb.append(arguments.stream().map(s ->
+            String.format("%s %s", s.getType(), s.getName())
+        ).collect(Collectors.joining(", ")));
+        // @formatter:on
+        sb.append(')');
+
+        // [fn attrs]
+        // TODO: implement
+
+        return sb.toString();
     }
 }

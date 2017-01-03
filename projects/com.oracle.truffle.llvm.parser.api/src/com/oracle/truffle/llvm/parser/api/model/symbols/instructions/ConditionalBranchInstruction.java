@@ -39,6 +39,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class ConditionalBranchInstruction implements VoidInstruction, TerminatingInstruction {
 
+    public static final String LLVMIR_LABEL = "br";
+
     private Symbol condition;
 
     private final InstructionBlock trueSuccessor;
@@ -83,5 +85,14 @@ public final class ConditionalBranchInstruction implements VoidInstruction, Term
         final ConditionalBranchInstruction inst = new ConditionalBranchInstruction(trueSuccessor, falseSuccessor);
         inst.condition = symbols.getSymbol(conditionIndex, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        // br i1 <cond>, label <iftrue>, label <iffalse>
+        return String.format("%s %s %s, label %s, label %s", LLVMIR_LABEL,
+                        condition.getType(), condition.getName(),
+                        trueSuccessor.getName(),
+                        falseSuccessor.getName());
     }
 }

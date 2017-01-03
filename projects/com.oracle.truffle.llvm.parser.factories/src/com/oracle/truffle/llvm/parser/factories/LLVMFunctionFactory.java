@@ -139,7 +139,7 @@ public final class LLVMFunctionFactory {
 
     public static LLVMExpressionNode createFunctionCall(LLVMExpressionNode functionNode, LLVMExpressionNode[] argNodes, LLVMType[] argTypes, LLVMBaseType llvmType) {
         LLVMUnresolvedCallNode unresolvedCallNode = new LLVMUnresolvedCallNode(functionNode, argNodes, argTypes, LLVMTypeHelper.convertType(new LLVMType(llvmType)),
-                        LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0()));
+                        LLVMLanguage.INSTANCE.findContext0());
         return createUnresolvedNodeWrapping(llvmType, unresolvedCallNode);
 
     }

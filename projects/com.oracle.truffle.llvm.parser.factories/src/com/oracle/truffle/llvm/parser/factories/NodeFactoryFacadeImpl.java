@@ -425,7 +425,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
         if (globalVariable.isStatic()) {
             descriptor = new LLVMGlobalVariableDescriptor(name, nativeResolver);
         } else {
-            final LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+            final LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
             descriptor = context.getGlobalVariableRegistry().lookupOrAdd(name, nativeResolver);
         }
 
@@ -451,7 +451,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
         if (globalConstant.isStatic()) {
             descriptor = new LLVMGlobalVariableDescriptor(name, nativeResolver);
         } else {
-            final LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+            final LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
             descriptor = context.getGlobalVariableRegistry().lookupOrAdd(name, nativeResolver);
         }
 
@@ -469,7 +469,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
 
     @Override
     public RootNode createStaticInitsRootNode(LLVMParserRuntime runtime, LLVMExpressionNode[] staticInits) {
-        return new LLVMStaticInitsBlockNode(staticInits, runtime.getGlobalFrameDescriptor(), LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0()),
+        return new LLVMStaticInitsBlockNode(staticInits, runtime.getGlobalFrameDescriptor(), LLVMLanguage.INSTANCE.findContext0(),
                         runtime.getStackPointerSlot());
     }
 
@@ -520,7 +520,7 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
 
     @Override
     public LLVMFunction createAndRegisterFunctionDescriptor(LLVMParserRuntime runtime, String name, LLVMRuntimeType convertType, boolean varArgs, LLVMRuntimeType[] convertTypes) {
-        return LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0()).getFunctionRegistry().createFunctionDescriptor(name, convertType, convertTypes, varArgs);
+        return LLVMLanguage.INSTANCE.findContext0().getFunctionRegistry().createFunctionDescriptor(name, convertType, convertTypes, varArgs);
     }
 
 }

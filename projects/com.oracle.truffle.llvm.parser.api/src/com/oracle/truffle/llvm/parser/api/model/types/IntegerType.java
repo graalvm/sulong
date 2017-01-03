@@ -52,11 +52,17 @@ public final class IntegerType implements Type {
 
     public static final IntegerType LONG = new IntegerType(LONG_BITS);
 
+    private static final IntegerType[] itArray = new IntegerType[]{BOOLEAN, BYTE, SHORT, INTEGER, LONG};
+
     private final int bits;
 
     public IntegerType(int bits) {
         super();
         this.bits = bits;
+    }
+
+    public static IntegerType[] values() {
+        return itArray;
     }
 
     @Override

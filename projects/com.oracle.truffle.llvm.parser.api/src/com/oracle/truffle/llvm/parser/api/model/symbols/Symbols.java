@@ -175,6 +175,11 @@ public final class Symbols {
         }
 
         @Override
+        public String getStringValue() {
+            return toString();
+        }
+
+        @Override
         public Type getType() {
             return MetaType.UNKNOWN;
         }

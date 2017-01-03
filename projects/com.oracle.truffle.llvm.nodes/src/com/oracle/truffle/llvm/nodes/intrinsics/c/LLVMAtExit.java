@@ -55,7 +55,7 @@ public abstract class LLVMAtExit extends LLVMIntrinsic {
     @Specialization
     @TruffleBoundary
     public int doInt(LLVMFunctionDescriptor func) {
-        LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+        LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
 
         LLVMExpressionNode[] args = {new LLVMAddressLiteralNode(context.getStack().getUpperBounds())};
         LLVMType[] argsTypes = {new LLVMType(LLVMBaseType.ADDRESS)};

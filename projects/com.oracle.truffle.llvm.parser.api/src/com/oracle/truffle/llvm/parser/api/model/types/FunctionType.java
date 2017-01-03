@@ -30,6 +30,8 @@
 package com.oracle.truffle.llvm.parser.api.model.types;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.oracle.truffle.llvm.parser.api.LLVMBaseType;
 import com.oracle.truffle.llvm.parser.api.datalayout.DataLayoutConverter;
@@ -131,27 +133,20 @@ public class FunctionType implements Type, ValueSymbol {
         }
     }
 
+    public String getTypeSignature() {
+        final StringBuilder builder = new StringBuilder();
+
+        Stream<String> argTypeStream = Arrays.stream(getArgumentTypes()).map(Type::toString);
+        if (isVarArg()) {
+            argTypeStream = Stream.concat(argTypeStream, Stream.of("..."));
+        }
+        builder.append(argTypeStream.collect(Collectors.joining(", ", "(", ")")));
+
+        return builder.toString();
+    }
+
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(getReturnType()).append(" (");
-
-        for (int i = 0; i < args.length; i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            sb.append(args[i]);
-        }
-
-        if (isVarArg) {
-            if (args.length > 0) {
-                sb.append(", ");
-            }
-            sb.append("...");
-        }
-        sb.append(")");
-
-        return sb.toString();
+        return String.format("%s %s", getReturnType().toString(), getTypeSignature());
     }
 }

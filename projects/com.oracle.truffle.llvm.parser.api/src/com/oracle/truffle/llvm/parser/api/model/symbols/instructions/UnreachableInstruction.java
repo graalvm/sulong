@@ -37,6 +37,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class UnreachableInstruction implements VoidInstruction, TerminatingInstruction {
 
+    public static final String LLVMIR_LABEL = "unreachable";
+
     private UnreachableInstruction() {
     }
 
@@ -52,5 +54,10 @@ public final class UnreachableInstruction implements VoidInstruction, Terminatin
 
     public static UnreachableInstruction generate() {
         return new UnreachableInstruction();
+    }
+
+    @Override
+    public String toString() {
+        return LLVMIR_LABEL;
     }
 }

@@ -51,6 +51,7 @@ import com.oracle.truffle.llvm.context.LLVMLanguage;
 import com.oracle.truffle.llvm.parser.api.LLVMParserResult;
 import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacade;
 import com.oracle.truffle.llvm.parser.api.facade.NodeFactoryFacadeProvider;
+import com.oracle.truffle.llvm.parser.api.model.Model;
 import com.oracle.truffle.llvm.parser.bc.LLVMBitcodeVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
@@ -96,8 +97,7 @@ public class LLVM {
             }
 
             private CallTarget parse(Source code) throws IOException {
-                Node findContext = LLVMLanguage.INSTANCE.createFindContextNode0();
-                LLVMContext context = LLVMLanguage.INSTANCE.findContext0(findContext);
+                LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
                 CallTarget mainFunction = null;
                 if (code.getMimeType().equals(LLVMLanguage.LLVM_BITCODE_MIME_TYPE) || code.getMimeType().equals(LLVMLanguage.LLVM_BITCODE_BASE64_MIME_TYPE)) {
                     LLVMParserResult parserResult = parseBitcodeFile(code, context);
@@ -166,28 +166,6 @@ public class LLVM {
                 }
             }
 
-            private void handleParserResult(LLVMContext context, LLVMParserResult result) {
-                context.getFunctionRegistry().register(result.getParsedFunctions());
-                context.registerGlobalVarInit(result.getGlobalVarInits());
-                context.registerGlobalVarDealloc(result.getGlobalVarDeallocs());
-                if (result.getConstructorFunctions() != null) {
-                    for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
-                        context.registerConstructorFunction(constructorFunction);
-                    }
-                }
-                if (result.getDestructorFunctions() != null) {
-                    for (RootCallTarget destructorFunction : result.getDestructorFunctions()) {
-                        context.registerDestructorFunction(destructorFunction);
-                    }
-                }
-                if (!context.isParseOnly()) {
-                    result.getGlobalVarInits().call();
-                    for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
-                        constructorFunction.call(result.getConstructorFunctions());
-                    }
-                }
-            }
-
             @Override
             public LLVMContext createContext(Env env) {
                 NodeFactoryFacade facade = getNodeFactoryFacade();
@@ -223,6 +201,28 @@ public class LLVM {
         };
     }
 
+    private static void handleParserResult(LLVMContext context, LLVMParserResult result) {
+        context.getFunctionRegistry().register(result.getParsedFunctions());
+        context.registerGlobalVarInit(result.getGlobalVarInits());
+        context.registerGlobalVarDealloc(result.getGlobalVarDeallocs());
+        if (result.getConstructorFunctions() != null) {
+            for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
+                context.registerConstructorFunction(constructorFunction);
+            }
+        }
+        if (result.getDestructorFunctions() != null) {
+            for (RootCallTarget destructorFunction : result.getDestructorFunctions()) {
+                context.registerDestructorFunction(destructorFunction);
+            }
+        }
+        if (!context.isParseOnly()) {
+            result.getGlobalVarInits().call();
+            for (RootCallTarget constructorFunction : result.getConstructorFunctions()) {
+                constructorFunction.call(result.getConstructorFunctions());
+            }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             throw new IllegalArgumentException("please provide a file to execute!");
@@ -236,6 +236,14 @@ public class LLVM {
 
     public static LLVMParserResult parseBitcodeFile(Source source, LLVMContext context) {
         return LLVMBitcodeVisitor.parse(source, context, getNodeFactoryFacade());
+    }
+
+    public static LLVMParserResult parseModel(Model model, LLVMContext context) {
+        LLVMParserResult result = LLVMBitcodeVisitor.parse(model, context, getNodeFactoryFacade());
+
+        handleParserResult(context, result);
+
+        return result;
     }
 
     public static int executeMain(File file, Object... args) {

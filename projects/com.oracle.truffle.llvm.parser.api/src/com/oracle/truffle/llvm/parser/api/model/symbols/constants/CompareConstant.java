@@ -36,6 +36,9 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 
 public final class CompareConstant extends AbstractConstant {
 
+    private static final String LLVMIR_LABEL = "icmp";
+    private static final String LLVMIR_LABEL_FP = "fcmp";
+
     private final CompareOperator operator;
 
     private Symbol lhs;
@@ -67,6 +70,35 @@ public final class CompareConstant extends AbstractConstant {
         if (rhs == original) {
             rhs = replacement;
         }
+    }
+
+    @Override
+    public String getStringValue() {
+        final StringBuilder builder = new StringBuilder();
+        if (operator.isFloatingPoint()) {
+            builder.append(LLVMIR_LABEL_FP);
+        } else {
+            builder.append(LLVMIR_LABEL);
+        }
+        builder.append(' ');
+
+        builder.append(operator.toString()).append(' ');
+        builder.append(getType().toString()).append(' ');
+
+        if (lhs instanceof Constant) {
+            builder.append(((Constant) lhs).getStringValue());
+        } else {
+            builder.append(lhs.getName());
+        }
+
+        builder.append(", ");
+        if (rhs instanceof Constant) {
+            builder.append(((Constant) rhs).getStringValue());
+        } else {
+            builder.append(rhs.getName());
+        }
+
+        return builder.toString();
     }
 
     public static CompareConstant fromSymbols(Symbols symbols, Type type, int opcode, int lhs, int rhs) {

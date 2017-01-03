@@ -36,6 +36,8 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
 public final class ShuffleVectorInstruction extends ValueInstruction {
 
+    public static final String LLVMIR_LABEL = "shufflevector";
+
     private Symbol vector1;
 
     private Symbol vector2;
@@ -82,5 +84,14 @@ public final class ShuffleVectorInstruction extends ValueInstruction {
         inst.vector2 = symbols.getSymbol(vector2, inst);
         inst.mask = symbols.getSymbol(mask, inst);
         return inst;
+    }
+
+    @Override
+    public String toString() {
+        // <result> = shufflevector <n x <ty>> <v1>, <n x <ty>> <v2>, <m x i32> <mask>
+        return String.format("%s = %s %s %s, %s %s, %s %s", getName(), LLVMIR_LABEL,
+                        vector1.getType(), vector1.getName(),
+                        vector2.getType(), vector2.getName(),
+                        mask.getType(), mask.getName());
     }
 }
