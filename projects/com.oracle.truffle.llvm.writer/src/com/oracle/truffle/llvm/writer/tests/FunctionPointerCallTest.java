@@ -42,7 +42,7 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
-public class FunctionPointerCallTest {
+public class FunctionPointerCallTest extends TestExecutor {
 
     private final IntegerType functionType = IntegerType.INTEGER;
 
@@ -82,7 +82,7 @@ public class FunctionPointerCallTest {
 
         // Checkstyle: resume magic number name check
 
-        System.out.println(model);
+        testModel(model, 0);
     }
 
 }

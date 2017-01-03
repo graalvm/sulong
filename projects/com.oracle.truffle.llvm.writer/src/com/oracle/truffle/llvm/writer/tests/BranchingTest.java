@@ -37,7 +37,7 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
-public class BranchingTest {
+public class BranchingTest extends TestExecutor {
 
     @Test
     public void test() {
@@ -57,7 +57,7 @@ public class BranchingTest {
 
         // Checkstyle: resume magic number name check
 
-        System.out.println(model);
+        testModel(model, 1);
     }
 
 }

@@ -337,7 +337,7 @@ suite = {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.truffle.llvm.parser.bc",
+        "com.oracle.truffle.llvm",
         "mx:JUNIT",
        ],
       "checkstyle" : "com.oracle.truffle.llvm",
@@ -379,7 +379,8 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.llvm.test",
         "com.oracle.truffle.llvm.types.test",
-        "com.oracle.truffle.llvm.pipe"
+        "com.oracle.truffle.llvm.pipe",
+        "com.oracle.truffle.llvm.writer"
       ],
       "exclude" : [
        "mx:JUNIT"

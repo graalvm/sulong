@@ -42,7 +42,7 @@ import com.oracle.truffle.llvm.parser.api.model.types.Type;
 import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
-public class FibonacciFunctionCallTest {
+public class FibonacciFunctionCallTest extends TestExecutor {
 
     @Test
     public void test() {
@@ -75,7 +75,7 @@ public class FibonacciFunctionCallTest {
 
         fibFacade.createReturn(res);
 
-        System.out.println(model);
+        testModel(model, 55);
     }
 
 }

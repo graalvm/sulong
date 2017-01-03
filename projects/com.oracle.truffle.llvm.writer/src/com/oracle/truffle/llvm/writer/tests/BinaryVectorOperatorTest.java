@@ -51,7 +51,7 @@ import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
 @RunWith(Parameterized.class)
-public class BinaryVectorOperatorTest {
+public class BinaryVectorOperatorTest extends TestExecutor {
 
     private final IntegerType type;
     private final BinaryOperator operator;
@@ -133,27 +133,7 @@ public class BinaryVectorOperatorTest {
         facade.createReturn(ret); // 0=OK, 1=ERROR
         // Checkstyle: resume magic number name check
 
-        System.out.println(model);
-
-        // TODO: execute
-        // NodeFactoryFacade factoryFacade = NodeFactoryFacadeProviderImpl.getNodeFactoryFacade();
-        // TODO: NodeFactoryFacadeProviderImpl.get;
-        // Node findContext = LLVMLanguage.INSTANCE.createFindContextNode0();
-        // LLVMContext context = LLVMLanguage.INSTANCE.findContext0(findContext);
-
-        // vm.eval(fileSource).as(Integer.class);
-
-        // LLVMContext context = new LLVMContext(LLVM.getNodeFactoryFacade());
-
-        // LLVMContext context = new LLVMContext(new NodeFactoryFacadeImpl());
-        //
-        // LLVMParserResult parserResult = LLVM.parseModel(facade.getModel(), context);
-        //
-        // RootCallTarget callTarget =
-        // Truffle.getRuntime().createCallTarget(parserResult.getMainFunction().getRootNode());
-        //
-        // Object result = callTarget.call();
-        // System.out.println("result: " + result);
+        testModel(model, 0);
     }
 
     private long calculateResultValue(long vector1, long vector2, long maxValue) {

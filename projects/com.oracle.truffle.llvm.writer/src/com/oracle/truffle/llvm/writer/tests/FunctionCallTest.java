@@ -48,7 +48,7 @@ import com.oracle.truffle.llvm.writer.facades.InstructionGeneratorFacade;
 import com.oracle.truffle.llvm.writer.facades.ModelModuleFacade;
 
 @RunWith(Parameterized.class)
-public class FunctionCallTest {
+public class FunctionCallTest extends TestExecutor {
 
     private final IntegerType functionType;
 
@@ -85,7 +85,7 @@ public class FunctionCallTest {
 
         // Checkstyle: resume magic number name check
 
-        System.out.println(model);
+        testModel(model, 0);
     }
 
 }
