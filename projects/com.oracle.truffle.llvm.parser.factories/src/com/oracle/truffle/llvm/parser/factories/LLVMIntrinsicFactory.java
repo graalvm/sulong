@@ -136,7 +136,7 @@ public final class LLVMIntrinsicFactory {
 
     public static LLVMExpressionNode create(String functionName, LLVMExpressionNode[] argNodes, int numberOfExplicitArguments, FrameSlot stack) {
         NodeFactory<? extends LLVMExpressionNode> factory = factories.get(functionName);
-        LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+        LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
         LLVMExpressionNode readStackPointerNode = argNodes[0];
         Object[] realArgNodes = new Object[argNodes.length - LLVMCallNode.ARG_START_INDEX];
         System.arraycopy(argNodes, LLVMCallNode.ARG_START_INDEX, realArgNodes, 0, realArgNodes.length);

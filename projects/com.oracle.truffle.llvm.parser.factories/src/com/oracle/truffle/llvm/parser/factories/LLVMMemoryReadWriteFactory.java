@@ -144,7 +144,7 @@ public final class LLVMMemoryReadWriteFactory {
                     return LLVMAddressDirectLoadNodeGen.create(loadTarget);
                 }
             case FUNCTION_ADDRESS:
-                LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+                LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
                 return LLVMFunctionDirectLoadNodeGen.create(loadTarget, context.getFunctionRegistry());
             case STRUCT:
             case ARRAY:

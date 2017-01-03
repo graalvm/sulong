@@ -133,7 +133,7 @@ public final class LLVMLiteralFactory {
             case ADDRESS:
                 return new LLVMAddressLiteralNode(LLVMAddress.createUndefinedAddress());
             case FUNCTION_ADDRESS:
-                LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+                LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
                 LLVMFunction functionDescriptor = context.getFunctionRegistry().createFunctionDescriptor("<undefined function>", LLVMRuntimeType.ILLEGAL, new LLVMRuntimeType[0], false);
                 return LLVMFunctionLiteralNodeGen.create((LLVMFunctionDescriptor) functionDescriptor);
             default:
@@ -188,7 +188,7 @@ public final class LLVMLiteralFactory {
                 }
             case FUNCTION_ADDRESS:
                 if (stringValue.equals("null")) {
-                    LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+                    LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
                     LLVMFunction functionDescriptor = context.getFunctionRegistry().createFunctionDescriptor(LLVMFunctionRegistry.ZERO_FUNCTION, LLVMRuntimeType.ILLEGAL, new LLVMRuntimeType[0],
                                     false);
                     return LLVMFunctionLiteralNodeGen.create((LLVMFunctionDescriptor) functionDescriptor);

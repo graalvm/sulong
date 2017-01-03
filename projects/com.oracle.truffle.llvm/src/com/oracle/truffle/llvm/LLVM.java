@@ -97,8 +97,7 @@ public class LLVM {
             }
 
             private CallTarget parse(Source code) throws IOException {
-                Node findContext = LLVMLanguage.INSTANCE.createFindContextNode0();
-                LLVMContext context = LLVMLanguage.INSTANCE.findContext0(findContext);
+                LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
                 CallTarget mainFunction = null;
                 if (code.getMimeType().equals(LLVMLanguage.LLVM_BITCODE_MIME_TYPE) || code.getMimeType().equals(LLVMLanguage.LLVM_BITCODE_BASE64_MIME_TYPE)) {
                     LLVMParserResult parserResult = parseBitcodeFile(code, context);

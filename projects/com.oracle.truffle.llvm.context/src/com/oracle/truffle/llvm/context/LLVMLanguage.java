@@ -129,6 +129,10 @@ public final class LLVMLanguage extends TruffleLanguage<LLVMContext> {
         throw new AssertionError();
     }
 
+    public LLVMContext findContext0() {
+        return findContext0(createFindContextNode0());
+    }
+
     public LLVMContext findContext0(Node node) {
         return findContext(node);
     }

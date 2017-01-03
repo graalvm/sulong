@@ -42,7 +42,7 @@ import com.oracle.truffle.llvm.parser.api.util.LLVMParserRuntime;
 public class LLVMAllocFactory {
 
     public static LLVMExpressionNode createAlloc(LLVMParserRuntime runtime, LLVMBaseType llvmType, LLVMExpressionNode numElements, int byteSize, int alignment) {
-        LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+        LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
         switch (llvmType) {
             case I32:
                 return LLVMI32AllocaInstructionNodeGen.create(numElements, byteSize, alignment, context, runtime.getStackPointerSlot());
@@ -54,7 +54,7 @@ public class LLVMAllocFactory {
     }
 
     public static LLVMAllocaInstruction createAlloc(LLVMParserRuntime runtime, int byteSize, int alignment) {
-        LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
+        LLVMContext context = LLVMLanguage.INSTANCE.findContext0();
         return LLVMAllocaInstructionNodeGen.create(byteSize, alignment, context, runtime.getStackPointerSlot());
     }
 
