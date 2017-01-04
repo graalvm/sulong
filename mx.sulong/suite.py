@@ -302,11 +302,24 @@ suite = {
       "workingSets" : "Truffle, LLVM",
       "license" : "BSD-new",
     },
+
     "com.oracle.truffle.llvm.libraries" : {
       "subDir" : "projects",
       "native" : True,
       "vpath" : True,
       "class" : "SulongNativeProject",
+      "license" : "BSD-new",
+    },
+
+    "com.oracle.truffle.llvm.writer" : {
+      "subDir" : "projects",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.truffle.llvm.parser.api",
+       ],
+      "checkstyle" : "com.oracle.truffle.llvm",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Truffle, LLVM",
       "license" : "BSD-new",
     },
   },
