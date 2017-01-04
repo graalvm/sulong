@@ -30,18 +30,25 @@
 package com.oracle.truffle.llvm.parser.model.enums;
 
 public enum AtomicOrdering {
-    NOT_ATOMIC(0L),
-    UNORDERED(1L),
-    MONOTONIC(2L),
-    ACQUIRE(3L),
-    RELEASE(4L),
-    ACQUIRE_RELEASE(5L),
-    SEQUENTIALLY_CONSISTENT(6L);
+    NOT_ATOMIC(0L, ""),
+    UNORDERED(1L, "unordered"),
+    MONOTONIC(2L, "monotonic"),
+    ACQUIRE(3L, "acquire"),
+    RELEASE(4L, "release"),
+    ACQUIRE_RELEASE(5L, "acq_rel"),
+    SEQUENTIALLY_CONSISTENT(6L, "seq_cst");
 
     private final long encodedValue;
+    private final String name;
 
-    AtomicOrdering(long encodeValue) {
+    AtomicOrdering(long encodeValue, String name) {
         this.encodedValue = encodeValue;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 
     public long getEncodedValue() {
