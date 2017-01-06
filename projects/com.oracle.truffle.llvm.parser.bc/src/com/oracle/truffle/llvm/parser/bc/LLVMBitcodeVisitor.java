@@ -91,8 +91,10 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
         final TargetDataLayout layout = ((ModelModule) model.createModule()).getTargetDataLayout();
         final DataLayoutConverter.DataSpecConverterImpl targetDataLayout = layout != null ? DataLayoutConverter.getConverter(layout.getDataLayout()) : null;
 
+        final Map<String, LLVMLifetimeAnalysis> lifetimes = LLVMLifetimeAnalysis.getResults(parserResult);
+
         final LLVMBitcodeVisitor visitor = new LLVMBitcodeVisitor(source, context, stackAllocation, parserResult.getLabels(), parserResult.getPhis(), targetDataLayout, factoryFacade);
-        final LLVMModelVisitor module = new LLVMModelVisitor(visitor, context);
+        final LLVMModelVisitor module = new LLVMModelVisitor(visitor, context, lifetimes);
         model.accept(module);
 
         LLVMFunction mainFunction = visitor.getFunction("@main");

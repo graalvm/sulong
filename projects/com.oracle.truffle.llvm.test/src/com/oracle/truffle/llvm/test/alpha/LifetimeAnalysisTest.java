@@ -95,6 +95,7 @@ public final class LifetimeAnalysisTest {
             LLVMLogger.info("original file: " + bcFile.toString());
 
             final BitcodeParserResult parserResult = BitcodeParserResult.getFromSource(Source.newBuilder(bcFile.toFile().getAbsoluteFile()).build());
+            final Map<String, LLVMLifetimeAnalysis> lifetimesMap = LLVMLifetimeAnalysis.getResults(parserResult);
             parserResult.getModel().accept(new ModelVisitor() {
                 @Override
                 public void ifVisitNotOverwritten(Object obj) {
@@ -103,8 +104,7 @@ public final class LifetimeAnalysisTest {
                 @Override
                 public void visit(FunctionDefinition method) {
                     final String functionName = method.getName();
-                    final LLVMLifetimeAnalysis lifetimes = LLVMLifetimeAnalysis.getResult(method, parserResult.getStackAllocation().getFrame(functionName),
-                                    parserResult.getPhis().getPhiMap(functionName));
+                    final LLVMLifetimeAnalysis lifetimes = lifetimesMap.get(functionName);
 
                     if (SulongTestOptions.TEST.generateLifetimeReferenceOutput()) {
                         fileWriter.writeFunctionName(functionName);

@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.parser.bc;
 
 import java.util.List;
+import java.util.Map;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -55,10 +56,12 @@ public final class LLVMModelVisitor implements ModelVisitor {
 
     private final LLVMBitcodeVisitor visitor;
     private final LLVMContext context;
+    private final Map<String, LLVMLifetimeAnalysis> lifetimesMap;
 
-    public LLVMModelVisitor(LLVMBitcodeVisitor visitor, LLVMContext context) {
+    public LLVMModelVisitor(LLVMBitcodeVisitor visitor, LLVMContext context, Map<String, LLVMLifetimeAnalysis> lifetimesMap) {
         this.visitor = visitor;
         this.context = context;
+        this.lifetimesMap = lifetimesMap;
     }
 
     @Override
@@ -86,7 +89,7 @@ public final class LLVMModelVisitor implements ModelVisitor {
 
         List<LLVMExpressionNode> parameters = visitor.createParameters(frame, method);
 
-        final LLVMLifetimeAnalysis lifetimes = LLVMLifetimeAnalysis.getResult(method, frame, visitor.getPhis().getPhiMap(method.getName()));
+        final LLVMLifetimeAnalysis lifetimes = lifetimesMap.get(method.getName());
 
         LLVMExpressionNode body = visitor.createFunction(method, lifetimes);
 
