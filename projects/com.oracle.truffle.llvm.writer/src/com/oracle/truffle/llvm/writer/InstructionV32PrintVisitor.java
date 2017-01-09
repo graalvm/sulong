@@ -79,12 +79,12 @@ public class InstructionV32PrintVisitor implements InstructionVisitor {
 
     private final PrintWriter out;
 
-    public InstructionV32PrintVisitor() {
-        this(System.out);
+    public InstructionV32PrintVisitor(PrintWriter out) {
+        this.out = out;
     }
 
     public InstructionV32PrintVisitor(OutputStream out) {
-        this.out = new PrintWriter(out);
+        this(new PrintWriter(out));
     }
 
     private static final String LLVMIR_LABEL_ALLOCATE = "alloca";
