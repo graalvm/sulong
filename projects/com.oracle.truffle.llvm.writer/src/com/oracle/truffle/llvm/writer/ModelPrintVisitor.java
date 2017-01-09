@@ -33,10 +33,14 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.oracle.truffle.llvm.parser.api.model.Model;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
@@ -88,16 +92,38 @@ public class ModelPrintVisitor implements ModelVisitor {
 
     @Override
     public void visit(FunctionDeclaration function) {
-        out.println(function.toString());
+        Stream<String> argumentStream = Arrays.stream(function.getArgumentTypes()).map(Type::toString);
+        if (function.isVarArg()) {
+            argumentStream = Stream.concat(argumentStream, Stream.of("..."));
+        }
+        out.println(String.format("declare %s %s(%s)", function.getReturnType().toString(), function.getName(),
+                        argumentStream.collect(Collectors.joining(", "))));
         out.println();
     }
 
     @Override
     public void visit(FunctionDefinition function) {
-        out.println(String.format("%s {", function.toString()));
+
+        Stream<String> parameterStream = function.getParameters().stream().map(f -> FunctionParameterToLLVMIR(f));
+        if (function.isVarArg()) {
+            parameterStream = Stream.concat(parameterStream, Stream.of("..."));
+        }
+
+        out.println(String.format("define %s %s(%s) {", function.getReturnType().toString(), function.getName(),
+                        parameterStream.collect(Collectors.joining(", "))));
+
         function.accept(functionVisitor);
         out.println("}");
         out.println();
+    }
+
+    private static String FunctionParameterToLLVMIR(FunctionParameter param) {
+        final StringBuilder builder = new StringBuilder();
+        builder.append(param.getType().toString());
+        if (!ValueSymbol.UNKNOWN.equals(param.getName())) {
+            builder.append(' ').append(param.getName());
+        }
+        return builder.toString();
     }
 
     @Override
