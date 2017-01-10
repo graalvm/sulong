@@ -66,6 +66,7 @@ import com.oracle.truffle.llvm.nodes.memory.LLVMStoreNodeFactory.LLVMI32ArrayLit
 import com.oracle.truffle.llvm.nodes.memory.LLVMStoreNodeFactory.LLVMI64ArrayLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.memory.LLVMStoreNodeFactory.LLVMI8ArrayLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.others.LLVMAccessGlobalVariableStorageNodeGen;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.AbstractConstant;
 import com.oracle.truffle.llvm.parser.api.util.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.api.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
@@ -141,7 +142,8 @@ public final class LLVMLiteralFactory {
         }
     }
 
-    public static LLVMExpressionNode createSimpleConstantNoArray(String stringValue, LLVMBaseType instructionType, Type type) {
+    public static LLVMExpressionNode createSimpleConstantNoArray(AbstractConstant constant, LLVMBaseType instructionType, Type type) {
+        String stringValue = constant.toString(); // TODO: do not use string
         switch (instructionType) {
             case ARRAY:
                 throw new AssertionError("construction of array is not supported!");

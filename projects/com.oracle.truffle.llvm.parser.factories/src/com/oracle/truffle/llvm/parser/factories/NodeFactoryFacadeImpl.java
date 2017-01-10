@@ -89,6 +89,7 @@ import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.AbstractConstant;
 import com.oracle.truffle.llvm.parser.api.util.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.api.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
@@ -150,8 +151,8 @@ public class NodeFactoryFacadeImpl implements NodeFactoryFacade {
     }
 
     @Override
-    public LLVMExpressionNode createSimpleConstantNoArray(LLVMParserRuntime runtime, String stringValue, LLVMBaseType instructionType, Type type) {
-        return LLVMLiteralFactory.createSimpleConstantNoArray(stringValue, instructionType, type);
+    public LLVMExpressionNode createSimpleConstantNoArray(LLVMParserRuntime runtime, AbstractConstant constant, LLVMBaseType instructionType, Type type) {
+        return LLVMLiteralFactory.createSimpleConstantNoArray(constant, instructionType, type);
     }
 
     @Override
