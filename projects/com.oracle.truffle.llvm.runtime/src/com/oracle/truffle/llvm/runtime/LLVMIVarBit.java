@@ -341,4 +341,9 @@ public final class LLVMIVarBit {
         return asIVar(bits, constAsBigInteger);
     }
 
+    @TruffleBoundary
+    public static LLVMIVarBit fromBigInteger(BigInteger constAsBigInteger, int bits) {
+        return asIVar(bits, constAsBigInteger);
+    }
+
 }
