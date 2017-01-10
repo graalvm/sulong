@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.oracle.truffle.llvm.parser.api.model.Model;
+import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
@@ -72,9 +73,16 @@ public class ModelPrintVisitor implements ModelVisitor {
     public void ifVisitNotOverwritten(Object obj) {
     }
 
+    private static final String UNRESOLVED_FORWARD_REFERENCE = "<unresolved>";
+
     @Override
     public void visit(GlobalAlias alias) {
-        out.println(alias.toString());
+        out.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
+        if (alias.getVisibility() != Visibility.DEFAULT) {
+            out.print(String.format(" %s", alias.getVisibility()));
+        }
+        out.print(String.format(" %s", alias.getType()));
+        out.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
         out.println();
     }
 
@@ -104,7 +112,7 @@ public class ModelPrintVisitor implements ModelVisitor {
     @Override
     public void visit(FunctionDefinition function) {
 
-        Stream<String> parameterStream = function.getParameters().stream().map(f -> FunctionParameterToLLVMIR(f));
+        Stream<String> parameterStream = function.getParameters().stream().map(f -> functionParameterToLLVMIR(f));
         if (function.isVarArg()) {
             parameterStream = Stream.concat(parameterStream, Stream.of("..."));
         }
@@ -117,7 +125,7 @@ public class ModelPrintVisitor implements ModelVisitor {
         out.println();
     }
 
-    private static String FunctionParameterToLLVMIR(FunctionParameter param) {
+    private static String functionParameterToLLVMIR(FunctionParameter param) {
         final StringBuilder builder = new StringBuilder();
         builder.append(param.getType().toString());
         if (!ValueSymbol.UNKNOWN.equals(param.getName())) {
