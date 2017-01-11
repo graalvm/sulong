@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.model.symbols.constants;
 
+import com.oracle.truffle.llvm.parser.model.visitors.AbstractConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
 
 public abstract class AbstractConstant implements Constant {
@@ -38,6 +39,8 @@ public abstract class AbstractConstant implements Constant {
     protected AbstractConstant(Type type) {
         this.type = type;
     }
+
+    public abstract void accept(AbstractConstantVisitor visitor);
 
     @Override
     public boolean hasName() {
