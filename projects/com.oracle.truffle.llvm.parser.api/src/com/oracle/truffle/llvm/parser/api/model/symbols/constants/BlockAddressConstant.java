@@ -32,6 +32,7 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
@@ -44,6 +45,11 @@ public final class BlockAddressConstant extends AbstractConstant {
     private BlockAddressConstant(Type type, int block) {
         super(type);
         this.block = block;
+    }
+
+    @Override
+    public void accept(AbstractConstantVisitor visitor) {
+        visitor.visit(this);
     }
 
     public FunctionDefinition getFunction() {

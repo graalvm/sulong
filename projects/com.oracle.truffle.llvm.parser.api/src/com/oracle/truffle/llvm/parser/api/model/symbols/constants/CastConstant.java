@@ -31,6 +31,7 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.CastOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
@@ -43,6 +44,11 @@ public final class CastConstant extends AbstractConstant {
     private CastConstant(Type type, CastOperator operator) {
         super(type);
         this.operator = operator;
+    }
+
+    @Override
+    public void accept(AbstractConstantVisitor visitor) {
+        visitor.visit(this);
     }
 
     public CastOperator getOperator() {

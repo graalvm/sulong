@@ -29,12 +29,18 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
+import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
 
 public final class UndefinedConstant extends AbstractConstant {
 
     public UndefinedConstant(Type type) {
         super(type);
+    }
+
+    @Override
+    public void accept(AbstractConstantVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

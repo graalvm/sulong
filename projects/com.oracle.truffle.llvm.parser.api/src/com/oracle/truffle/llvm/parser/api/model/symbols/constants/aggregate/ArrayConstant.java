@@ -29,12 +29,18 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants.aggregate;
 
+import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.ArrayType;
 
 public final class ArrayConstant extends AggregateConstant {
 
     ArrayConstant(ArrayType type, int valueCount) {
         super(type, valueCount);
+    }
+
+    @Override
+    public void accept(AbstractConstantVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

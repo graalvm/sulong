@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
+import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
 
 public final class StringConstant extends AbstractConstant {
@@ -41,6 +42,11 @@ public final class StringConstant extends AbstractConstant {
         super(type);
         this.value = value;
         this.isCString = isCString;
+    }
+
+    @Override
+    public void accept(AbstractConstantVisitor visitor) {
+        visitor.visit(this);
     }
 
     public String getString() {

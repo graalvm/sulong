@@ -31,6 +31,7 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.BinaryOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
+import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.VectorType;
@@ -49,6 +50,11 @@ public final class BinaryOperationConstant extends AbstractConstant {
         this.operator = operator;
         this.lhs = null;
         this.rhs = null;
+    }
+
+    @Override
+    public void accept(AbstractConstantVisitor visitor) {
+        visitor.visit(this);
     }
 
     public Symbol getLHS() {
