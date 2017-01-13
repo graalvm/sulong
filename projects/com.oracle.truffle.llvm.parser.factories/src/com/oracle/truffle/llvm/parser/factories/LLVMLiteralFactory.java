@@ -29,7 +29,6 @@
  */
 package com.oracle.truffle.llvm.parser.factories;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,6 +65,13 @@ import com.oracle.truffle.llvm.nodes.memory.LLVMStoreNodeFactory.LLVMI32ArrayLit
 import com.oracle.truffle.llvm.nodes.memory.LLVMStoreNodeFactory.LLVMI64ArrayLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.memory.LLVMStoreNodeFactory.LLVMI8ArrayLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.others.LLVMAccessGlobalVariableStorageNodeGen;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.AbstractConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.NullConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.FloatConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.DoubleConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.X86FP80Constant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.BigIntegerConstant;
 import com.oracle.truffle.llvm.parser.api.util.LLVMParserRuntime;
 import com.oracle.truffle.llvm.parser.api.util.LLVMTypeHelper;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
@@ -80,9 +86,6 @@ import com.oracle.truffle.llvm.runtime.types.LLVMBaseType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 
 public final class LLVMLiteralFactory {
-
-    public static final int HEX_BASE = 16;
-    private static final String HEX_VALUE_PREFIX = "0x";
 
     private LLVMLiteralFactory() {
     }
@@ -141,68 +144,52 @@ public final class LLVMLiteralFactory {
         }
     }
 
-    public static LLVMExpressionNode createSimpleConstantNoArray(String stringValue, LLVMBaseType instructionType, Type type) {
+    public static LLVMExpressionNode createSimpleConstantNoArray(AbstractConstant constant, LLVMBaseType instructionType, Type type) {
         switch (instructionType) {
             case ARRAY:
                 throw new AssertionError("construction of array is not supported!");
             case I1:
-                return new LLVMI1LiteralNode(Boolean.parseBoolean(stringValue));
+                return new LLVMI1LiteralNode(((IntegerConstant) constant).getValue() != 0);
             case I8:
-                return new LLVMI8LiteralNode(Byte.parseByte(stringValue));
+                return new LLVMI8LiteralNode((byte) ((IntegerConstant) constant).getValue());
             case I16:
-                return new LLVMI16LiteralNode(Short.parseShort(stringValue));
+                return new LLVMI16LiteralNode((short) ((IntegerConstant) constant).getValue());
             case I32:
-                return new LLVMI32LiteralNode(Integer.parseInt(stringValue));
+                return new LLVMI32LiteralNode((int) ((IntegerConstant) constant).getValue());
             case I_VAR_BITWIDTH:
-                return new LLVMIVarBitLiteralNode(LLVMIVarBit.fromString(stringValue, type.getBits()));
+                if (constant instanceof IntegerConstant) {
+                    return new LLVMIVarBitLiteralNode(LLVMIVarBit.fromLong(type.getBits(), ((IntegerConstant) constant).getValue()));
+                } else if (constant instanceof BigIntegerConstant) {
+                    return new LLVMIVarBitLiteralNode(LLVMIVarBit.fromBigInteger(((BigIntegerConstant) constant).getValue(), type.getBits()));
+                } else {
+                    throw new AssertionError("unexpected constant: " + constant.getClass().getName());
+                }
             case FLOAT:
-                if (stringValue.startsWith(HEX_VALUE_PREFIX)) {
-                    long longBits = decodeHex(HEX_VALUE_PREFIX.length(), stringValue);
-                    float intBitsToFloat = (float) Double.longBitsToDouble(longBits);
-                    return new LLVMFloatLiteralNode(intBitsToFloat);
-                } else {
-                    return new LLVMFloatLiteralNode(Float.parseFloat(stringValue));
-                }
+                return new LLVMFloatLiteralNode(((FloatConstant) constant).getValue());
             case DOUBLE:
-                if (stringValue.startsWith(HEX_VALUE_PREFIX)) {
-                    long longBits = decodeHex(HEX_VALUE_PREFIX.length(), stringValue);
-                    double longBitsToDouble = Double.longBitsToDouble(longBits);
-                    return new LLVMDoubleLiteralNode(longBitsToDouble);
-                } else {
-                    return new LLVMDoubleLiteralNode(Double.parseDouble(stringValue));
-                }
+                return new LLVMDoubleLiteralNode(((DoubleConstant) constant).getValue());
             case X86_FP80:
-                if (stringValue.startsWith("0xK")) {
-                    return new LLVM80BitFloatLiteralNode(LLVM80BitFloat.fromString(stringValue.substring("0xK".length())));
-                } else {
-                    throw new AssertionError(stringValue);
-                }
+                return new LLVM80BitFloatLiteralNode(LLVM80BitFloat.fromBytes(((X86FP80Constant) constant).getValue()));
             case I64:
-                long val = Long.decode(stringValue);
-                return new LLVMI64LiteralNode(val);
+                return new LLVMI64LiteralNode(((IntegerConstant) constant).getValue());
             case ADDRESS:
-                if (stringValue.equals("null")) {
+                if (constant instanceof NullConstant) {
                     return new LLVMAddressLiteralNode(LLVMAddress.fromLong(0));
                 } else {
-                    throw new AssertionError(stringValue);
+                    throw new AssertionError("unexpected constant: " + constant.getClass().getName());
                 }
             case FUNCTION_ADDRESS:
-                if (stringValue.equals("null")) {
+                if (constant instanceof NullConstant) {
                     LLVMContext context = LLVMLanguage.INSTANCE.findContext0(LLVMLanguage.INSTANCE.createFindContextNode0());
                     LLVMFunction functionDescriptor = context.getFunctionRegistry().createFunctionDescriptor(LLVMFunctionRegistry.ZERO_FUNCTION, LLVMRuntimeType.ILLEGAL, new LLVMRuntimeType[0],
                                     false);
                     return LLVMFunctionLiteralNodeGen.create((LLVMFunctionDescriptor) functionDescriptor);
                 } else {
-                    throw new AssertionError(stringValue);
+                    throw new AssertionError("unexpected constant: " + constant.getClass().getName());
                 }
             default:
-                throw new AssertionError();
+                throw new AssertionError("unexpected constant: " + constant.getClass().getName());
         }
-    }
-
-    private static long decodeHex(int prefixLength, String stringValue) {
-        BigInteger bigInteger = new BigInteger(stringValue.substring(prefixLength), HEX_BASE);
-        return bigInteger.longValue();
     }
 
     public static LLVMExpressionNode[] createFunctionLiteralNodes(int nrElements, LLVMFunctionDescriptor value) {

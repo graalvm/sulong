@@ -150,21 +150,18 @@ public final class LLVMSymbolResolver {
     private LLVMExpressionNode toInteger(IntegerConstant constant) {
         final Type type = constant.getType();
         final LLVMBaseType baseType = type.getLLVMBaseType();
-        final String stringValue = constant.toString();
-        return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, stringValue, baseType, type);
+        return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, constant, baseType, type);
     }
 
     private LLVMExpressionNode toBigInteger(BigIntegerConstant constant) {
         final Type type = constant.getType();
-        final String stringValue = constant.toString();
-        return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, stringValue, type.getLLVMBaseType(), type);
+        return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, constant, type.getLLVMBaseType(), type);
     }
 
     private LLVMExpressionNode toFloat(FloatingPointConstant constant) {
         final Type type = constant.getType();
         final LLVMBaseType baseType = type.getLLVMBaseType();
-        final String stringValue = constant.getStringValue();
-        return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, stringValue, baseType, type);
+        return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, constant, baseType, type);
     }
 
     private LLVMExpressionNode toStr(StringConstant constant) {
@@ -310,22 +307,20 @@ public final class LLVMSymbolResolver {
 
     private LLVMExpressionNode toNullValue(Type type) {
         if (type instanceof IntegerType) {
-            if (type.getBits() == 1) {
-                return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, "false", LLVMBaseType.I1, type);
-            } else {
-                return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, "0", type.getLLVMBaseType(), type);
-            }
-
+            return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime,
+                            new IntegerConstant((IntegerType) type, 0),
+                            type.getLLVMBaseType(),
+                            type);
         } else if (type instanceof FloatingPointType) {
-            final FloatingPointType floatingPointType = (FloatingPointType) type;
-            if (floatingPointType == FloatingPointType.X86_FP80) {
-                return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, "0xK00000000000000000000", LLVMBaseType.X86_FP80, type);
-            } else {
-                return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, "0.0", floatingPointType.getLLVMBaseType(), floatingPointType);
-            }
-
+            return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime,
+                            FloatingPointConstant.create((FloatingPointType) type, new long[]{0, 0}),
+                            type.getLLVMBaseType(),
+                            type);
         } else if (type instanceof PointerType || type instanceof FunctionType) {
-            return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime, "null", type.getLLVMBaseType(), type);
+            return runtime.getNodeFactoryFacade().createSimpleConstantNoArray(runtime,
+                            new NullConstant(type),
+                            type.getLLVMBaseType(),
+                            type);
 
         } else if (type instanceof ArrayType) {
             final int size = runtime.getByteSize(type);
