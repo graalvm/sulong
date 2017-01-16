@@ -27,34 +27,37 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.writer;
+package com.oracle.truffle.llvm.parser.bc.irwriter;
 
-import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
-import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-public class FunctionPrintVisitor implements FunctionVisitor {
+public final class IRWriterUtil {
 
     private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
 
-    public FunctionPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
+    public IRWriterUtil(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
         this.printVisitors = printVisitors;
     }
 
-    @Override
-    public void visit(InstructionBlock block) {
-        if (!block.getName().equals(ValueSymbol.UNKNOWN)) {
-            printVisitors.println();
-            if (isNamedLabel(block.getName())) {
-                printVisitors.println(String.format("%s:", block.getName().substring(1)));
-            } else {
-                printVisitors.println(String.format("; <label>:%s:", block.getName().substring(1)));
-            }
+    public void printSymbol(Symbol symbol) {
+        if (symbol instanceof Constant) {
+            ((Constant) symbol).accept(printVisitors.getConstantVisitor());
+        } else {
+            printVisitors.print(symbol); // TODO: put warning
         }
-        block.accept(printVisitors.getInstructionVisitor());
     }
 
-    private static boolean isNamedLabel(String label) {
-        return !label.substring(1).matches("^[0-9]+$");
+    public void printSymbolName(Symbol symbol) {
+        if (symbol instanceof ValueSymbol) {
+            printVisitors.print(((ValueSymbol) symbol).getName());
+        } else {
+            printSymbol(symbol); // TODO
+        }
+    }
+
+    public void printConstantValue(Constant symbol) {
+        symbol.accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
     }
 }

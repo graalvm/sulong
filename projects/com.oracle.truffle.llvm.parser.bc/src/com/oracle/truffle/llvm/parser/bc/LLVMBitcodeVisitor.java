@@ -77,6 +77,9 @@ import com.oracle.truffle.llvm.parser.bc.util.LLVMFrameIDs;
 import com.oracle.truffle.llvm.parser.bc.util.Pair;
 import com.oracle.truffle.llvm.runtime.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.runtime.memory.LLVMHeapFunctions;
+import com.oracle.truffle.llvm.parser.bc.irwriter.ModelPrintVisitor;
+import com.oracle.truffle.llvm.runtime.LLVMLogger;
+import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.LLVMBaseType;
 import com.oracle.truffle.llvm.runtime.types.LLVMType;
@@ -109,6 +112,16 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
 
         final List<RootCallTarget> constructorFunctions = visitor.getConstructors();
         final List<RootCallTarget> destructorFunctions = visitor.getDestructors();
+
+        final String llvmIRTarget = LLVMOptions.DEBUG.printLLVMIR();
+        if (String.valueOf(true).equals(llvmIRTarget)) {
+            LLVMLogger.print(llvmIRTarget).accept(ModelPrintVisitor.getIRString(model));
+
+        } else if (!String.valueOf(false).equals(llvmIRTarget)) {
+            final String sourceFileName = source.getName();
+            final String actualTarget = sourceFileName.substring(0, sourceFileName.length() - ".bc".length()) + ".ll";
+            LLVMLogger.print(actualTarget).accept(ModelPrintVisitor.getIRString(model));
+        }
 
         final RootCallTarget mainFunctionCallTarget;
         if (mainFunction != null) {

@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.writer;
+package com.oracle.truffle.llvm.parser.bc.irwriter;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -68,7 +68,7 @@ import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
-public class ConstantPrintVisitor implements ConstantVisitor {
+public final class ConstantPrintVisitor implements ConstantVisitor {
 
     private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
 

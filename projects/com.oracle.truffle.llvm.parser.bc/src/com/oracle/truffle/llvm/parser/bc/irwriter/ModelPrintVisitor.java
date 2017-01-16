@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.writer;
+package com.oracle.truffle.llvm.parser.bc.irwriter;
 
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -43,11 +43,13 @@ import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
+import com.oracle.truffle.llvm.runtime.LLVMLogger;
+import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-public class ModelPrintVisitor implements ModelVisitor {
+public final class ModelPrintVisitor implements ModelVisitor {
 
     private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
 
@@ -130,10 +132,19 @@ public class ModelPrintVisitor implements ModelVisitor {
     }
 
     public static String getIRString(Model model) {
+        if ("3.2".equals(LLVMOptions.ENGINE.llvmVersion())) {
+            return getIRString(model, LLVMPrintVersion.LLVM_3_2);
+        } else {
+            LLVMLogger.info(String.format("No explicit LLVMIR-Printer for version %s, falling back to 3.2!", LLVMOptions.ENGINE.llvmVersion()));
+            return getIRString(model, LLVMPrintVersion.LLVM_3_2);
+        }
+    }
+
+    public static String getIRString(Model model, LLVMPrintVersion printVersion) {
         // TODO add Top-Level Structures like TargetDataLayout
         StringWriter strOut = new StringWriter();
         // TODO: LLVMPrintVersion
-        LLVMPrintVersion.LLVMPrintVisitors visitors = LLVMPrintVersion.DEFAULT.createPrintVisitors(strOut);
+        LLVMPrintVersion.LLVMPrintVisitors visitors = printVersion.createPrintVisitors(strOut);
         model.accept(visitors.getModelVisitor());
         return strOut.toString();
     }
