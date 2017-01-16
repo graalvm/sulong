@@ -30,7 +30,7 @@
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.AsmDialect;
-import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
+import com.oracle.truffle.llvm.parser.api.model.visitors.ConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
 
 public final class InlineAsmConstant extends AbstractConstant {
@@ -57,7 +57,7 @@ public final class InlineAsmConstant extends AbstractConstant {
     }
 
     @Override
-    public void accept(AbstractConstantVisitor visitor) {
+    public void accept(ConstantVisitor visitor) {
         visitor.visit(this);
     }
 

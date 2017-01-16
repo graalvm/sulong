@@ -29,7 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint;
 
-import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
+import com.oracle.truffle.llvm.parser.api.model.visitors.ConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
 
 public final class DoubleConstant extends FloatingPointConstant {
@@ -42,7 +42,7 @@ public final class DoubleConstant extends FloatingPointConstant {
     }
 
     @Override
-    public void accept(AbstractConstantVisitor visitor) {
+    public void accept(ConstantVisitor visitor) {
         visitor.visit(this);
     }
 

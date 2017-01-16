@@ -29,6 +29,8 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.visitors;
 
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.BinaryOperationConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.BlockAddressConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.CastConstant;
@@ -47,7 +49,7 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.BigIntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 
-public interface AbstractConstantVisitor {
+public interface ConstantVisitor {
 
     void visit(ArrayConstant arrayConstant);
 
@@ -70,6 +72,10 @@ public interface AbstractConstantVisitor {
     void visit(FloatConstant floatConstant);
 
     void visit(X86FP80Constant x86fp80Constant);
+
+    void visit(FunctionDeclaration functionDeclaration);
+
+    void visit(FunctionDefinition functionDefinition);
 
     void visit(GetElementPointerConstant getElementPointerConstant);
 

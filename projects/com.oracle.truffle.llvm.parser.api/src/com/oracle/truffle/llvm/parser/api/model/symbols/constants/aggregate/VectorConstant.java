@@ -29,7 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.api.model.symbols.constants.aggregate;
 
-import com.oracle.truffle.llvm.parser.api.model.visitors.AbstractConstantVisitor;
+import com.oracle.truffle.llvm.parser.api.model.visitors.ConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.VectorType;
 
 public final class VectorConstant extends AggregateConstant {
@@ -39,7 +39,7 @@ public final class VectorConstant extends AggregateConstant {
     }
 
     @Override
-    public void accept(AbstractConstantVisitor visitor) {
+    public void accept(ConstantVisitor visitor) {
         visitor.visit(this);
     }
 
