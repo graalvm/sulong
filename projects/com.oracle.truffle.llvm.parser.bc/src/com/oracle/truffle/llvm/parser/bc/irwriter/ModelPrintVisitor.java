@@ -46,6 +46,7 @@ import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
+import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
@@ -74,14 +75,54 @@ public final class ModelPrintVisitor implements ModelVisitor {
         printVisitors.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
     }
 
+    private static int getTrueAlignment(int align) {
+        return 1 << (align - 1);
+    }
+
     @Override
     public void visit(GlobalConstant constant) {
-        printVisitors.println(constant.toString());
+        printVisitors.print(constant.getName());
+        printVisitors.print(" = ");
+        printVisitors.print(constant.getLinkage().getIrString());
+        printVisitors.print(" constant ");
+
+        // TODO use TypeVisitor
+        printVisitors.print(((PointerType) constant.getType()).getPointeeType().toString());
+        printVisitors.print(" ");
+
+        if (constant.getValue() == null) {
+            printVisitors.print("zeroinitializer");
+
+        } else {
+            // TODO use visitor
+            printVisitors.print(constant.getValue().toString());
+        }
+
+        printVisitors.print(", align ");
+        printVisitors.println(String.valueOf(getTrueAlignment(constant.getAlign())));
     }
 
     @Override
     public void visit(GlobalVariable variable) {
-        printVisitors.println(variable.toString());
+        printVisitors.print(variable.getName());
+        printVisitors.print(" = ");
+        printVisitors.print(variable.getLinkage().getIrString());
+        printVisitors.print(" global ");
+
+        // TODO use TypeVisitor
+        printVisitors.print(((PointerType) variable.getType()).getPointeeType().toString());
+        printVisitors.print(" ");
+
+        if (variable.getValue() == null) {
+            printVisitors.print("zeroinitializer");
+
+        } else {
+            // TODO use visitor
+            printVisitors.print(variable.getValue().toString());
+        }
+
+        printVisitors.print(", align ");
+        printVisitors.println(String.valueOf(getTrueAlignment(variable.getAlign())));
     }
 
     @Override
@@ -93,7 +134,6 @@ public final class ModelPrintVisitor implements ModelVisitor {
         }
         printVisitors.println(String.format("declare %s %s(%s)", function.getReturnType().toString(), function.getName(),
                         argumentStream.collect(Collectors.joining(", "))));
-        printVisitors.println();
     }
 
     @Override
