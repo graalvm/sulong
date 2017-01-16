@@ -42,6 +42,7 @@ import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
+import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
@@ -113,6 +114,13 @@ public final class ModelPrintVisitor implements ModelVisitor {
         printVisitors.println();
     }
 
+    @Override
+    public void visit(TargetDataLayout layout) {
+        final String layoutString = layout.getDataLayout();
+        printVisitors.println(String.format("target datalayout = \"%s\"", layoutString));
+        printVisitors.println();
+    }
+
     private static String functionParameterToLLVMIR(FunctionParameter param) {
         final StringBuilder builder = new StringBuilder();
         builder.append(param.getType().toString());
@@ -142,9 +150,8 @@ public final class ModelPrintVisitor implements ModelVisitor {
 
     public static String getIRString(Model model, LLVMPrintVersion printVersion) {
         // TODO add Top-Level Structures like TargetDataLayout
-        StringWriter strOut = new StringWriter();
-        // TODO: LLVMPrintVersion
-        LLVMPrintVersion.LLVMPrintVisitors visitors = printVersion.createPrintVisitors(strOut);
+        final StringWriter strOut = new StringWriter();
+        final LLVMPrintVersion.LLVMPrintVisitors visitors = printVersion.createPrintVisitors(strOut);
         model.accept(visitors.getModelVisitor());
         return strOut.toString();
     }
