@@ -72,23 +72,21 @@ public final class ModelPrintVisitor implements ModelVisitor {
         }
         printVisitors.print(String.format(" %s", alias.getType()));
         printVisitors.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
-        printVisitors.println();
     }
 
     @Override
     public void visit(GlobalConstant constant) {
         printVisitors.println(constant.toString());
-        printVisitors.println();
     }
 
     @Override
     public void visit(GlobalVariable variable) {
         printVisitors.println(variable.toString());
-        printVisitors.println();
     }
 
     @Override
     public void visit(FunctionDeclaration function) {
+        printVisitors.println();
         Stream<String> argumentStream = Arrays.stream(function.getArgumentTypes()).map(Type::toString);
         if (function.isVarArg()) {
             argumentStream = Stream.concat(argumentStream, Stream.of("..."));
@@ -100,7 +98,7 @@ public final class ModelPrintVisitor implements ModelVisitor {
 
     @Override
     public void visit(FunctionDefinition function) {
-
+        printVisitors.println();
         Stream<String> parameterStream = function.getParameters().stream().map(f -> functionParameterToLLVMIR(f));
         if (function.isVarArg()) {
             parameterStream = Stream.concat(parameterStream, Stream.of("..."));
@@ -111,7 +109,6 @@ public final class ModelPrintVisitor implements ModelVisitor {
 
         function.accept(printVisitors.getFunctionVisitor());
         printVisitors.println("}");
-        printVisitors.println();
     }
 
     @Override

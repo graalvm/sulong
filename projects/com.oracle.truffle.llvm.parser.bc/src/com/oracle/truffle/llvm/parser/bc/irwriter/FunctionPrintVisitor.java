@@ -44,7 +44,6 @@ public final class FunctionPrintVisitor implements FunctionVisitor {
     @Override
     public void visit(InstructionBlock block) {
         if (!block.getName().equals(ValueSymbol.UNKNOWN)) {
-            printVisitors.println();
             if (isNamedLabel(block.getName())) {
                 printVisitors.println(String.format("%s:", block.getName().substring(1)));
             } else {
@@ -52,6 +51,7 @@ public final class FunctionPrintVisitor implements FunctionVisitor {
             }
         }
         block.accept(printVisitors.getInstructionVisitor());
+        printVisitors.println();
     }
 
     private static boolean isNamedLabel(String label) {
