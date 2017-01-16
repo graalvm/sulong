@@ -1,7 +1,5 @@
 package com.oracle.truffle.llvm.writer;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.math.BigInteger;
 
 import com.oracle.truffle.llvm.runtime.types.ArrayType;
@@ -21,111 +19,107 @@ import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
 public class TypePrintVisitor implements TypeVisitor {
 
-    private final PrintWriter out;
+    private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
 
-    public TypePrintVisitor(PrintWriter out) {
-        this.out = out;
-    }
-
-    public TypePrintVisitor(OutputStream out) {
-        this(new PrintWriter(out));
+    public TypePrintVisitor(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
+        this.printVisitors = printVisitors;
     }
 
     @Override
     public void visit(BigIntegerConstantType bigIntegerConstantType) {
         if (bigIntegerConstantType.getType().getBits() == 1) {
-            out.print(bigIntegerConstantType.getValue().equals(BigInteger.ZERO) ? "i1 false" : "i1 true");
+            printVisitors.print(bigIntegerConstantType.getValue().equals(BigInteger.ZERO) ? "i1 false" : "i1 true");
         }
         bigIntegerConstantType.getType().accept(this);
-        out.print(String.format(" %s", bigIntegerConstantType.getValue()));
+        printVisitors.print(String.format(" %s", bigIntegerConstantType.getValue()));
     }
 
     @Override
     public void visit(FloatingPointType floatingPointType) {
-        out.print(floatingPointType.name().toLowerCase());
+        printVisitors.print(floatingPointType.name().toLowerCase());
     }
 
     @Override
     public void visit(FunctionType functionType) {
         functionType.getReturnType().accept(this);
 
-        out.print(" (");
+        printVisitors.print(" (");
 
         for (int i = 0; i < functionType.getArgumentTypes().length; i++) {
             if (i > 0) {
-                out.print(", ");
+                printVisitors.print(", ");
             }
             functionType.getArgumentTypes()[i].accept(this);
         }
 
         if (functionType.isVarArg()) {
             if (functionType.getArgumentTypes().length > 0) {
-                out.print(", ");
+                printVisitors.print(", ");
             }
-            out.print("...");
+            printVisitors.print("...");
         }
-        out.print(")");
+        printVisitors.print(")");
     }
 
     @Override
     public void visit(IntegerConstantType integerConstantType) {
         if (integerConstantType.getType().getBits() == 1) {
-            out.print(integerConstantType.getValue() == 0 ? "i1 false" : "i1 true");
+            printVisitors.print(integerConstantType.getValue() == 0 ? "i1 false" : "i1 true");
         }
         integerConstantType.getType().accept(this);
-        out.print(String.format(" %d", integerConstantType.getValue()));
+        printVisitors.print(String.format(" %d", integerConstantType.getValue()));
     }
 
     @Override
     public void visit(IntegerType integerType) {
-        out.print(String.format("i%d", integerType.getBits()));
+        printVisitors.print(String.format("i%d", integerType.getBits()));
     }
 
     @Override
     public void visit(MetadataConstantType metadataConstantType) {
         metadataConstantType.getType().accept(this);
-        out.print(String.format(" %d", metadataConstantType.getValue()));
+        printVisitors.print(String.format(" %d", metadataConstantType.getValue()));
     }
 
     @Override
     public void visit(MetadataConstantPointerType metadataConstantPointerType) {
-        out.print(String.format("!!%d", metadataConstantPointerType.getSymbolIndex()));
+        printVisitors.print(String.format("!!%d", metadataConstantPointerType.getSymbolIndex()));
     }
 
     @Override
     public void visit(MetaType metaType) {
-        out.print(metaType.name().toLowerCase());
+        printVisitors.print(metaType.name().toLowerCase());
     }
 
     @Override
     public void visit(PointerType pointerType) {
         pointerType.getPointeeType().accept(this);
-        out.print("*");
+        printVisitors.print("*");
     }
 
     @Override
     public void visit(ArrayType arrayType) {
-        out.print(String.format("[%d", arrayType.getLength()));
-        out.print(" x ");
+        printVisitors.print(String.format("[%d", arrayType.getLength()));
+        printVisitors.print(" x ");
         arrayType.getElementType().accept(this);
-        out.print("]");
+        printVisitors.print("]");
     }
 
     @Override
     public void visit(StructureType structureType) {
         if (structureType.getName().equals(ValueSymbol.UNKNOWN)) {
-            out.print(structureType.toDeclarationString());
+            printVisitors.print(structureType.toDeclarationString());
         } else {
-            out.print("%" + structureType.getName());
+            printVisitors.print("%" + structureType.getName());
         }
     }
 
     @Override
     public void visit(VectorType vectorType) {
-        out.print(String.format("<%d", vectorType.getLength()));
-        out.print(" x ");
+        printVisitors.print(String.format("<%d", vectorType.getLength()));
+        printVisitors.print(" x ");
         vectorType.getElementType().accept(this);
-        out.print(">");
+        printVisitors.print(">");
     }
 
 }

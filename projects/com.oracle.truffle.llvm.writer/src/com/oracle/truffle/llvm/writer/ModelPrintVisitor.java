@@ -29,10 +29,7 @@
  */
 package com.oracle.truffle.llvm.writer;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -52,21 +49,10 @@ import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
 public class ModelPrintVisitor implements ModelVisitor {
 
-    private final PrintWriter out;
+    private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
 
-    private final FunctionPrintVisitor functionVisitor;
-
-    public ModelPrintVisitor(PrintWriter out) {
-        this.out = out;
-        this.functionVisitor = new FunctionPrintVisitor(out);
-    }
-
-    public ModelPrintVisitor(Writer out) {
-        this(new PrintWriter(out));
-    }
-
-    public ModelPrintVisitor(OutputStream out) {
-        this(new PrintWriter(out));
+    public ModelPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
+        this.printVisitors = printVisitors;
     }
 
     @Override
@@ -77,25 +63,25 @@ public class ModelPrintVisitor implements ModelVisitor {
 
     @Override
     public void visit(GlobalAlias alias) {
-        out.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
+        printVisitors.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
         if (alias.getVisibility() != Visibility.DEFAULT) {
-            out.print(String.format(" %s", alias.getVisibility()));
+            printVisitors.print(String.format(" %s", alias.getVisibility()));
         }
-        out.print(String.format(" %s", alias.getType()));
-        out.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
-        out.println();
+        printVisitors.print(String.format(" %s", alias.getType()));
+        printVisitors.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
+        printVisitors.println();
     }
 
     @Override
     public void visit(GlobalConstant constant) {
-        out.println(constant.toString());
-        out.println();
+        printVisitors.println(constant.toString());
+        printVisitors.println();
     }
 
     @Override
     public void visit(GlobalVariable variable) {
-        out.println(variable.toString());
-        out.println();
+        printVisitors.println(variable.toString());
+        printVisitors.println();
     }
 
     @Override
@@ -104,9 +90,9 @@ public class ModelPrintVisitor implements ModelVisitor {
         if (function.isVarArg()) {
             argumentStream = Stream.concat(argumentStream, Stream.of("..."));
         }
-        out.println(String.format("declare %s %s(%s)", function.getReturnType().toString(), function.getName(),
+        printVisitors.println(String.format("declare %s %s(%s)", function.getReturnType().toString(), function.getName(),
                         argumentStream.collect(Collectors.joining(", "))));
-        out.println();
+        printVisitors.println();
     }
 
     @Override
@@ -117,12 +103,12 @@ public class ModelPrintVisitor implements ModelVisitor {
             parameterStream = Stream.concat(parameterStream, Stream.of("..."));
         }
 
-        out.println(String.format("define %s %s(%s) {", function.getReturnType().toString(), function.getName(),
+        printVisitors.println(String.format("define %s %s(%s) {", function.getReturnType().toString(), function.getName(),
                         parameterStream.collect(Collectors.joining(", "))));
 
-        function.accept(functionVisitor);
-        out.println("}");
-        out.println();
+        function.accept(printVisitors.getFunctionVisitor());
+        printVisitors.println("}");
+        printVisitors.println();
     }
 
     private static String functionParameterToLLVMIR(FunctionParameter param) {
@@ -138,16 +124,17 @@ public class ModelPrintVisitor implements ModelVisitor {
     public void visit(Type type) {
         if (type instanceof StructureType && !((StructureType) type).getName().equals(ValueSymbol.UNKNOWN)) {
             StructureType actualType = (StructureType) type;
-            out.println(String.format("%%%s = type %s", actualType.getName(), actualType.toDeclarationString()));
-            out.println();
+            printVisitors.println(String.format("%%%s = type %s", actualType.getName(), actualType.toDeclarationString()));
+            printVisitors.println();
         }
     }
 
     public static String getIRString(Model model) {
         // TODO add Top-Level Structures like TargetDataLayout
         StringWriter strOut = new StringWriter();
-        final ModelPrintVisitor visitor = new ModelPrintVisitor(strOut);
-        model.accept(visitor);
+        // TODO: LLVMPrintVersion
+        LLVMPrintVersion.LLVMPrintVisitors visitors = LLVMPrintVersion.DEFAULT.createPrintVisitors(strOut);
+        model.accept(visitors.getModelVisitor());
         return strOut.toString();
     }
 }

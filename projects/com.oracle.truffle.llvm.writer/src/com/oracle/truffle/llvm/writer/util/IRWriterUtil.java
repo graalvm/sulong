@@ -1,45 +1,35 @@
 package com.oracle.truffle.llvm.writer.util;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
-
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
-import com.oracle.truffle.llvm.writer.ConstantPrintVisitor;
+import com.oracle.truffle.llvm.writer.LLVMPrintVersion;
 
 public class IRWriterUtil {
 
-    private final PrintWriter out;
+    private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
 
-    private final ConstantPrintVisitor constantVisitor;
-
-    public IRWriterUtil(PrintWriter out) {
-        this.out = out;
-        this.constantVisitor = new ConstantPrintVisitor(out);
-    }
-
-    public IRWriterUtil(OutputStream out) {
-        this(new PrintWriter(out));
+    public IRWriterUtil(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
+        this.printVisitors = printVisitors;
     }
 
     public void printSymbol(Symbol symbol) {
         if (symbol instanceof Constant) {
-            ((Constant) symbol).accept(constantVisitor);
+            ((Constant) symbol).accept(printVisitors.getConstantVisitor());
         } else {
-            out.print(symbol); // TODO: put warning
+            printVisitors.print(symbol); // TODO: put warning
         }
     }
 
     public void printSymbolName(Symbol symbol) {
         if (symbol instanceof ValueSymbol) {
-            out.print(((ValueSymbol) symbol).getName());
+            printVisitors.print(((ValueSymbol) symbol).getName());
         } else {
             printSymbol(symbol); // TODO
         }
     }
 
     public void printConstantValue(Constant symbol) {
-        symbol.accept(constantVisitor.getStringRepresentationVisitor());
+        symbol.accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
     }
 }
