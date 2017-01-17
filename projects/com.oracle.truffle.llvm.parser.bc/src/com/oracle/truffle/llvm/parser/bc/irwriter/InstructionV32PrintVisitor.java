@@ -40,11 +40,6 @@ import com.oracle.truffle.llvm.parser.api.model.enums.AtomicOrdering;
 import com.oracle.truffle.llvm.parser.api.model.enums.Flag;
 import com.oracle.truffle.llvm.parser.api.model.enums.SynchronizationScope;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
-import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
-import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
-import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
-import com.oracle.truffle.llvm.parser.api.model.symbols.constants.InlineAsmConstant;
-import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.AllocateInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.BinaryOperationInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.BranchInstruction;
@@ -68,6 +63,11 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.SwitchInstr
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.SwitchOldInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.UnreachableInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.VoidCallInstruction;
+import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
+import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.InlineAsmConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
@@ -436,49 +436,34 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
     @Override
     public void visit(StoreInstruction store) {
         printVisitors.print(INDENTATION);
-        // <result> = load
-        printVisitors.print(String.format("%s", LLVMIR_LABEL_STORE));
 
-        if (store.getAtomicOrdering() == AtomicOrdering.NOT_ATOMIC) {
-            // [volatile]
-            if (store.isVolatile()) {
-                printVisitors.print(" volatile");
-            }
+        printVisitors.print(String.format("%s ", LLVMIR_LABEL_STORE));
 
-            // <ty> <value>, <ty>* <pointer>
-            printVisitors.print(String.format(" %s %s, %s %s", ((PointerType) store.getDestination().getType()).getPointeeType(), getSymbolName(store.getSource()),
-                            store.getDestination().getType(), getSymbolName(store.getDestination())));
-
-            // [, align <alignment>]
-            if (store.getAlign() != 0) {
-                printVisitors.print(String.format(", align %d", 1 << (store.getAlign() - 1)));
-            }
-
-            // [, !nontemporal !<index>][, !invariant.load !<index>]
-            // TODO: implement
-        } else {
-            // atomic
-            printVisitors.print(" atomic");
-
-            // [volatile]
-            if (store.isVolatile()) {
-                printVisitors.print(" volatile");
-            }
-
-            // <ty> <value>, <ty>* <pointer>
-            printVisitors.print(String.format(" %s %s, %s %s", ((PointerType) store.getDestination().getType()).getPointeeType(), getSymbolName(store.getSource()),
-                            store.getDestination().getType(), getSymbolName(store.getDestination())));
-
-            // [singlethread]
-            if (store.getSynchronizationScope() == SynchronizationScope.SINGLE_THREAD) {
-                printVisitors.print(" singlethread");
-            }
-
-            // <ordering>, align <alignment>
-            printVisitors.print(String.format(" %s, align %d", store.getAtomicOrdering(), 1 << (store.getAlign() - 1)));
+        if (store.getAtomicOrdering() != AtomicOrdering.NOT_ATOMIC) {
+            printVisitors.print("atomic ");
         }
 
-        printVisitors.println();
+        if (store.isVolatile()) {
+            printVisitors.print("volatile ");
+        }
+
+        ((PointerType) store.getDestination().getType()).getPointeeType().accept(printVisitors.getTypeVisitor());
+        printVisitors.print(" ");
+        printVisitors.getIRWriterUtil().printInnerSymbolValue(store.getSource());
+        printVisitors.print(", ");
+        store.getDestination().getType().accept(printVisitors.getTypeVisitor());
+        printVisitors.print(" ");
+        printVisitors.getIRWriterUtil().printInnerSymbolValue(store.getDestination());
+
+        if (store.getAtomicOrdering() != AtomicOrdering.NOT_ATOMIC) {
+            if (store.getSynchronizationScope() == SynchronizationScope.SINGLE_THREAD) {
+                printVisitors.print(" singlethread ");
+            }
+
+            printVisitors.print(store.getAtomicOrdering());
+        }
+
+        printVisitors.println(String.format(", align %d", 1 << (store.getAlign() - 1)));
     }
 
     public static final String LLVMIR_LABEL_SWITCH = "switch";

@@ -57,6 +57,18 @@ public final class IRWriterUtil {
         }
     }
 
+    public void printInnerSymbolValue(Symbol symbol) {
+        if (symbol instanceof ValueSymbol) {
+            printVisitors.print(((ValueSymbol) symbol).getName());
+
+        } else if (symbol instanceof Constant) {
+            ((Constant) symbol).accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
+
+        } else {
+            throw new IllegalStateException("Cannot print this value: " + symbol);
+        }
+    }
+
     public void printConstantValue(Constant symbol) {
         symbol.accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
     }
