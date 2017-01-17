@@ -77,10 +77,6 @@ public final class ModelPrintVisitor implements ModelVisitor {
         printVisitors.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
     }
 
-    private static int getTrueAlignment(int align) {
-        return 1 << (align - 1);
-    }
-
     @Override
     public void visit(GlobalConstant constant) {
         printVisitors.print(constant.getName());
@@ -99,13 +95,13 @@ public final class ModelPrintVisitor implements ModelVisitor {
             printVisitors.print("zeroinitializer");
 
         } else if (constant.getValue() instanceof Constant) {
-            ((Constant) constant.getValue()).accept(printVisitors.getConstantVisitor());
+            ((Constant) constant.getValue()).accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
         } else {
             throw new AssertionError("Cannot print Global Constant with non-constant value: " + constant.getValue());
         }
 
         printVisitors.print(", align ");
-        printVisitors.println(String.valueOf(getTrueAlignment(constant.getAlign())));
+        printVisitors.println(String.valueOf(1 << (constant.getAlign() - 1)));
     }
 
     @Override
@@ -126,7 +122,7 @@ public final class ModelPrintVisitor implements ModelVisitor {
             printVisitors.print("zeroinitializer");
 
         } else if (variable.getValue() instanceof Constant) {
-            ((Constant) variable.getValue()).accept(printVisitors.getConstantVisitor());
+            ((Constant) variable.getValue()).accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
 
         } else if (variable.getValue() instanceof ValueSymbol) {
             printVisitors.print(((ValueSymbol) variable.getValue()).getName());
@@ -136,7 +132,7 @@ public final class ModelPrintVisitor implements ModelVisitor {
         }
 
         printVisitors.print(", align ");
-        printVisitors.println(String.valueOf(getTrueAlignment(variable.getAlign())));
+        printVisitors.println(String.valueOf(1 << (variable.getAlign() - 1)));
     }
 
     @Override
