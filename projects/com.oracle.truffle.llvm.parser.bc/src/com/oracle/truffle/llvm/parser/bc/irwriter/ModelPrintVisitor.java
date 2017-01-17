@@ -42,6 +42,8 @@ import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.NullConstant;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
@@ -83,19 +85,23 @@ public final class ModelPrintVisitor implements ModelVisitor {
     public void visit(GlobalConstant constant) {
         printVisitors.print(constant.getName());
         printVisitors.print(" = ");
+        if (constant.getVisibility() != Visibility.DEFAULT) {
+            printVisitors.print(constant.getVisibility().getIrString());
+            printVisitors.print(" ");
+        }
         printVisitors.print(constant.getLinkage().getIrString());
         printVisitors.print(" constant ");
 
-        // TODO use TypeVisitor
-        printVisitors.print(((PointerType) constant.getType()).getPointeeType().toString());
+        ((PointerType) constant.getType()).getPointeeType().accept(printVisitors.getTypeVisitor());
         printVisitors.print(" ");
 
-        if (constant.getValue() == null) {
+        if (constant.getValue() == null || constant.getValue() instanceof NullConstant) {
             printVisitors.print("zeroinitializer");
 
+        } else if (constant.getValue() instanceof Constant) {
+            ((Constant) constant.getValue()).accept(printVisitors.getConstantVisitor());
         } else {
-            // TODO use visitor
-            printVisitors.print(constant.getValue().toString());
+            throw new AssertionError("Cannot print Global Constant with non-constant value: " + constant.getValue());
         }
 
         printVisitors.print(", align ");
@@ -106,19 +112,27 @@ public final class ModelPrintVisitor implements ModelVisitor {
     public void visit(GlobalVariable variable) {
         printVisitors.print(variable.getName());
         printVisitors.print(" = ");
+        if (variable.getVisibility() != Visibility.DEFAULT) {
+            printVisitors.print(variable.getVisibility().getIrString());
+            printVisitors.print(" ");
+        }
         printVisitors.print(variable.getLinkage().getIrString());
         printVisitors.print(" global ");
 
-        // TODO use TypeVisitor
-        printVisitors.print(((PointerType) variable.getType()).getPointeeType().toString());
+        ((PointerType) variable.getType()).getPointeeType().accept(printVisitors.getTypeVisitor());
         printVisitors.print(" ");
 
-        if (variable.getValue() == null) {
+        if (variable.getValue() == null || variable.getValue() instanceof NullConstant) {
             printVisitors.print("zeroinitializer");
 
+        } else if (variable.getValue() instanceof Constant) {
+            ((Constant) variable.getValue()).accept(printVisitors.getConstantVisitor());
+
+        } else if (variable.getValue() instanceof ValueSymbol) {
+            printVisitors.print(((ValueSymbol) variable.getValue()).getName());
+
         } else {
-            // TODO use visitor
-            printVisitors.print(variable.getValue().toString());
+            throw new IllegalStateException("Cannot print Global with value: " + variable.getValue());
         }
 
         printVisitors.print(", align ");
