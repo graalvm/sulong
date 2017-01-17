@@ -366,22 +366,17 @@ public final class ConstantPrintVisitor implements ConstantVisitor {
             }
 
             // <pty>* <ptrval>
-            printVisitors.print(" ( ");
+            printVisitors.print(" (");
             printVisitors.print(getElementPointerConstant.getBasePointer().getType());
             printVisitors.print(' ');
-            printVisitors.getIRWriterUtil().printSymbolName(getElementPointerConstant.getBasePointer());
+            printVisitors.getIRWriterUtil().printInnerSymbolValue(getElementPointerConstant.getBasePointer());
 
             // {, <ty> <idx>}*
-            for (Symbol sym : getElementPointerConstant.getIndices()) {
-                if (sym instanceof Constant) {
-                    printVisitors.print(", ");
-                    printVisitors.print(sym);
-                } else {
-                    printVisitors.print(", ");
-                    printVisitors.print(sym.getType());
-                    printVisitors.print(' ');
-                    printVisitors.getIRWriterUtil().printSymbolName(sym);
-                }
+            for (final Symbol sym : getElementPointerConstant.getIndices()) {
+                printVisitors.print(", ");
+                sym.getType().accept(printVisitors.getTypeVisitor());
+                printVisitors.print(" ");
+                printVisitors.getIRWriterUtil().printInnerSymbolValue(sym);
             }
 
             printVisitors.print(')');
