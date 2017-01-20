@@ -55,6 +55,7 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.UndefinedConst
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.FloatingPointConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.BigIntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
+import com.oracle.truffle.llvm.parser.api.model.target.ModuleID;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
@@ -65,6 +66,8 @@ import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
 public final class ModelModule implements ModuleGenerator {
+
+    private final ModuleID moduleID;
 
     private final List<Type> types = new ArrayList<>();
 
@@ -91,10 +94,12 @@ public final class ModelModule implements ModuleGenerator {
         return targetDataLayout;
     }
 
-    public ModelModule() {
+    public ModelModule(ModuleID moduleID) {
+        this.moduleID = moduleID;
     }
 
     public void accept(ModelVisitor visitor) {
+        visitor.visit(moduleID);
         if (targetDataLayout != null) {
             visitor.visit(targetDataLayout);
         }

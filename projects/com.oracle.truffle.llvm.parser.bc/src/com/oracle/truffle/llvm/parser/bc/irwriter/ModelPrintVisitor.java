@@ -29,19 +29,15 @@
  */
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
-import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.NullConstant;
+import com.oracle.truffle.llvm.parser.api.model.target.ModuleID;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
@@ -70,7 +66,7 @@ final class ModelPrintVisitor implements ModelVisitor {
     public void visit(GlobalAlias alias) {
         out.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
         if (alias.getVisibility() != Visibility.DEFAULT) {
-            out.print(String.format(" %s", alias.getVisibility()));
+            out.print(String.format(" %s", alias.getVisibility().toString()));
         }
         out.print(String.format(" %s", alias.getType()));
         out.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
@@ -81,7 +77,7 @@ final class ModelPrintVisitor implements ModelVisitor {
         out.print(constant.getName());
         out.print(" = ");
         if (constant.getVisibility() != Visibility.DEFAULT) {
-            out.print(constant.getVisibility().getIrString());
+            out.print(constant.getVisibility().toString());
             out.print(" ");
         }
         out.print(constant.getLinkage().getIrString());
@@ -108,7 +104,7 @@ final class ModelPrintVisitor implements ModelVisitor {
         out.print(variable.getName());
         out.print(" = ");
         if (variable.getVisibility() != Visibility.DEFAULT) {
-            out.print(variable.getVisibility().getIrString());
+            out.print(variable.getVisibility().toString());
             out.print(" ");
         }
         out.print(variable.getLinkage().getIrString());
@@ -137,50 +133,49 @@ final class ModelPrintVisitor implements ModelVisitor {
     @Override
     public void visit(FunctionDeclaration function) {
         out.println();
-        Stream<String> argumentStream = Arrays.stream(function.getArgumentTypes()).map(Type::toString);
-        if (function.isVarArg()) {
-            argumentStream = Stream.concat(argumentStream, Stream.of("..."));
-        }
-        out.println(String.format("declare %s %s(%s)", function.getReturnType().toString(), function.getName(),
-                        argumentStream.collect(Collectors.joining(", "))));
+
+        out.print("declare ");
+        function.getReturnType().accept(visitors.getTypeVisitor());
+
+        out.print(String.format(" %s", function.getName()));
+
+        visitors.getTypeVisitor().printFormalArguments(function);
+        out.println();
     }
 
     @Override
     public void visit(FunctionDefinition function) {
         out.println();
-        Stream<String> parameterStream = function.getParameters().stream().map(ModelPrintVisitor::functionParameterToLLVMIR);
-        if (function.isVarArg()) {
-            parameterStream = Stream.concat(parameterStream, Stream.of("..."));
-        }
 
-        out.println(String.format("define %s %s(%s) {", function.getReturnType().toString(), function.getName(),
-                        parameterStream.collect(Collectors.joining(", "))));
+        out.print("define ");
+        function.getReturnType().accept(visitors.getTypeVisitor());
 
+        out.print(String.format(" %s", function.getName()));
+        visitors.getTypeVisitor().printFormalArguments(function);
+
+        out.println(" {");
         function.accept(visitors.getFunctionVisitor());
         out.println("}");
     }
 
     @Override
-    public void visit(TargetDataLayout layout) {
-        final String layoutString = layout.getDataLayout();
-        out.println(String.format("target datalayout = \"%s\"", layoutString));
+    public void visit(ModuleID moduleID) {
+        out.println(String.format("; ModuleID = \'%s\'", moduleID.getModuleID()));
         out.println();
     }
 
-    private static String functionParameterToLLVMIR(FunctionParameter param) {
-        final StringBuilder builder = new StringBuilder();
-        builder.append(param.getType().toString());
-        if (!ValueSymbol.UNKNOWN.equals(param.getName())) {
-            builder.append(' ').append(param.getName());
-        }
-        return builder.toString();
+    @Override
+    public void visit(TargetDataLayout layout) {
+        out.println(String.format("target datalayout = \"%s\"", layout.getDataLayout()));
+        out.println();
     }
 
     @Override
     public void visit(Type type) {
         if (type instanceof StructureType && !((StructureType) type).getName().equals(ValueSymbol.UNKNOWN)) {
-            StructureType actualType = (StructureType) type;
-            out.println(String.format("%%%s = type %s", actualType.getName(), actualType.toDeclarationString()));
+            final StructureType actualType = (StructureType) type;
+            out.print(String.format("%%%s = type ", actualType.getName()));
+            visitors.getTypeVisitor().printStructDeclaration(actualType);
             out.println();
         }
     }

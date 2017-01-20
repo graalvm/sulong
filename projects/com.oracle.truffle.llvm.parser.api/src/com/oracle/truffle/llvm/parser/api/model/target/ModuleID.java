@@ -27,38 +27,22 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.api.model.enums;
+package com.oracle.truffle.llvm.parser.api.model.target;
 
-public enum Visibility {
+public class ModuleID {
 
-    DEFAULT("default", 0L),
-    HIDDEN("hidden", 1L),
-    PROTECTED("protected", 2L);
+    private final String moduleID;
 
-    private final String irString;
-
-    Visibility(String irString, long encodedValue) {
-        this.irString = irString;
-        this.encodedValue = encodedValue;
+    public ModuleID(String moduleID) {
+        this.moduleID = moduleID;
     }
 
-    private final long encodedValue;
-
-    public long getEncodedValue() {
-        return encodedValue;
-    }
-
-    public static Visibility decode(long value) {
-        for (Visibility visibility : values()) {
-            if (visibility.getEncodedValue() == value) {
-                return visibility;
-            }
-        }
-        return DEFAULT;
+    public String getModuleID() {
+        return moduleID;
     }
 
     @Override
     public String toString() {
-        return irString;
+        return moduleID;
     }
 }

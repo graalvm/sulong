@@ -40,6 +40,7 @@ import com.oracle.truffle.llvm.runtime.types.IntegerType;
 import com.oracle.truffle.llvm.runtime.types.MetaType;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
+import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.VectorType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataConstantPointerType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataConstantType;
@@ -141,10 +142,12 @@ final class TypePrintVisitor implements TypeVisitor {
 
     @Override
     public void visit(StructureType structureType) {
-        if (structureType.getName().equals(ValueSymbol.UNKNOWN)) {
-            out.print(structureType.toDeclarationString()); // TODO replace here
+        if (ValueSymbol.UNKNOWN.equals(structureType.getName())) {
+            printStructDeclaration(structureType);
+
         } else {
             out.print("%" + structureType.getName());
+
         }
     }
 
@@ -154,6 +157,49 @@ final class TypePrintVisitor implements TypeVisitor {
         out.print(" x ");
         vectorType.getElementType().accept(this);
         out.print(">");
+    }
+
+    void printFormalArguments(FunctionType function) {
+        out.print("(");
+
+        final Type[] argTypes = function.getArgumentTypes();
+        for (int i = 0; i < argTypes.length; i++) {
+            if (i != 0) {
+                out.print(", ");
+            }
+
+            argTypes[i].accept(this);
+        }
+
+        if (function.isVarArg()) {
+            if (argTypes.length != 0) {
+                out.print(", ");
+            }
+
+            out.print("...");
+        }
+
+        out.print(")");
+    }
+
+    void printStructDeclaration(StructureType structureType) {
+        if (structureType.isPacked()) {
+            out.print("<");
+        }
+        out.print("{ ");
+
+        for (int i = 0; i < structureType.getLength(); i++) {
+            if (i > 0) {
+                out.print(", ");
+            }
+
+            structureType.getElementType(i).accept(this);
+        }
+
+        out.print(" }");
+        if (structureType.isPacked()) {
+            out.print(">");
+        }
     }
 
 }

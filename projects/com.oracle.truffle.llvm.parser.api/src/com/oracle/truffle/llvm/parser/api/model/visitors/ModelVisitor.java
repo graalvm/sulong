@@ -34,6 +34,7 @@ import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
+import com.oracle.truffle.llvm.parser.api.model.target.ModuleID;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.types.Type;
@@ -65,6 +66,10 @@ public interface ModelVisitor {
 
     default void visit(FunctionDefinition function) {
         ifVisitNotOverwritten(function);
+    }
+
+    default void visit(ModuleID moduleID) {
+        ifVisitNotOverwritten(moduleID);
     }
 
     default void visit(TargetDataLayout layout) {
