@@ -192,7 +192,8 @@ final class InstructionV32PrintVisitor implements InstructionVisitor {
             out.print(String.format(" %s ", call.getCallTarget().getType().toString()));
 
         } else if (call.getCallTarget() instanceof InlineAsmConstant) {
-            out.print(String.format(" %s ", call.getCallTarget().toString()));
+            out.print(" ");
+            ((InlineAsmConstant) call.getCallTarget()).accept(visitors.getConstantVisitor());
 
         } else {
             throw new AssertionError("unexpected target type: " + call.getCallTarget().getClass().getName());
