@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.bc;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,13 +73,12 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.ReducedInstructionVisit
 import com.oracle.truffle.llvm.parser.api.util.LLVMParserAsserts;
 import com.oracle.truffle.llvm.parser.api.util.LLVMParserResultImpl;
 import com.oracle.truffle.llvm.parser.api.util.LLVMParserRuntime;
+import com.oracle.truffle.llvm.parser.bc.irwriter.LLVMIRPrinter;
 import com.oracle.truffle.llvm.parser.bc.nodes.LLVMSymbolResolver;
 import com.oracle.truffle.llvm.parser.bc.util.LLVMFrameIDs;
 import com.oracle.truffle.llvm.parser.bc.util.Pair;
 import com.oracle.truffle.llvm.runtime.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.runtime.memory.LLVMHeapFunctions;
-import com.oracle.truffle.llvm.parser.bc.irwriter.ModelPrintVisitor;
-import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.LLVMBaseType;
@@ -115,12 +115,12 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
 
         final String llvmIRTarget = LLVMOptions.DEBUG.printLLVMIR();
         if (String.valueOf(true).equals(llvmIRTarget)) {
-            LLVMLogger.print(llvmIRTarget).accept(ModelPrintVisitor.getIRString(model));
+            LLVMIRPrinter.printLLVMToStream(model, LLVMOptions.ENGINE.llvmVersion(), new PrintWriter(System.out));
 
         } else if (!String.valueOf(false).equals(llvmIRTarget)) {
             final String sourceFileName = source.getName();
             final String actualTarget = sourceFileName.substring(0, sourceFileName.length() - ".bc".length()) + ".ll";
-            LLVMLogger.print(actualTarget).accept(ModelPrintVisitor.getIRString(model));
+            LLVMIRPrinter.printLLVMToFile(model, LLVMOptions.ENGINE.llvmVersion(), actualTarget);
         }
 
         final RootCallTarget mainFunctionCallTarget;

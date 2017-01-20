@@ -29,11 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Writer;
-
-public enum LLVMPrintVersion {
+enum LLVMPrintVersion {
     LLVM_3_2(
                     ModelPrintVisitor::new,
                     FunctionPrintVisitor::new,
@@ -49,27 +45,27 @@ public enum LLVMPrintVersion {
 
     @FunctionalInterface
     private interface ModelPrinter {
-        ModelPrintVisitor instantiate(LLVMPrintVisitors out);
+        ModelPrintVisitor instantiate(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target);
     }
 
     @FunctionalInterface
     private interface FunctionPrinter {
-        FunctionPrintVisitor instantiate(LLVMPrintVisitors out);
+        FunctionPrintVisitor instantiate(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target);
     }
 
     @FunctionalInterface
     private interface InstructionPrinter {
-        InstructionV32PrintVisitor instantiate(LLVMPrintVisitors out);
+        InstructionV32PrintVisitor instantiate(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target);
     }
 
     @FunctionalInterface
     private interface ConstantPrinter {
-        ConstantPrintVisitor instantiate(LLVMPrintVisitors out);
+        ConstantPrintVisitor instantiate(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target);
     }
 
     @FunctionalInterface
     private interface TypePrinter {
-        TypePrintVisitor instantiate(LLVMPrintVisitors out);
+        TypePrintVisitor instantiate(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target);
     }
 
     private final ModelPrinter modelVisitor;
@@ -87,41 +83,31 @@ public enum LLVMPrintVersion {
         this.typeVisitor = typeVisitor;
     }
 
-    public ModelPrintVisitor createModelPrintVisitor(LLVMPrintVisitors out) {
-        return modelVisitor.instantiate(out);
+    public ModelPrintVisitor createModelPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+        return modelVisitor.instantiate(out, target);
     }
 
-    public FunctionPrintVisitor createFunctionPrintVisitor(LLVMPrintVisitors out) {
-        return functionVisitor.instantiate(out);
+    public FunctionPrintVisitor createFunctionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+        return functionVisitor.instantiate(out, target);
     }
 
-    public InstructionV32PrintVisitor createInstructionPrintVisitor(LLVMPrintVisitors out) {
-        return instructionVisitor.instantiate(out);
+    public InstructionV32PrintVisitor createInstructionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+        return instructionVisitor.instantiate(out, target);
     }
 
-    public ConstantPrintVisitor createConstantPrintVisitor(LLVMPrintVisitors out) {
-        return constantVisitor.instantiate(out);
+    public ConstantPrintVisitor createConstantPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+        return constantVisitor.instantiate(out, target);
     }
 
-    public TypePrintVisitor createTypePrintVisitor(LLVMPrintVisitors out) {
-        return typeVisitor.instantiate(out);
+    public TypePrintVisitor createTypePrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+        return typeVisitor.instantiate(out, target);
     }
 
-    public LLVMPrintVisitors createPrintVisitors(PrintWriter out) {
+    public LLVMPrintVisitors createPrintVisitors(LLVMIRPrinter.PrintTarget out) {
         return new LLVMPrintVisitors(this, out);
     }
 
-    public LLVMPrintVisitors createPrintVisitors(Writer out) {
-        return new LLVMPrintVisitors(this, new PrintWriter(out));
-    }
-
-    public LLVMPrintVisitors createPrintVisitors(OutputStream out) {
-        return new LLVMPrintVisitors(this, new PrintWriter(out));
-    }
-
     public static final class LLVMPrintVisitors {
-
-        private final PrintWriter out;
 
         private final ModelPrintVisitor modelVisitor;
         private final FunctionPrintVisitor functionVisitor;
@@ -131,21 +117,13 @@ public enum LLVMPrintVersion {
 
         private final IRWriterUtil irWriter;
 
-        private LLVMPrintVisitors(LLVMPrintVersion version, PrintWriter out) {
-            this.out = out;
-
-            // TODO: create instance using this object
-            this.modelVisitor = version.createModelPrintVisitor(this);
-            this.functionVisitor = version.createFunctionPrintVisitor(this);
-            this.instructionVisitor = version.createInstructionPrintVisitor(this);
-            this.constantVisitor = version.createConstantPrintVisitor(this);
-            this.typeVisitor = version.createTypePrintVisitor(this);
-
-            this.irWriter = new IRWriterUtil(this);
-        }
-
-        public PrintWriter getPrintWriter() {
-            return out;
+        private LLVMPrintVisitors(LLVMPrintVersion version, LLVMIRPrinter.PrintTarget target) {
+            this.modelVisitor = version.createModelPrintVisitor(this, target);
+            this.functionVisitor = version.createFunctionPrintVisitor(this, target);
+            this.instructionVisitor = version.createInstructionPrintVisitor(this, target);
+            this.constantVisitor = version.createConstantPrintVisitor(this, target);
+            this.typeVisitor = version.createTypePrintVisitor(this, target);
+            this.irWriter = new IRWriterUtil(this, target);
         }
 
         public ModelPrintVisitor getModelVisitor() {
@@ -170,26 +148,6 @@ public enum LLVMPrintVersion {
 
         public IRWriterUtil getIRWriterUtil() {
             return irWriter;
-        }
-
-        public void print(Object obj) {
-            out.print(obj);
-        }
-
-        public void print(String s) {
-            out.print(s);
-        }
-
-        public void println() {
-            out.println();
-        }
-
-        public void println(Object obj) {
-            out.println(obj);
-        }
-
-        public void println(String s) {
-            out.println(s);
         }
     }
 }

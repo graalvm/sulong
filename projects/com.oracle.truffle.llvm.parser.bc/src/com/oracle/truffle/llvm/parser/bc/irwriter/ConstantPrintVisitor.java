@@ -68,416 +68,302 @@ import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
-public final class ConstantPrintVisitor implements ConstantVisitor {
+final class ConstantPrintVisitor implements ConstantVisitor {
 
-    private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
+    private final LLVMPrintVersion.LLVMPrintVisitors visitors;
 
-    private final StringRepresentationVisitor stringRepr = new StringRepresentationVisitor();
+    private final LLVMIRPrinter.PrintTarget out;
 
-    public ConstantPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
-        this.printVisitors = printVisitors;
-    }
-
-    public StringRepresentationVisitor getStringRepresentationVisitor() {
-        return stringRepr;
+    ConstantPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
+        this.visitors = visitors;
+        this.out = target;
     }
 
     @Override
     public void visit(ArrayConstant arrayConstant) {
-        stringRepr.visit(arrayConstant);
+        final StringJoiner joiner = new StringJoiner(", ", "[", "]");
+        if (arrayConstant.getElementCount() == 0) {
+            joiner.setEmptyValue("");
+        }
+        for (int i = 0; i < arrayConstant.getElementCount(); i++) {
+            joiner.add(arrayConstant.getElement(i).toString());
+        }
+        out.print(joiner.toString());
     }
 
     @Override
     public void visit(StructureConstant structureConstant) {
-        stringRepr.visit(structureConstant);
+        final StringJoiner joiner = new StringJoiner(", ", "{", "}");
+        if (structureConstant.getElementCount() == 0) {
+            joiner.setEmptyValue("");
+        }
+        for (int i = 0; i < structureConstant.getElementCount(); i++) {
+            joiner.add(structureConstant.getElement(i).toString());
+        }
+        out.print(joiner.toString());
     }
 
     @Override
     public void visit(VectorConstant vectorConstant) {
-        stringRepr.visit(vectorConstant);
+        final StringJoiner joiner = new StringJoiner(", ", "<", ">");
+        if (vectorConstant.getElementCount() == 0) {
+            joiner.setEmptyValue("");
+        }
+        for (int i = 0; i < vectorConstant.getElementCount(); i++) {
+            joiner.add(vectorConstant.getElement(i).toString());
+        }
+        out.print(joiner.toString());
     }
 
     @Override
     public void visit(BigIntegerConstant bigIntegerConstant) {
-        printVisitors.print(bigIntegerConstant.getType());
-        printVisitors.print(' ');
-        stringRepr.visit(bigIntegerConstant);
+        if (bigIntegerConstant.getType().getBits() == 1) {
+            out.print(bigIntegerConstant.getValue().equals(BigInteger.ZERO) ? "false" : "true");
+        } else {
+            out.print(bigIntegerConstant.getValue().toString());
+        }
     }
 
     @Override
     public void visit(BinaryOperationConstant binaryOperationConstant) {
-        stringRepr.visit(binaryOperationConstant);
+        out.print(binaryOperationConstant.getOperator().toString());
+        out.print(" ");
+        out.print(binaryOperationConstant.getType().toString());
+        if (binaryOperationConstant.getLHS() instanceof Constant) {
+            out.print(" ");
+            visitors.getIRWriterUtil().printConstantValue((Constant) binaryOperationConstant.getLHS());
+        } else {
+            out.print(" ");
+            binaryOperationConstant.getLHS().getType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+            visitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getLHS());
+        }
+        out.print(",");
+        if (binaryOperationConstant.getRHS() instanceof Constant) {
+            out.print(" ");
+            visitors.getIRWriterUtil().printConstantValue((Constant) binaryOperationConstant.getRHS());
+        } else {
+            out.print(" ");
+            binaryOperationConstant.getRHS().getType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+            visitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getRHS());
+        }
+        out.print(" ");
+        binaryOperationConstant.getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
+        visitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getLHS());
+        out.print(", ");
+        visitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getRHS());
     }
 
     @Override
     public void visit(BlockAddressConstant blockAddressConstant) {
-        stringRepr.visit(blockAddressConstant);
+        out.print(String.format("label %s", blockAddressConstant.getInstructionBlock().getName()));
     }
 
     @Override
     public void visit(CastConstant castConstant) {
-        stringRepr.visit(castConstant);
+        out.print(castConstant.getOperator().toString());
+        out.print(" ");
+        castConstant.getValue().getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
+        visitors.getIRWriterUtil().printSymbolName(castConstant.getValue());
+        out.print(" ");
+        castConstant.getType().accept(visitors.getTypeVisitor());
     }
+
+    private static final String LLVMIR_LABEL_COMPARE = "icmp";
+    private static final String LLVMIR_LABEL_COMPARE_FP = "fcmp";
 
     @Override
     public void visit(CompareConstant compareConstant) {
-        stringRepr.visit(compareConstant);
+        if (compareConstant.getOperator().isFloatingPoint()) {
+            out.print(LLVMIR_LABEL_COMPARE_FP);
+        } else {
+            out.print(LLVMIR_LABEL_COMPARE);
+        }
+        out.print(" ");
+        out.print(compareConstant.getOperator().toString());
+        out.print(" ");
+        compareConstant.getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
+
+        if (compareConstant.getLHS() instanceof Constant) {
+            visitors.getIRWriterUtil().printConstantValue((Constant) compareConstant.getLHS());
+        } else {
+            visitors.getIRWriterUtil().printSymbolName(compareConstant.getLHS());
+        }
+
+        out.print(", ");
+        if (compareConstant.getRHS() instanceof Constant) {
+            visitors.getIRWriterUtil().printConstantValue((Constant) compareConstant.getRHS());
+        } else {
+            visitors.getIRWriterUtil().printSymbolName(compareConstant.getRHS());
+        }
     }
 
     @Override
     public void visit(DoubleConstant doubleConstant) {
-        printVisitors.print(doubleConstant.getType());
-        printVisitors.print(' ');
-        stringRepr.visit(doubleConstant);
+        out.print(String.format(Locale.ROOT, "%.15f", doubleConstant.getValue()));
     }
 
     @Override
     public void visit(FloatConstant floatConstant) {
-        printVisitors.print(floatConstant.getType());
-        printVisitors.print(' ');
-        stringRepr.visit(floatConstant);
+        out.print(String.format(Locale.ROOT, "%.6f", floatConstant.getValue()));
     }
 
     @Override
     public void visit(X86FP80Constant x86fp80Constant) {
-        printVisitors.print(x86fp80Constant.getType());
-        printVisitors.print(' ');
-        stringRepr.visit(x86fp80Constant);
+        // TODO: remove dependency to getStringValue?
+        out.print(x86fp80Constant.getStringValue());
     }
+
+    private static final String LLVMIR_LABEL_GET_ELEMENT_POINTER = "getelementptr";
 
     @Override
     public void visit(FunctionDeclaration functionDeclaration) {
-        stringRepr.visit(functionDeclaration);
+        // TODO: remove dependency to toString
+        Stream<String> argumentStream = Arrays.stream(functionDeclaration.getArgumentTypes()).map(Type::toString);
+        if (functionDeclaration.isVarArg()) {
+            argumentStream = Stream.concat(argumentStream, Stream.of("..."));
+        }
+        out.print(String.format("declare %s %s(%s)", functionDeclaration.getReturnType(), functionDeclaration.getName(),
+                        argumentStream.collect(Collectors.joining(", "))));
     }
 
     @Override
     public void visit(FunctionDefinition functionDefinition) {
-        stringRepr.visit(functionDefinition);
+        // TODO: remove dependency to toString
+        Stream<String> parameterStream = functionDefinition.getParameters().stream().map(FunctionParameter::toString);
+        if (functionDefinition.isVarArg()) {
+            parameterStream = Stream.concat(parameterStream, Stream.of("..."));
+        }
+
+        out.print(String.format("define %s %s(%s)", functionDefinition.getReturnType(), functionDefinition.getName(),
+                        parameterStream.collect(Collectors.joining(", "))));
     }
 
     @Override
     public void visit(GetElementPointerConstant getElementPointerConstant) {
-        stringRepr.visit(getElementPointerConstant);
+        // getelementptr
+        out.print(LLVMIR_LABEL_GET_ELEMENT_POINTER);
+
+        // [inbounds]
+        if (getElementPointerConstant.isInbounds()) {
+            out.print(" inbounds");
+        }
+
+        // <pty>* <ptrval>
+        out.print(" (");
+        getElementPointerConstant.getBasePointer().getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
+        visitors.getIRWriterUtil().printInnerSymbolValue(getElementPointerConstant.getBasePointer());
+
+        // {, <ty> <idx>}*
+        for (final Symbol sym : getElementPointerConstant.getIndices()) {
+            out.print(", ");
+            sym.getType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+            visitors.getIRWriterUtil().printInnerSymbolValue(sym);
+        }
+
+        out.print(")");
     }
+
+    private static final String LLVMIR_LABEL_ASM = "asm";
+
+    private static final String LLVMIR_ASM_KEYWORD_SIDEEFFECT = "sideeffect";
+
+    private static final String LLVMIR_ASM_KEYWORD_ALIGNSTACK = "alignstack";
 
     @Override
     public void visit(InlineAsmConstant inlineAsmConstant) {
-        stringRepr.visit(inlineAsmConstant);
+        final FunctionType decl = (FunctionType) ((PointerType) inlineAsmConstant.getType()).getPointeeType();
+
+        if (decl.getReturnType() != MetaType.VOID) {
+            decl.getReturnType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+        }
+
+        if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
+            out.print(decl.toString()); // TODO use visitors
+            printTypeSignature(decl);
+            out.print(" ");
+        }
+
+        out.print(LLVMIR_LABEL_ASM);
+
+        if (inlineAsmConstant.hasSideEffects()) {
+            out.print(" ");
+            out.print(LLVMIR_ASM_KEYWORD_SIDEEFFECT);
+        }
+
+        if (inlineAsmConstant.needsAlignedStack()) {
+            out.print(" ");
+            out.print(LLVMIR_ASM_KEYWORD_ALIGNSTACK);
+        }
+
+        if (inlineAsmConstant.getDialect() != AsmDialect.AT_T) {
+            out.print(" ");
+            out.print(inlineAsmConstant.getDialect().getIrString());
+        }
+
+        out.print(" ");
+        out.print(inlineAsmConstant.getAsmExpression());
+
+        out.print(", ");
+        out.print(inlineAsmConstant.getAsmFlags());
+    }
+
+    // TODO: move into visitor?
+    private void printTypeSignature(FunctionType functionType) {
+        // TODO: remove dependency to toString
+        Stream<String> argTypeStream = Arrays.stream(functionType.getArgumentTypes()).map(Type::toString);
+        if (functionType.isVarArg()) {
+            argTypeStream = Stream.concat(argTypeStream, Stream.of("..."));
+        }
+        out.print(argTypeStream.collect(Collectors.joining(", ", "(", ")")));
     }
 
     @Override
     public void visit(IntegerConstant integerConstant) {
-        printVisitors.print(integerConstant.getType());
-        printVisitors.print(' ');
-        stringRepr.visit(integerConstant);
+        if (integerConstant.getType().getBits() == 1) {
+            out.print(integerConstant.getValue() == 0 ? "false" : "true");
+        } else {
+            out.print(String.valueOf(integerConstant.getValue()));
+        }
     }
 
     @Override
     public void visit(NullConstant nullConstant) {
-        printVisitors.print(nullConstant.getType());
-        printVisitors.print(' ');
-        stringRepr.visit(nullConstant);
+        if (nullConstant.getType() instanceof IntegerType) {
+            out.print(String.valueOf(0));
+        } else if (nullConstant.getType() instanceof FloatingPointType) {
+            out.print(String.valueOf(0.0));
+        } else {
+            out.print("null");
+        }
     }
 
     @Override
     public void visit(StringConstant stringConstant) {
-        printVisitors.print(stringConstant.getString()); // TODO: correct?
+        out.print("c\"");
+        for (int i = 0; i < stringConstant.getString().length(); i++) {
+            byte b = (byte) stringConstant.getString().charAt(i);
+            if (b < ' ' || b >= '~') {
+                out.print(String.format("\\%02X", b));
+            } else {
+                out.print(Character.toString((char) b));
+            }
+        }
+        if (stringConstant.getType() instanceof ArrayType && ((ArrayType) stringConstant.getType()).getLength() > stringConstant.getString().length()) {
+            out.print("\\00");
+        }
+        out.print("\"");
     }
 
     @Override
     public void visit(UndefinedConstant undefinedConstant) {
-        stringRepr.visit(undefinedConstant);
-    }
-
-    public class StringRepresentationVisitor implements ConstantVisitor {
-
-        @Override
-        public void visit(ArrayConstant arrayConstant) {
-            final StringJoiner joiner = new StringJoiner(", ", "[", "]");
-            if (arrayConstant.getElementCount() == 0) {
-                joiner.setEmptyValue("");
-            }
-            for (int i = 0; i < arrayConstant.getElementCount(); i++) {
-                joiner.add(arrayConstant.getElement(i).toString());
-            }
-            printVisitors.print(joiner.toString());
-        }
-
-        @Override
-        public void visit(StructureConstant structureConstant) {
-            final StringJoiner joiner = new StringJoiner(", ", "{", "}");
-            if (structureConstant.getElementCount() == 0) {
-                joiner.setEmptyValue("");
-            }
-            for (int i = 0; i < structureConstant.getElementCount(); i++) {
-                joiner.add(structureConstant.getElement(i).toString());
-            }
-            printVisitors.print(joiner.toString());
-        }
-
-        @Override
-        public void visit(VectorConstant vectorConstant) {
-            final StringJoiner joiner = new StringJoiner(", ", "<", ">");
-            if (vectorConstant.getElementCount() == 0) {
-                joiner.setEmptyValue("");
-            }
-            for (int i = 0; i < vectorConstant.getElementCount(); i++) {
-                joiner.add(vectorConstant.getElement(i).toString());
-            }
-            printVisitors.print(joiner.toString());
-        }
-
-        @Override
-        public void visit(BigIntegerConstant bigIntegerConstant) {
-            if (bigIntegerConstant.getType().getBits() == 1) {
-                printVisitors.print(bigIntegerConstant.getValue().equals(BigInteger.ZERO) ? "false" : "true");
-            } else {
-                printVisitors.print(bigIntegerConstant.getValue().toString());
-            }
-        }
-
-        @Override
-        public void visit(BinaryOperationConstant binaryOperationConstant) {
-            printVisitors.print(binaryOperationConstant.getOperator().toString());
-            printVisitors.print(' ');
-            printVisitors.print(binaryOperationConstant.getType().toString());
-            if (binaryOperationConstant.getLHS() instanceof Constant) {
-                printVisitors.print(' ');
-                printVisitors.getIRWriterUtil().printConstantValue((Constant) binaryOperationConstant.getLHS());
-            } else {
-                printVisitors.print(' ');
-                printVisitors.print(binaryOperationConstant.getLHS().getType());
-                printVisitors.print(' ');
-                printVisitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getLHS());
-            }
-            printVisitors.print(',');
-            if (binaryOperationConstant.getRHS() instanceof Constant) {
-                printVisitors.print(' ');
-                printVisitors.getIRWriterUtil().printConstantValue((Constant) binaryOperationConstant.getRHS());
-            } else {
-                printVisitors.print(' ');
-                printVisitors.print(binaryOperationConstant.getRHS().getType());
-                printVisitors.print(' ');
-                printVisitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getRHS());
-            }
-            printVisitors.print(' ');
-            printVisitors.print(binaryOperationConstant.getType());
-            printVisitors.print(' ');
-            printVisitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getLHS());
-            printVisitors.print(", ");
-            printVisitors.getIRWriterUtil().printSymbolName(binaryOperationConstant.getRHS());
-        }
-
-        @Override
-        public void visit(BlockAddressConstant blockAddressConstant) {
-            printVisitors.print(String.format("label %s", blockAddressConstant.getInstructionBlock().getName()));
-        }
-
-        @Override
-        public void visit(CastConstant castConstant) {
-            printVisitors.print(castConstant.getOperator());
-            printVisitors.print(' ');
-            printVisitors.print(castConstant.getValue().getType());
-            printVisitors.print(' ');
-            printVisitors.getIRWriterUtil().printSymbolName(castConstant.getValue());
-            printVisitors.print(' ');
-            printVisitors.print(castConstant.getType());
-        }
-
-        private static final String LLVMIR_LABEL_COMPARE = "icmp";
-        private static final String LLVMIR_LABEL_COMPARE_FP = "fcmp";
-
-        @Override
-        public void visit(CompareConstant compareConstant) {
-            if (compareConstant.getOperator().isFloatingPoint()) {
-                printVisitors.print(LLVMIR_LABEL_COMPARE_FP);
-            } else {
-                printVisitors.print(LLVMIR_LABEL_COMPARE);
-            }
-            printVisitors.print(' ');
-            printVisitors.print(compareConstant.getOperator());
-            printVisitors.print(' ');
-            printVisitors.print(compareConstant.getType());
-            printVisitors.print(' ');
-
-            if (compareConstant.getLHS() instanceof Constant) {
-                printVisitors.getIRWriterUtil().printConstantValue((Constant) compareConstant.getLHS());
-            } else {
-                printVisitors.getIRWriterUtil().printSymbolName(compareConstant.getLHS());
-            }
-
-            printVisitors.print(", ");
-            if (compareConstant.getRHS() instanceof Constant) {
-                printVisitors.getIRWriterUtil().printConstantValue((Constant) compareConstant.getRHS());
-            } else {
-                printVisitors.getIRWriterUtil().printSymbolName(compareConstant.getRHS());
-            }
-        }
-
-        @Override
-        public void visit(DoubleConstant doubleConstant) {
-            printVisitors.print(String.format(Locale.ROOT, "%.15f", doubleConstant.getValue()));
-        }
-
-        @Override
-        public void visit(FloatConstant floatConstant) {
-            printVisitors.print(String.format(Locale.ROOT, "%.6f", floatConstant.getValue()));
-        }
-
-        @Override
-        public void visit(X86FP80Constant x86fp80Constant) {
-            // TODO: remove dependency to getStringValue?
-            printVisitors.print(x86fp80Constant.getStringValue());
-        }
-
-        private static final String LLVMIR_LABEL_GET_ELEMENT_POINTER = "getelementptr";
-
-        @Override
-        public void visit(FunctionDeclaration functionDeclaration) {
-            // TODO: remove dependency to toString
-            Stream<String> argumentStream = Arrays.stream(functionDeclaration.getArgumentTypes()).map(Type::toString);
-            if (functionDeclaration.isVarArg()) {
-                argumentStream = Stream.concat(argumentStream, Stream.of("..."));
-            }
-            printVisitors.print(String.format("declare %s %s(%s)", functionDeclaration.getReturnType(), functionDeclaration.getName(),
-                            argumentStream.collect(Collectors.joining(", "))));
-        }
-
-        @Override
-        public void visit(FunctionDefinition functionDefinition) {
-            // TODO: remove dependency to toString
-            Stream<String> parameterStream = functionDefinition.getParameters().stream().map(FunctionParameter::toString);
-            if (functionDefinition.isVarArg()) {
-                parameterStream = Stream.concat(parameterStream, Stream.of("..."));
-            }
-
-            printVisitors.print(String.format("define %s %s(%s)", functionDefinition.getReturnType(), functionDefinition.getName(),
-                            parameterStream.collect(Collectors.joining(", "))));
-        }
-
-        @Override
-        public void visit(GetElementPointerConstant getElementPointerConstant) {
-            // getelementptr
-            printVisitors.print(LLVMIR_LABEL_GET_ELEMENT_POINTER);
-
-            // [inbounds]
-            if (getElementPointerConstant.isInbounds()) {
-                printVisitors.print(" inbounds");
-            }
-
-            // <pty>* <ptrval>
-            printVisitors.print(" (");
-            printVisitors.print(getElementPointerConstant.getBasePointer().getType());
-            printVisitors.print(' ');
-            printVisitors.getIRWriterUtil().printInnerSymbolValue(getElementPointerConstant.getBasePointer());
-
-            // {, <ty> <idx>}*
-            for (final Symbol sym : getElementPointerConstant.getIndices()) {
-                printVisitors.print(", ");
-                sym.getType().accept(printVisitors.getTypeVisitor());
-                printVisitors.print(" ");
-                printVisitors.getIRWriterUtil().printInnerSymbolValue(sym);
-            }
-
-            printVisitors.print(')');
-        }
-
-        private static final String LLVMIR_LABEL_ASM = "asm";
-
-        private static final String LLVMIR_ASM_KEYWORD_SIDEEFFECT = "sideeffect";
-
-        private static final String LLVMIR_ASM_KEYWORD_ALIGNSTACK = "alignstack";
-
-        @Override
-        public void visit(InlineAsmConstant inlineAsmConstant) {
-            final FunctionType decl = (FunctionType) ((PointerType) inlineAsmConstant.getType()).getPointeeType();
-
-            if (decl.getReturnType() != MetaType.VOID) {
-                printVisitors.print(decl.getReturnType());
-                printVisitors.print(' ');
-            }
-
-            if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
-                printVisitors.print(decl);
-                printTypeSignature(decl);
-                printVisitors.print(' ');
-            }
-
-            printVisitors.print(LLVMIR_LABEL_ASM);
-
-            if (inlineAsmConstant.hasSideEffects()) {
-                printVisitors.print(' ');
-                printVisitors.print(LLVMIR_ASM_KEYWORD_SIDEEFFECT);
-            }
-
-            if (inlineAsmConstant.needsAlignedStack()) {
-                printVisitors.print(' ');
-                printVisitors.print(LLVMIR_ASM_KEYWORD_ALIGNSTACK);
-            }
-
-            if (inlineAsmConstant.getDialect() != AsmDialect.AT_T) {
-                printVisitors.print(' ');
-                printVisitors.print(inlineAsmConstant.getDialect().getIrString());
-            }
-
-            printVisitors.print(' ');
-            printVisitors.print(inlineAsmConstant.getAsmExpression());
-
-            printVisitors.print(", ");
-            printVisitors.print(inlineAsmConstant.getAsmFlags());
-        }
-
-        // TODO: move into visitor?
-        private void printTypeSignature(FunctionType functionType) {
-            // TODO: remove dependency to toString
-            Stream<String> argTypeStream = Arrays.stream(functionType.getArgumentTypes()).map(Type::toString);
-            if (functionType.isVarArg()) {
-                argTypeStream = Stream.concat(argTypeStream, Stream.of("..."));
-            }
-            printVisitors.print(argTypeStream.collect(Collectors.joining(", ", "(", ")")));
-        }
-
-        @Override
-        public void visit(IntegerConstant integerConstant) {
-            if (integerConstant.getType().getBits() == 1) {
-                printVisitors.print(integerConstant.getValue() == 0 ? "false" : "true");
-            } else {
-                printVisitors.print(String.valueOf(integerConstant.getValue()));
-            }
-        }
-
-        @Override
-        public void visit(NullConstant nullConstant) {
-            if (nullConstant.getType() instanceof IntegerType) {
-                printVisitors.print(String.valueOf(0));
-            } else if (nullConstant.getType() instanceof FloatingPointType) {
-                printVisitors.print(String.valueOf(0.0));
-            } else {
-                printVisitors.print("null");
-            }
-        }
-
-        @Override
-        public void visit(StringConstant stringConstant) {
-            printVisitors.print("c\"");
-            for (int i = 0; i < stringConstant.getString().length(); i++) {
-                byte b = (byte) stringConstant.getString().charAt(i);
-                if (b < ' ' || b >= '~') {
-                    printVisitors.print(String.format("\\%02X", b));
-                } else {
-                    printVisitors.print((char) b);
-                }
-            }
-            if (stringConstant.getType() instanceof ArrayType && ((ArrayType) stringConstant.getType()).getLength() > stringConstant.getString().length()) {
-                printVisitors.print("\\00");
-            }
-            printVisitors.print("\"");
-        }
-
-        @Override
-        public void visit(UndefinedConstant undefinedConstant) {
-            printVisitors.print("undef");
-        }
-
+        out.print("undef");
     }
 }

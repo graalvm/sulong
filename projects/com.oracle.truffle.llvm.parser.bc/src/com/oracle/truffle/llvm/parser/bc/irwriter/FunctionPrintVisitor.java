@@ -33,25 +33,28 @@ import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-public final class FunctionPrintVisitor implements FunctionVisitor {
+final class FunctionPrintVisitor implements FunctionVisitor {
 
-    private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
+    private final LLVMPrintVersion.LLVMPrintVisitors visitors;
 
-    public FunctionPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
-        this.printVisitors = printVisitors;
+    private final LLVMIRPrinter.PrintTarget out;
+
+    FunctionPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
+        this.visitors = visitors;
+        this.out = target;
     }
 
     @Override
     public void visit(InstructionBlock block) {
         if (!block.getName().equals(ValueSymbol.UNKNOWN)) {
             if (isNamedLabel(block.getName())) {
-                printVisitors.println(String.format("%s:", block.getName().substring(1)));
+                out.println(String.format("%s:", block.getName().substring(1)));
             } else {
-                printVisitors.println(String.format("; <label>:%s:", block.getName().substring(1)));
+                out.println(String.format("; <label>:%s:", block.getName().substring(1)));
             }
         }
-        block.accept(printVisitors.getInstructionVisitor());
-        printVisitors.println();
+        block.accept(visitors.getInstructionVisitor());
+        out.println();
     }
 
     private static boolean isNamedLabel(String label) {

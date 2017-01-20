@@ -33,43 +33,46 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-public final class IRWriterUtil {
+final class IRWriterUtil {
 
     private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
 
-    public IRWriterUtil(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
+    private final LLVMIRPrinter.PrintTarget out;
+
+    IRWriterUtil(LLVMPrintVersion.LLVMPrintVisitors printVisitors, LLVMIRPrinter.PrintTarget target) {
         this.printVisitors = printVisitors;
+        this.out = target;
     }
 
-    public void printSymbol(Symbol symbol) {
+    private void printSymbol(Symbol symbol) {
         if (symbol instanceof Constant) {
             ((Constant) symbol).accept(printVisitors.getConstantVisitor());
         } else {
-            printVisitors.print(symbol); // TODO: put warning
+            out.print(symbol.toString()); // TODO: put warning
         }
     }
 
-    public void printSymbolName(Symbol symbol) {
+    void printSymbolName(Symbol symbol) {
         if (symbol instanceof ValueSymbol) {
-            printVisitors.print(((ValueSymbol) symbol).getName());
+            out.print(((ValueSymbol) symbol).getName());
         } else {
             printSymbol(symbol); // TODO
         }
     }
 
-    public void printInnerSymbolValue(Symbol symbol) {
+    void printInnerSymbolValue(Symbol symbol) {
         if (symbol instanceof ValueSymbol) {
-            printVisitors.print(((ValueSymbol) symbol).getName());
+            out.print(((ValueSymbol) symbol).getName());
 
         } else if (symbol instanceof Constant) {
-            ((Constant) symbol).accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
+            ((Constant) symbol).accept(printVisitors.getConstantVisitor());
 
         } else {
             throw new IllegalStateException("Cannot print this value: " + symbol);
         }
     }
 
-    public void printConstantValue(Constant symbol) {
-        symbol.accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
+    void printConstantValue(Constant symbol) {
+        symbol.accept(printVisitors.getConstantVisitor());
     }
 }

@@ -29,12 +29,10 @@
  */
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
-import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.oracle.truffle.llvm.parser.api.model.Model;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
@@ -46,19 +44,20 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.NullConstant;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
-import com.oracle.truffle.llvm.runtime.LLVMLogger;
-import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-public final class ModelPrintVisitor implements ModelVisitor {
+final class ModelPrintVisitor implements ModelVisitor {
 
-    private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
+    private final LLVMPrintVersion.LLVMPrintVisitors visitors;
 
-    public ModelPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
-        this.printVisitors = printVisitors;
+    private final LLVMIRPrinter.PrintTarget out;
+
+    ModelPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
+        this.visitors = visitors;
+        this.out = target;
     }
 
     @Override
@@ -69,103 +68,103 @@ public final class ModelPrintVisitor implements ModelVisitor {
 
     @Override
     public void visit(GlobalAlias alias) {
-        printVisitors.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
+        out.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
         if (alias.getVisibility() != Visibility.DEFAULT) {
-            printVisitors.print(String.format(" %s", alias.getVisibility()));
+            out.print(String.format(" %s", alias.getVisibility()));
         }
-        printVisitors.print(String.format(" %s", alias.getType()));
-        printVisitors.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
+        out.print(String.format(" %s", alias.getType()));
+        out.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
     }
 
     @Override
     public void visit(GlobalConstant constant) {
-        printVisitors.print(constant.getName());
-        printVisitors.print(" = ");
+        out.print(constant.getName());
+        out.print(" = ");
         if (constant.getVisibility() != Visibility.DEFAULT) {
-            printVisitors.print(constant.getVisibility().getIrString());
-            printVisitors.print(" ");
+            out.print(constant.getVisibility().getIrString());
+            out.print(" ");
         }
-        printVisitors.print(constant.getLinkage().getIrString());
-        printVisitors.print(" constant ");
+        out.print(constant.getLinkage().getIrString());
+        out.print(" constant ");
 
-        ((PointerType) constant.getType()).getPointeeType().accept(printVisitors.getTypeVisitor());
-        printVisitors.print(" ");
+        ((PointerType) constant.getType()).getPointeeType().accept(visitors.getTypeVisitor());
+        out.print(" ");
 
         if (constant.getValue() == null || constant.getValue() instanceof NullConstant) {
-            printVisitors.print("zeroinitializer");
+            out.print("zeroinitializer");
 
         } else if (constant.getValue() instanceof Constant) {
-            ((Constant) constant.getValue()).accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
+            ((Constant) constant.getValue()).accept(visitors.getConstantVisitor());
         } else {
             throw new AssertionError("Cannot print Global Constant with non-constant value: " + constant.getValue());
         }
 
-        printVisitors.print(", align ");
-        printVisitors.println(String.valueOf(1 << (constant.getAlign() - 1)));
+        out.print(", align ");
+        out.println(String.valueOf(1 << (constant.getAlign() - 1)));
     }
 
     @Override
     public void visit(GlobalVariable variable) {
-        printVisitors.print(variable.getName());
-        printVisitors.print(" = ");
+        out.print(variable.getName());
+        out.print(" = ");
         if (variable.getVisibility() != Visibility.DEFAULT) {
-            printVisitors.print(variable.getVisibility().getIrString());
-            printVisitors.print(" ");
+            out.print(variable.getVisibility().getIrString());
+            out.print(" ");
         }
-        printVisitors.print(variable.getLinkage().getIrString());
-        printVisitors.print(" global ");
+        out.print(variable.getLinkage().getIrString());
+        out.print(" global ");
 
-        ((PointerType) variable.getType()).getPointeeType().accept(printVisitors.getTypeVisitor());
-        printVisitors.print(" ");
+        ((PointerType) variable.getType()).getPointeeType().accept(visitors.getTypeVisitor());
+        out.print(" ");
 
         if (variable.getValue() == null || variable.getValue() instanceof NullConstant) {
-            printVisitors.print("zeroinitializer");
+            out.print("zeroinitializer");
 
         } else if (variable.getValue() instanceof Constant) {
-            ((Constant) variable.getValue()).accept(printVisitors.getConstantVisitor().getStringRepresentationVisitor());
+            ((Constant) variable.getValue()).accept(visitors.getConstantVisitor());
 
         } else if (variable.getValue() instanceof ValueSymbol) {
-            printVisitors.print(((ValueSymbol) variable.getValue()).getName());
+            out.print(((ValueSymbol) variable.getValue()).getName());
 
         } else {
             throw new IllegalStateException("Cannot print Global with value: " + variable.getValue());
         }
 
-        printVisitors.print(", align ");
-        printVisitors.println(String.valueOf(1 << (variable.getAlign() - 1)));
+        out.print(", align ");
+        out.println(String.valueOf(1 << (variable.getAlign() - 1)));
     }
 
     @Override
     public void visit(FunctionDeclaration function) {
-        printVisitors.println();
+        out.println();
         Stream<String> argumentStream = Arrays.stream(function.getArgumentTypes()).map(Type::toString);
         if (function.isVarArg()) {
             argumentStream = Stream.concat(argumentStream, Stream.of("..."));
         }
-        printVisitors.println(String.format("declare %s %s(%s)", function.getReturnType().toString(), function.getName(),
+        out.println(String.format("declare %s %s(%s)", function.getReturnType().toString(), function.getName(),
                         argumentStream.collect(Collectors.joining(", "))));
     }
 
     @Override
     public void visit(FunctionDefinition function) {
-        printVisitors.println();
-        Stream<String> parameterStream = function.getParameters().stream().map(f -> functionParameterToLLVMIR(f));
+        out.println();
+        Stream<String> parameterStream = function.getParameters().stream().map(ModelPrintVisitor::functionParameterToLLVMIR);
         if (function.isVarArg()) {
             parameterStream = Stream.concat(parameterStream, Stream.of("..."));
         }
 
-        printVisitors.println(String.format("define %s %s(%s) {", function.getReturnType().toString(), function.getName(),
+        out.println(String.format("define %s %s(%s) {", function.getReturnType().toString(), function.getName(),
                         parameterStream.collect(Collectors.joining(", "))));
 
-        function.accept(printVisitors.getFunctionVisitor());
-        printVisitors.println("}");
+        function.accept(visitors.getFunctionVisitor());
+        out.println("}");
     }
 
     @Override
     public void visit(TargetDataLayout layout) {
         final String layoutString = layout.getDataLayout();
-        printVisitors.println(String.format("target datalayout = \"%s\"", layoutString));
-        printVisitors.println();
+        out.println(String.format("target datalayout = \"%s\"", layoutString));
+        out.println();
     }
 
     private static String functionParameterToLLVMIR(FunctionParameter param) {
@@ -181,25 +180,8 @@ public final class ModelPrintVisitor implements ModelVisitor {
     public void visit(Type type) {
         if (type instanceof StructureType && !((StructureType) type).getName().equals(ValueSymbol.UNKNOWN)) {
             StructureType actualType = (StructureType) type;
-            printVisitors.println(String.format("%%%s = type %s", actualType.getName(), actualType.toDeclarationString()));
-            printVisitors.println();
+            out.println(String.format("%%%s = type %s", actualType.getName(), actualType.toDeclarationString()));
+            out.println();
         }
-    }
-
-    public static String getIRString(Model model) {
-        if ("3.2".equals(LLVMOptions.ENGINE.llvmVersion())) {
-            return getIRString(model, LLVMPrintVersion.LLVM_3_2);
-        } else {
-            LLVMLogger.info(String.format("No explicit LLVMIR-Printer for version %s, falling back to 3.2!", LLVMOptions.ENGINE.llvmVersion()));
-            return getIRString(model, LLVMPrintVersion.LLVM_3_2);
-        }
-    }
-
-    public static String getIRString(Model model, LLVMPrintVersion printVersion) {
-        // TODO add Top-Level Structures like TargetDataLayout
-        final StringWriter strOut = new StringWriter();
-        final LLVMPrintVersion.LLVMPrintVisitors visitors = printVersion.createPrintVisitors(strOut);
-        model.accept(visitors.getModelVisitor());
-        return strOut.toString();
     }
 }

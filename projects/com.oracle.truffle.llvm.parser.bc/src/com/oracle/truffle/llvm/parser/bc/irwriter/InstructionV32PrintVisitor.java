@@ -70,12 +70,15 @@ import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
-public final class InstructionV32PrintVisitor implements InstructionVisitor {
+final class InstructionV32PrintVisitor implements InstructionVisitor {
 
-    private final LLVMPrintVersion.LLVMPrintVisitors printVisitors;
+    private final LLVMPrintVersion.LLVMPrintVisitors visitors;
 
-    public InstructionV32PrintVisitor(LLVMPrintVersion.LLVMPrintVisitors printVisitors) {
-        this.printVisitors = printVisitors;
+    private final LLVMIRPrinter.PrintTarget out;
+
+    InstructionV32PrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
+        this.visitors = visitors;
+        this.out = target;
     }
 
     private static final String INDENTATION = "    ";
@@ -92,58 +95,58 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(AllocateInstruction allocate) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = alloca <type>
-        printVisitors.print(String.format("%s = %s %s", allocate.getName(), LLVMIR_LABEL_ALLOCATE, allocate.getPointeeType()));
+        out.print(String.format("%s = %s %s", allocate.getName(), LLVMIR_LABEL_ALLOCATE, allocate.getPointeeType()));
 
         // [, <ty> <NumElements>]
         if (!(allocate.getCount() instanceof IntegerConstant && ((IntegerConstant) allocate.getCount()).getValue() == 1)) {
-            printVisitors.print(String.format(", %s %s", allocate.getCount().getType(), allocate.getCount()));
+            out.print(String.format(", %s %s", allocate.getCount().getType(), allocate.getCount()));
         }
 
         // [, align <alignment>]
         if (allocate.getAlign() != 0) {
-            printVisitors.print(String.format(", align %d", 1 << (allocate.getAlign() - 1)));
+            out.print(String.format(", align %d", 1 << (allocate.getAlign() - 1)));
         }
 
-        printVisitors.println();
+        out.println();
     }
 
     @Override
     public void visit(BinaryOperationInstruction operation) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = <op>
-        printVisitors.print(String.format("%s = %s", operation.getName(), operation.getOperator()));
+        out.print(String.format("%s = %s", operation.getName(), operation.getOperator()));
 
         // { <flag>}*
         for (Flag flag : operation.getFlags()) {
-            printVisitors.print(" " + flag);
+            out.print(" " + flag);
         }
 
         // <ty> <op1>, <op2>
-        printVisitors.print(String.format(" %s %s, %s", operation.getType(),
+        out.print(String.format(" %s %s, %s", operation.getType(),
                         getSymbolName(operation.getLHS()),
                         getSymbolName(operation.getRHS())));
 
-        printVisitors.println();
+        out.println();
     }
 
     private static final String LLVMIR_LABEL_BRANCH = "br";
 
     @Override
     public void visit(BranchInstruction branch) {
-        printVisitors.print(INDENTATION);
-        printVisitors.println(String.format("%s label %s", LLVMIR_LABEL_BRANCH, branch.getSuccessor().getName()));
+        out.print(INDENTATION);
+        out.println(String.format("%s label %s", LLVMIR_LABEL_BRANCH, branch.getSuccessor().getName()));
     }
 
     private static final String LLVMIR_LABEL_CALL = "call";
 
     @Override
     public void visit(CallInstruction call) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = [tail] call
-        printVisitors.print(String.format("%s = %s", call.getName(), LLVMIR_LABEL_CALL)); // TODO:
-                                                                                          // [tail]
+        out.print(String.format("%s = %s", call.getName(), LLVMIR_LABEL_CALL)); // TODO:
+                                                                                // [tail]
 
         // [cconv] [ret attrs]
         // TODO: implement
@@ -152,27 +155,27 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
             // <ty>
             final FunctionType decl = (FunctionType) call.getCallTarget();
 
-            printVisitors.print(" ");
-            decl.getReturnType().accept(printVisitors.getTypeVisitor());
+            out.print(" ");
+            decl.getReturnType().accept(visitors.getTypeVisitor());
 
             if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
-                printVisitors.print(" (");
+                out.print(" (");
                 final Type[] argTypes = decl.getArgumentTypes();
                 for (int i = 0; i < argTypes.length; i++) {
                     if (i != 0) {
-                        printVisitors.print(", ");
+                        out.print(", ");
                     }
-                    argTypes[i].accept(printVisitors.getTypeVisitor());
+                    argTypes[i].accept(visitors.getTypeVisitor());
                 }
                 if (decl.isVarArg()) {
                     if (argTypes.length != 0) {
-                        printVisitors.print(", ");
+                        out.print(", ");
                     }
-                    printVisitors.print("...");
+                    out.print("...");
                 }
-                printVisitors.print(")*");
+                out.print(")*");
             }
-            printVisitors.print(String.format(" %s", decl.getName()));
+            out.print(String.format(" %s", decl.getName()));
 
         } else if (call.getCallTarget() instanceof LoadInstruction) {
             Type targetType = ((LoadInstruction) call.getCallTarget()).getSource().getType();
@@ -180,16 +183,16 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
                 targetType = ((PointerType) targetType).getPointeeType();
             }
             if (targetType instanceof FunctionType) {
-                printVisitors.print(String.format(" %s %s ", ((FunctionType) targetType).getReturnType(), getSymbolName(call.getCallTarget())));
+                out.print(String.format(" %s %s ", ((FunctionType) targetType).getReturnType(), getSymbolName(call.getCallTarget())));
             } else {
                 throw new AssertionError("unexpected target type: " + targetType.getClass().getName());
             }
 
         } else if (call.getCallTarget() instanceof FunctionParameter) {
-            printVisitors.print(String.format(" %s ", call.getCallTarget().getType().toString()));
+            out.print(String.format(" %s ", call.getCallTarget().getType().toString()));
 
         } else if (call.getCallTarget() instanceof InlineAsmConstant) {
-            printVisitors.print(String.format(" %s ", call.getCallTarget().toString()));
+            out.print(String.format(" %s ", call.getCallTarget().toString()));
 
         } else {
             throw new AssertionError("unexpected target type: " + call.getCallTarget().getClass().getName());
@@ -199,29 +202,29 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
         // [fn attrs]
         // TODO: implement
-        printVisitors.println();
+        out.println();
     }
 
     private void printActualArgs(Call call) {
-        printVisitors.print("(");
+        out.print("(");
         for (int i = 0; i < call.getArgumentCount(); i++) {
             final Symbol arg = call.getArgument(i);
 
             if (i != 0) {
-                printVisitors.print(", ");
+                out.print(", ");
             }
 
-            arg.getType().accept(printVisitors.getTypeVisitor());
-            printVisitors.print(" ");
-            printVisitors.getIRWriterUtil().printInnerSymbolValue(arg);
+            arg.getType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+            visitors.getIRWriterUtil().printInnerSymbolValue(arg);
         }
-        printVisitors.print(")");
+        out.print(")");
     }
 
     @Override
     public void visit(CastInstruction cast) {
-        printVisitors.print(INDENTATION);
-        printVisitors.println(String.format("%s = %s %s %s to %s", cast.getName(), cast.getOperator(), cast.getValue().getType(), getSymbolName(cast.getValue()), cast.getType()));
+        out.print(INDENTATION);
+        out.println(String.format("%s = %s %s %s to %s", cast.getName(), cast.getOperator(), cast.getValue().getType(), getSymbolName(cast.getValue()), cast.getType()));
     }
 
     private static final String LLVMIR_LABEL_COMPARE = "icmp";
@@ -229,14 +232,14 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(CompareInstruction operation) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         if (operation.getOperator().isFloatingPoint()) {
             // <result> = fcmp <cond> <ty> <op1>, <op2>
-            printVisitors.println(String.format("%s = %s %s %s %s, %s", operation.getName(), LLVMIR_LABEL_COMPARE_FP, operation.getOperator(), operation.getBaseType(),
+            out.println(String.format("%s = %s %s %s %s, %s", operation.getName(), LLVMIR_LABEL_COMPARE_FP, operation.getOperator(), operation.getBaseType(),
                             getSymbolName(operation.getLHS()), getSymbolName(operation.getRHS())));
         } else {
             // <result> = icmp <cond> <ty> <op1>, <op2>
-            printVisitors.println(String.format("%s = %s %s %s %s, %s", operation.getName(), LLVMIR_LABEL_COMPARE, operation.getOperator(), operation.getBaseType(),
+            out.println(String.format("%s = %s %s %s %s, %s", operation.getName(), LLVMIR_LABEL_COMPARE, operation.getOperator(), operation.getBaseType(),
                             getSymbolName(operation.getLHS()), getSymbolName(operation.getRHS())));
         }
     }
@@ -245,9 +248,9 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(ConditionalBranchInstruction branch) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // br i1 <cond>, label <iftrue>, label <iffalse>
-        printVisitors.println(String.format("%s %s %s, label %s, label %s", LLVMIR_LABEL_CONDITIONAL_BRANCH,
+        out.println(String.format("%s %s %s, label %s, label %s", LLVMIR_LABEL_CONDITIONAL_BRANCH,
                         branch.getCondition().getType(), getSymbolName(branch.getCondition()),
                         branch.getTrueSuccessor().getName(),
                         branch.getFalseSuccessor().getName()));
@@ -257,9 +260,9 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(ExtractElementInstruction extract) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = extractelement <n x <ty>> <val>, i32 <idx>
-        printVisitors.println(String.format("%s = %s %s %s, %s %s", extract.getName(), LLVMIR_LABEL_EXTRACT_ELEMENT,
+        out.println(String.format("%s = %s %s %s, %s %s", extract.getName(), LLVMIR_LABEL_EXTRACT_ELEMENT,
                         extract.getVector().getType(), getSymbolName(extract.getVector()),
                         extract.getIndex().getType(), getSymbolName(extract.getIndex())));
     }
@@ -268,9 +271,9 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(ExtractValueInstruction extract) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = extractvalue <aggregate type> <val>, <idx>{, <idx>}*
-        printVisitors.println(String.format("%s = %s %s %s, %d", extract.getName(), LLVMIR_LABEL_EXTRACT_VALUE,
+        out.println(String.format("%s = %s %s %s, %d", extract.getName(), LLVMIR_LABEL_EXTRACT_VALUE,
                         extract.getAggregate().getType(), getSymbolName(extract.getAggregate()),
                         extract.getIndex()));
     }
@@ -279,38 +282,38 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(GetElementPointerInstruction gep) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = getelementptr
-        printVisitors.print(String.format("%s = %s", gep.getName(), LLVMIR_LABEL_GET_ELEMENT_POINTER));
+        out.print(String.format("%s = %s", gep.getName(), LLVMIR_LABEL_GET_ELEMENT_POINTER));
 
         // [inbounds]
         if (gep.isInbounds()) {
-            printVisitors.print(" inbounds");
+            out.print(" inbounds");
         }
 
         // <pty>* <ptrval>
-        printVisitors.print(String.format(" %s %s", gep.getBasePointer().getType(), getSymbolName(gep.getBasePointer())));
+        out.print(String.format(" %s %s", gep.getBasePointer().getType(), getSymbolName(gep.getBasePointer())));
 
         // {, <ty> <idx>}*
         for (Symbol sym : gep.getIndices()) {
             if (sym instanceof Constant) {
-                printVisitors.print(String.format(", %s", sym.toString()));
+                out.print(String.format(", %s", sym.toString()));
             } else {
-                printVisitors.print(String.format(", %s %s", sym.getType().toString(), getSymbolName(sym)));
+                out.print(String.format(", %s %s", sym.getType().toString(), getSymbolName(sym)));
             }
         }
 
-        printVisitors.println();
+        out.println();
     }
 
     private static final String LLVMIR_LABEL_INDIRECT_BRANCH = "indirectbr";
 
     @Override
     public void visit(IndirectBranchInstruction branch) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // indirectbr <somety>* <address>, [ label <dest1>, label <dest2>, ... ]
         // @formatter:off
-        printVisitors.println(String.format("%s %s %s, [ %s ]", LLVMIR_LABEL_INDIRECT_BRANCH,
+        out.println(String.format("%s %s %s, [ %s ]", LLVMIR_LABEL_INDIRECT_BRANCH,
                         branch.getAddress().getType(), getSymbolName(branch.getAddress()),
                         branch.getSuccessors().stream().map(s ->
                              String.format("label %s", s.getName())
@@ -322,9 +325,9 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(InsertElementInstruction insert) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = insertelement <n x <ty>> <val>, <ty> <elt>, i32 <idx>
-        printVisitors.println(String.format("%s = %s %s %s, %s %s, %s %s", insert.getName(), LLVMIR_LABEL_INSERT_ELEMENT,
+        out.println(String.format("%s = %s %s %s, %s %s, %s %s", insert.getName(), LLVMIR_LABEL_INSERT_ELEMENT,
                         insert.getVector().getType(), getSymbolName(insert.getVector()),
                         insert.getValue().getType(), getSymbolName(insert.getValue()),
                         insert.getIndex().getType(), getSymbolName(insert.getIndex())));
@@ -334,9 +337,9 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(InsertValueInstruction insert) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = insertvalue <aggregate type> <val>, <ty> <elt>, <idx>{, <idx>}*
-        printVisitors.println(String.format("%s = %s %s %s, %s %s, %d", insert.getName(), LLVMIR_LABEL_INSERT_VALUE,
+        out.println(String.format("%s = %s %s %s, %s %s, %d", insert.getName(), LLVMIR_LABEL_INSERT_VALUE,
                         insert.getAggregate().getType(), getSymbolName(insert.getAggregate()),
                         insert.getValue().getType(), getSymbolName(insert.getValue()),
                         insert.getIndex()));
@@ -346,79 +349,79 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(LoadInstruction load) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = load
-        printVisitors.print(String.format("%s = %s", load.getName(), LLVMIR_LABEL_LOAD));
+        out.print(String.format("%s = %s", load.getName(), LLVMIR_LABEL_LOAD));
 
         if (load.getAtomicOrdering() == AtomicOrdering.NOT_ATOMIC) {
             // [volatile]
             if (load.isVolatile()) {
-                printVisitors.print(" volatile");
+                out.print(" volatile");
             }
 
             // <ty>* <pointer>
-            printVisitors.print(String.format(" %s %s", load.getSource().getType(), getSymbolName(load.getSource())));
+            out.print(String.format(" %s %s", load.getSource().getType(), getSymbolName(load.getSource())));
 
             // [, align <alignment>]
             if (load.getAlign() != 0) {
-                printVisitors.print(String.format(", align %d", 1 << (load.getAlign() - 1)));
+                out.print(String.format(", align %d", 1 << (load.getAlign() - 1)));
             }
 
             // [, !nontemporal !<index>][, !invariant.load !<index>]
             // TODO: implement
         } else {
             // atomic
-            printVisitors.print(" atomic");
+            out.print(" atomic");
 
             // [volatile]
             if (load.isVolatile()) {
-                printVisitors.print(" volatile");
+                out.print(" volatile");
             }
 
             // <ty>* <pointer>
-            printVisitors.print(String.format(" %s %s", load.getSource().getType(), getSymbolName(load.getSource())));
+            out.print(String.format(" %s %s", load.getSource().getType(), getSymbolName(load.getSource())));
 
             // [singlethread]
             if (load.getSynchronizationScope() == SynchronizationScope.SINGLE_THREAD) {
-                printVisitors.print(" singlethread");
+                out.print(" singlethread");
             }
 
             // <ordering>, align <alignment>
-            printVisitors.print(String.format(" %s, align %d", load.getAtomicOrdering(), 1 << (load.getAlign() - 1)));
+            out.print(String.format(" %s, align %d", load.getAtomicOrdering(), 1 << (load.getAlign() - 1)));
         }
 
-        printVisitors.println();
+        out.println();
     }
 
     private static final String LLVMIR_LABEL_PHI = "phi";
 
     @Override
     public void visit(PhiInstruction phi) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = phi <ty>
-        printVisitors.print(String.format("%s = %s %s", phi.getName(), LLVMIR_LABEL_PHI, phi.getType()));
+        out.print(String.format("%s = %s %s", phi.getName(), LLVMIR_LABEL_PHI, phi.getType()));
 
         // [ <val0>, <label0>], ...
         // @formatter:off
-        printVisitors.print(IntStream.range(0, phi.getSize()).mapToObj(i ->
+        out.print(IntStream.range(0, phi.getSize()).mapToObj(i ->
                             String.format(" [ %s, %s ]", getSymbolName(phi.getValue(i)), phi.getBlock(i).getName())
                         ).collect(Collectors.joining(",")));
         // @formatter:on
 
-        printVisitors.println();
+        out.println();
     }
 
     private static final String LLVMIR_LABEL_RETURN = "ret";
 
     @Override
     public void visit(ReturnInstruction ret) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         if (ret.getValue() == null) {
             // ret void
-            printVisitors.println(String.format("%s void", LLVMIR_LABEL_RETURN));
+            out.println(String.format("%s void", LLVMIR_LABEL_RETURN));
         } else {
             // ret <type> <value>
-            printVisitors.println(String.format("%s %s %s", LLVMIR_LABEL_RETURN, ret.getValue().getType(), getSymbolName(ret.getValue())));
+            out.println(String.format("%s %s %s", LLVMIR_LABEL_RETURN, ret.getValue().getType(), getSymbolName(ret.getValue())));
         }
     }
 
@@ -426,9 +429,9 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(SelectInstruction select) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = select selty <cond>, <ty> <val1>, <ty> <val2>
-        printVisitors.println(String.format("%s = %s %s %s, %s %s, %s %s", select.getName(), LLVMIR_LABEL_SELECT,
+        out.println(String.format("%s = %s %s %s, %s %s, %s %s", select.getName(), LLVMIR_LABEL_SELECT,
                         select.getCondition().getType(), getSymbolName(select.getCondition()),
                         select.getTrueValue().getType(), getSymbolName(select.getTrueValue()),
                         select.getFalseValue().getType(), getSymbolName(select.getFalseValue())));
@@ -438,9 +441,9 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(ShuffleVectorInstruction shuffle) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // <result> = shufflevector <n x <ty>> <v1>, <n x <ty>> <v2>, <m x i32> <mask>
-        printVisitors.println(String.format("%s = %s %s %s, %s %s, %s %s", shuffle.getName(), LLVMIR_LABEL_SHUFFLE_VECTOR,
+        out.println(String.format("%s = %s %s %s, %s %s, %s %s", shuffle.getName(), LLVMIR_LABEL_SHUFFLE_VECTOR,
                         shuffle.getVector1().getType(), getSymbolName(shuffle.getVector1()),
                         shuffle.getVector2().getType(), getSymbolName(shuffle.getVector2()),
                         shuffle.getMask().getType(), getSymbolName(shuffle.getMask())));
@@ -450,35 +453,35 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
 
     @Override
     public void visit(StoreInstruction store) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
 
-        printVisitors.print(String.format("%s ", LLVMIR_LABEL_STORE));
+        out.print(String.format("%s ", LLVMIR_LABEL_STORE));
 
         if (store.getAtomicOrdering() != AtomicOrdering.NOT_ATOMIC) {
-            printVisitors.print("atomic ");
+            out.print("atomic ");
         }
 
         if (store.isVolatile()) {
-            printVisitors.print("volatile ");
+            out.print("volatile ");
         }
 
-        ((PointerType) store.getDestination().getType()).getPointeeType().accept(printVisitors.getTypeVisitor());
-        printVisitors.print(" ");
-        printVisitors.getIRWriterUtil().printInnerSymbolValue(store.getSource());
-        printVisitors.print(", ");
-        store.getDestination().getType().accept(printVisitors.getTypeVisitor());
-        printVisitors.print(" ");
-        printVisitors.getIRWriterUtil().printInnerSymbolValue(store.getDestination());
+        ((PointerType) store.getDestination().getType()).getPointeeType().accept(visitors.getTypeVisitor());
+        out.print(" ");
+        visitors.getIRWriterUtil().printInnerSymbolValue(store.getSource());
+        out.print(", ");
+        store.getDestination().getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
+        visitors.getIRWriterUtil().printInnerSymbolValue(store.getDestination());
 
         if (store.getAtomicOrdering() != AtomicOrdering.NOT_ATOMIC) {
             if (store.getSynchronizationScope() == SynchronizationScope.SINGLE_THREAD) {
-                printVisitors.print(" singlethread ");
+                out.print(" singlethread ");
             }
 
-            printVisitors.print(store.getAtomicOrdering());
+            out.print(store.getAtomicOrdering().toString());
         }
 
-        printVisitors.println(String.format(", align %d", 1 << (store.getAlign() - 1)));
+        out.println(String.format(", align %d", 1 << (store.getAlign() - 1)));
     }
 
     public static final String LLVMIR_LABEL_SWITCH = "switch";
@@ -488,20 +491,20 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
         // switch <intty> <value>, label <defaultdest>
         String mainStr = INDENTATION;
         mainStr += String.format("%s %s %s, label %s", LLVMIR_LABEL_SWITCH, select.getCondition().getType(), getSymbolName(select.getCondition()), select.getDefaultBlock().getName());
-        printVisitors.print(mainStr);
+        out.print(mainStr);
         // [ <intty> <val>, label <dest> ... ]
-        printVisitors.print(" [");
+        out.print(" [");
         // @formatter:off
         final String indent = buildIndent(mainStr.length() + 2);
-        printVisitors.print(IntStream.range(0, select.getCaseCount()).mapToObj(i -> {
+        out.print(IntStream.range(0, select.getCaseCount()).mapToObj(i -> {
                         final Symbol val = select.getCaseValue(i);
                         final Symbol blk = select.getCaseBlock(i);
                         return String.format("%s %s, label %s", val.getType(), getSymbolName(val), getSymbolName(blk));
                     }).collect(Collectors.joining(indent)));
         // @formatter:on
-        printVisitors.print("]");
+        out.print("]");
 
-        printVisitors.println();
+        out.println();
     }
 
     private static String buildIndent(int length) {
@@ -521,38 +524,38 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
         String mainStr = INDENTATION;
         mainStr += String.format("%s %s %s, label %s", LLVMIR_LABEL_SWITCH_OLD, select.getCondition().getType(), getSymbolName(select.getCondition()),
                         select.getDefaultBlock().getName());
-        printVisitors.print(mainStr);
+        out.print(mainStr);
 
         // [ <intty> <val>, label <dest> ... ]
-        printVisitors.print(" [");
+        out.print(" [");
         // @formatter:off
         final String indent = buildIndent(mainStr.length() + 2);
-        printVisitors.print(IntStream.range(0, select.getCaseCount()).mapToObj(i -> {
+        out.print(IntStream.range(0, select.getCaseCount()).mapToObj(i -> {
                     final long val = select.getCaseValue(i);
                     final Symbol blk = select.getCaseBlock(i);
                     return String.format("%s %d, label %s", select.getCondition().getType(), val, getSymbolName(blk));
                 }).collect(Collectors.joining(indent)));
         // @formatter:on
-        printVisitors.print("]");
+        out.print("]");
 
-        printVisitors.println();
+        out.println();
     }
 
     private static final String LLVMIR_LABEL_UNREACHABLE = "unreachable";
 
     @Override
     public void visit(UnreachableInstruction unreachable) {
-        printVisitors.print(INDENTATION);
-        printVisitors.println(LLVMIR_LABEL_UNREACHABLE);
+        out.print(INDENTATION);
+        out.println(LLVMIR_LABEL_UNREACHABLE);
     }
 
     private static final String LLVMIR_LABEL_VOID_CALL = "call";
 
     @Override
     public void visit(VoidCallInstruction call) {
-        printVisitors.print(INDENTATION);
+        out.print(INDENTATION);
         // [tail] call
-        printVisitors.print(LLVMIR_LABEL_VOID_CALL); // TODO: [tail]
+        out.print(LLVMIR_LABEL_VOID_CALL); // TODO: [tail]
 
         // [cconv] [ret attrs]
         // TODO: implement
@@ -561,21 +564,21 @@ public final class InstructionV32PrintVisitor implements InstructionVisitor {
             // <ty>
             final FunctionType decl = (FunctionType) call.getCallTarget();
 
-            printVisitors.print(" ");
-            decl.getReturnType().accept(printVisitors.getTypeVisitor());
-            printVisitors.print(" ");
+            out.print(" ");
+            decl.getReturnType().accept(visitors.getTypeVisitor());
+            out.print(" ");
 
-            printVisitors.print(decl.getName());
+            out.print(decl.getName());
 
         } else if (call.getCallTarget() instanceof FunctionParameter) {
-            printVisitors.print(String.format(" %s", call.getCallTarget().getType()));
+            out.print(String.format(" %s", call.getCallTarget().getType()));
 
         } else {
             throw new AssertionError("unexpected target type");
         }
 
         printActualArgs(call);
-        printVisitors.println();
+        out.println();
 
         // [fn attrs]
         // TODO: implement
