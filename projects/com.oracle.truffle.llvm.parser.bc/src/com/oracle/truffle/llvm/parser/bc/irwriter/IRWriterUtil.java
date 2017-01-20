@@ -44,22 +44,6 @@ final class IRWriterUtil {
         this.out = target;
     }
 
-    private void printSymbol(Symbol symbol) {
-        if (symbol instanceof Constant) {
-            ((Constant) symbol).accept(printVisitors.getConstantVisitor());
-        } else {
-            out.print(symbol.toString()); // TODO: put warning
-        }
-    }
-
-    void printSymbolName(Symbol symbol) {
-        if (symbol instanceof ValueSymbol) {
-            out.print(((ValueSymbol) symbol).getName());
-        } else {
-            printSymbol(symbol); // TODO
-        }
-    }
-
     void printInnerSymbolValue(Symbol symbol) {
         if (symbol instanceof ValueSymbol) {
             out.print(((ValueSymbol) symbol).getName());
@@ -70,9 +54,5 @@ final class IRWriterUtil {
         } else {
             throw new IllegalStateException("Cannot print this value: " + symbol);
         }
-    }
-
-    void printConstantValue(Constant symbol) {
-        symbol.accept(printVisitors.getConstantVisitor());
     }
 }

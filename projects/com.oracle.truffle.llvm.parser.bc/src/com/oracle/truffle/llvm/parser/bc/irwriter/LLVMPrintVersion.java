@@ -83,31 +83,31 @@ enum LLVMPrintVersion {
         this.typeVisitor = typeVisitor;
     }
 
-    public ModelPrintVisitor createModelPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+    private ModelPrintVisitor createModelPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
         return modelVisitor.instantiate(out, target);
     }
 
-    public FunctionPrintVisitor createFunctionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+    private FunctionPrintVisitor createFunctionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
         return functionVisitor.instantiate(out, target);
     }
 
-    public InstructionV32PrintVisitor createInstructionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+    private InstructionV32PrintVisitor createInstructionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
         return instructionVisitor.instantiate(out, target);
     }
 
-    public ConstantPrintVisitor createConstantPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+    private ConstantPrintVisitor createConstantPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
         return constantVisitor.instantiate(out, target);
     }
 
-    public TypePrintVisitor createTypePrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+    private TypePrintVisitor createTypePrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
         return typeVisitor.instantiate(out, target);
     }
 
-    public LLVMPrintVisitors createPrintVisitors(LLVMIRPrinter.PrintTarget out) {
+    LLVMPrintVisitors createPrintVisitors(LLVMIRPrinter.PrintTarget out) {
         return new LLVMPrintVisitors(this, out);
     }
 
-    public static final class LLVMPrintVisitors {
+    static final class LLVMPrintVisitors {
 
         private final ModelPrintVisitor modelVisitor;
         private final FunctionPrintVisitor functionVisitor;
@@ -126,27 +126,27 @@ enum LLVMPrintVersion {
             this.irWriter = new IRWriterUtil(this, target);
         }
 
-        public ModelPrintVisitor getModelVisitor() {
+        ModelPrintVisitor getModelVisitor() {
             return modelVisitor;
         }
 
-        public FunctionPrintVisitor getFunctionVisitor() {
+        FunctionPrintVisitor getFunctionVisitor() {
             return functionVisitor;
         }
 
-        public InstructionV32PrintVisitor getInstructionVisitor() {
+        InstructionV32PrintVisitor getInstructionVisitor() {
             return instructionVisitor;
         }
 
-        public ConstantPrintVisitor getConstantVisitor() {
+        ConstantPrintVisitor getConstantVisitor() {
             return constantVisitor;
         }
 
-        public TypePrintVisitor getTypeVisitor() {
+        TypePrintVisitor getTypeVisitor() {
             return typeVisitor;
         }
 
-        public IRWriterUtil getIRWriterUtil() {
+        IRWriterUtil getIRWriterUtil() {
             return irWriter;
         }
     }
