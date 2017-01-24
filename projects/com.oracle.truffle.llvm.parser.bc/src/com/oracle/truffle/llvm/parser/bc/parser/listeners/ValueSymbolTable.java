@@ -42,22 +42,22 @@ public final class ValueSymbolTable implements ParserListener {
     }
 
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         ValueSymbolTableRecord record = ValueSymbolTableRecord.decode(id);
 
         switch (record) {
             case ENTRY:
-                final String entryName = Records.toString(args, 1);
+                final String entryName = Records.toString(args, 1, argCount);
                 generator.nameEntry((int) args[0], entryName);
                 break;
 
             case BASIC_BLOCK_ENTRY:
-                final String blockName = Records.toString(args, 1);
+                final String blockName = Records.toString(args, 1, argCount);
                 generator.nameBlock((int) args[0], blockName);
                 break;
 
             case FUNCTION_ENTRY:
-                final String functionName = Records.toString(args, 2);
+                final String functionName = Records.toString(args, 2, argCount);
                 generator.nameFunction((int) args[0], (int) args[1], functionName);
                 break;
 

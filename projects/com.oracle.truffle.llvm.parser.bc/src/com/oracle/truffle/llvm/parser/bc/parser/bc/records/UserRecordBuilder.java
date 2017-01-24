@@ -38,6 +38,10 @@ import com.oracle.truffle.llvm.parser.bc.parser.bc.ParserResult;
 
 public final class UserRecordBuilder implements Operation {
 
+    private static final int INITIAL_BUFFER_SIZE = 128;
+
+    private static long[] buffer = new long[INITIAL_BUFFER_SIZE];
+
     private final List<UserRecordOperand> operands;
 
     public UserRecordBuilder(List<UserRecordOperand> operands) {
@@ -46,25 +50,26 @@ public final class UserRecordBuilder implements Operation {
 
     @Override
     public Parser apply(Parser parser) {
-        ParserResult result = operands.get(0).get(parser);
+        int bufferIndex = 0;
+        ParserResult result = operands.get(0).get(parser, buffer, bufferIndex);
+        buffer = result.getBuffer();
+        bufferIndex = result.getBufferIndex();
         long id = result.getValue();
 
-        long[] ops = new long[operands.size() - 1];
-
-        int idx = 0;
         for (int i = 0; i < operands.size() - 1; i++) {
-            result = operands.get(i + 1).get(result.getParser());
-            long[] values = result.getValues();
-            if (idx + values.length > ops.length) {
-                ops = Arrays.copyOf(ops, idx + values.length);
-            } else if (values.length == 0) {
-                ops = Arrays.copyOf(ops, ops.length - 1);
+            result = operands.get(i + 1).get(result.getParser(), buffer, bufferIndex);
+            if (bufferIndex == result.getBufferIndex()) {
+                if (buffer.length <= bufferIndex) {
+                    buffer = Arrays.copyOf(buffer, bufferIndex * 2);
+                }
+                buffer[bufferIndex++] = result.getValue();
+            } else {
+                buffer = result.getBuffer();
+                bufferIndex = result.getBufferIndex();
             }
-            System.arraycopy(values, 0, ops, idx, values.length);
-            idx += values.length;
         }
 
-        result.getParser().handleRecord(id, ops);
+        result.getParser().handleRecord(id, buffer, bufferIndex);
 
         return result.getParser();
     }

@@ -48,8 +48,8 @@ import com.oracle.truffle.llvm.runtime.types.VectorType;
 
 public final class Types implements ParserListener, Iterable<Type> {
 
-    public static Type[] toTypes(Types types, long[] args, long from, long to) {
-        Type[] t = new Type[(int) (to - from)];
+    public static Type[] toTypes(Types types, long[] args, long from, long argCount) {
+        Type[] t = new Type[(int) (argCount - from)];
 
         for (int i = 0; i < t.length; i++) {
             t[i] = types.get(args[(int) from + i]);
@@ -74,7 +74,7 @@ public final class Types implements ParserListener, Iterable<Type> {
     }
 
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         TypesRecord record = TypesRecord.decode(id);
         Type type;
 
@@ -123,7 +123,7 @@ public final class Types implements ParserListener, Iterable<Type> {
             case FUNCTION_OLD: {
                 int i = 2;
                 Type returnType = get(args[i++]);
-                type = new FunctionType(returnType, toTypes(this, args, i, args.length), args[0] != 0);
+                type = new FunctionType(returnType, toTypes(this, args, i, argCount), args[0] != 0);
                 break;
             }
             case HALF:
@@ -159,11 +159,11 @@ public final class Types implements ParserListener, Iterable<Type> {
                 break;
 
             case STRUCT_ANON:
-                type = new StructureType(args[0] != 0, toTypes(this, args, 1, args.length));
+                type = new StructureType(args[0] != 0, toTypes(this, args, 1, argCount));
                 break;
 
             case STRUCT_NAME: {
-                String name = Records.toString(args);
+                String name = Records.toString(args, 0, argCount);
                 if (table[size] instanceof UnresolvedPointeeType) {
                     table[size] = new UnresolvedNamedPointeeType(name, ((UnresolvedPointeeType) table[size]).getIndex());
                 } else {
@@ -172,7 +172,7 @@ public final class Types implements ParserListener, Iterable<Type> {
                 return;
             }
             case STRUCT_NAMED: {
-                StructureType structure = new StructureType(args[0] != 0, toTypes(this, args, 1, args.length));
+                StructureType structure = new StructureType(args[0] != 0, toTypes(this, args, 1, argCount));
                 if (table[size] != null) {
                     if (table[size] instanceof UnresolvedNamedPointeeType) {
                         structure.setName(((UnresolvedNamedPointeeType) table[size]).getName());
@@ -184,7 +184,7 @@ public final class Types implements ParserListener, Iterable<Type> {
                 break;
             }
             case FUNCTION:
-                type = new FunctionType(get(args[1]), toTypes(this, args, 2, args.length), args[0] != 0);
+                type = new FunctionType(get(args[1]), toTypes(this, args, 2, argCount), args[0] != 0);
                 break;
 
             case TOKEN:

@@ -39,7 +39,7 @@ public final class UserRecordBinaryOperand extends UserRecordOperand {
     }
 
     @Override
-    protected ParserResult get(Parser parser) {
+    protected ParserResult get(Parser parser, long[] buffer, int bufferIndex) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -42,8 +42,8 @@ public final class UserRecordVariableOperand extends UserRecordOperand {
     }
 
     @Override
-    protected ParserResult get(Parser parser) {
-        return parser.readVBR(width);
+    protected ParserResult get(Parser parser, long[] buffer, int bufferIndex) {
+        return parser.readVBR(width, buffer, bufferIndex);
     }
 
     @Override

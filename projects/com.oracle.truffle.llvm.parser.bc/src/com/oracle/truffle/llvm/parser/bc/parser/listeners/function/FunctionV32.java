@@ -80,13 +80,13 @@ public class FunctionV32 extends FunctionV38 {
     }
 
     @Override
-    protected void createCall(long[] args) {
+    protected void createCall(long[] args, int argCount) {
         int i = 0;
         final long linkage = args[i++];
         final long visibility = args[i++];
         final int target = getIndex(args[i++]);
-        final int[] arguments = new int[args.length - i];
-        for (int j = 0; i < args.length; j++, i++) {
+        final int[] arguments = new int[argCount - i];
+        for (int j = 0; i < argCount; j++, i++) {
             arguments[j] = getIndex(args[i]);
         }
 
@@ -123,7 +123,7 @@ public class FunctionV32 extends FunctionV38 {
     }
 
     @Override
-    protected void createSwitch(long[] args) {
+    protected void createSwitch(long[] args, int argCount) {
         int i = 2;
         int condition = getIndex(args[i++]);
         int defaultBlock = (int) args[i++];

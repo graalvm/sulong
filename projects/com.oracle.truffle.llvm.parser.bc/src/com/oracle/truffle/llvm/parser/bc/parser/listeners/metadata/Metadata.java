@@ -85,11 +85,11 @@ public class Metadata implements ParserListener {
 
     // https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/Bitcode/LLVMBitCodes.h#L191
     @Override
-    public void record(long id, long[] args) {
+    public void record(long id, long[] args, int argCount) {
         MetadataRecord record = MetadataRecord.decode(id);
         switch (record) {
             case STRING:
-                createString(args);
+                createString(args, argCount);
                 break;
 
             case VALUE:
@@ -97,11 +97,11 @@ public class Metadata implements ParserListener {
                 break;
 
             case NODE:
-                createNode(args);
+                createNode(args, argCount);
                 break;
 
             case NAME:
-                createName(args);
+                createName(args, argCount);
                 break;
 
             case DISTINCT_NODE:
@@ -109,26 +109,26 @@ public class Metadata implements ParserListener {
                 break;
 
             case KIND:
-                createKind(args);
+                createKind(args, argCount);
                 break;
 
             case LOCATION:
-                createLocation(args);
+                createLocation(args, argCount);
                 break;
 
             // OLD_NODE
             // OLD_FN_NODE
 
             case NAMED_NODE:
-                createNamedNode(args);
+                createNamedNode(args, argCount);
                 break;
 
             case ATTACHMENT:
-                createAttachment(args);
+                createAttachment(args, argCount);
                 break;
 
             case GENERIC_DEBUG:
-                createGenericDebug(args);
+                createGenericDebug(args, argCount);
                 break;
 
             case SUBRANGE:
@@ -196,17 +196,17 @@ public class Metadata implements ParserListener {
 
     private static final long LONG_ARRAY_TO_STRING_BYTE_PART = 0x000000FF;
 
-    private static String longArrayToString(long[] args) {
+    private static String longArrayToString(long[] args, int argCount) {
         // We use a byte array, so "new String(...)" is able to handle Unicode Characters correctly
-        byte[] bytes = new byte[args.length];
-        for (int i = 0; i < args.length; i++) {
+        byte[] bytes = new byte[argCount];
+        for (int i = 0; i < argCount; i++) {
             bytes[i] = (byte) (args[i] & LONG_ARRAY_TO_STRING_BYTE_PART);
         }
         return new String(bytes);
     }
 
-    protected void createString(long[] args) {
-        MetadataString node = new MetadataString(longArrayToString(args));
+    protected void createString(long[] args, int argCount) {
+        MetadataString node = new MetadataString(longArrayToString(args, argCount));
 
         metadata.add(node);
     }
@@ -219,18 +219,18 @@ public class Metadata implements ParserListener {
         metadata.add(node);
     }
 
-    protected void createNode(long[] args) {
+    protected void createNode(long[] args, int argCount) {
         MetadataNode node = new MetadataNode();
 
-        for (long arg : args) {
-            node.add(metadata.getReference((int) arg));
+        for (int i = 0; i < argCount; i++) {
+            node.add(metadata.getReference((int) args[i]));
         }
 
         metadata.add(node);
     }
 
-    protected void createName(long[] args) {
-        MetadataName node = new MetadataName(longArrayToString(args));
+    protected void createName(long[] args, int argCount) {
+        MetadataName node = new MetadataName(longArrayToString(args, argCount));
 
         metadata.add(node);
     }
@@ -241,16 +241,16 @@ public class Metadata implements ParserListener {
         LLVMLogger.info("! - " + MetadataRecord.DISTINCT_NODE + " - " + Arrays.toString(args));
     }
 
-    protected void createKind(long[] args) {
+    protected void createKind(long[] args, int argCount) {
         long id = args[0];
-        String name = longArrayToString(Arrays.copyOfRange(args, 1, args.length));
+        String name = longArrayToString(Arrays.copyOfRange(args, 1, argCount), argCount - 1);
 
         MetadataKind node = new MetadataKind(id, name);
 
         metadata.add(node);
     }
 
-    protected void createLocation(long[] args) {
+    protected void createLocation(long[] args, int argCount) {
         // int i = 0;
         //
         // long distinct = args[argNumber++];
@@ -259,26 +259,26 @@ public class Metadata implements ParserListener {
         // long scope = args[i++];
         // long inlineAt = args[i++];
         metadata.add(null);
-        LLVMLogger.info("! - " + MetadataRecord.LOCATION + " - " + Arrays.toString(args));
+        LLVMLogger.info("! - " + MetadataRecord.LOCATION + " - " + Arrays.toString(Arrays.copyOfRange(args, 0, argCount)));
     }
 
-    protected void createNamedNode(long[] args) {
+    protected void createNamedNode(long[] args, int argCount) {
         MetadataNamedNode node = new MetadataNamedNode();
 
-        for (long arg : args) {
-            node.add(metadata.getReference((int) arg));
+        for (int i = 0; i < argCount; i++) {
+            node.add(metadata.getReference((int) args[i]));
         }
 
         metadata.add(node);
     }
 
-    protected void createAttachment(long[] args) {
+    protected void createAttachment(long[] args, int argCount) {
         // [n x mdnodes]
         metadata.add(null);
-        LLVMLogger.info("! - " + MetadataRecord.ATTACHMENT + " - " + Arrays.toString(args));
+        LLVMLogger.info("! - " + MetadataRecord.ATTACHMENT + " - " + Arrays.toString(Arrays.copyOfRange(args, 0, argCount)));
     }
 
-    protected void createGenericDebug(long[] args) {
+    protected void createGenericDebug(long[] args, int argCount) {
         // int i = 0;
         //
         // long distinct = args[i++];
@@ -287,7 +287,7 @@ public class Metadata implements ParserListener {
         // long header = args[i++];
         // TODO: args[4] // n x md num
         metadata.add(null);
-        LLVMLogger.info("! - " + MetadataRecord.GENERIC_DEBUG + " - " + Arrays.toString(args));
+        LLVMLogger.info("! - " + MetadataRecord.GENERIC_DEBUG + " - " + Arrays.toString(Arrays.copyOfRange(args, 0, argCount)));
     }
 
     protected void createSubrange(long[] args) {

@@ -45,7 +45,7 @@ public interface ConstantGenerator {
 
     void createFloatingPoint(Type type, long[] value);
 
-    void createFromData(Type type, long[] data);
+    void createFromData(Type type, long[] data, int dataLength);
 
     void creatFromString(Type type, String string, boolean isCString);
 

@@ -41,8 +41,8 @@ public final class UserRecordLiteral extends UserRecordOperand {
     }
 
     @Override
-    protected ParserResult get(Parser parser) {
-        return new ParserResult(parser, value);
+    protected ParserResult get(Parser parser, long[] buffer, int bufferIndex) {
+        return new ParserResult(parser, value, buffer, bufferIndex);
     }
 
     @Override

@@ -34,12 +34,12 @@ public final class Records {
     private Records() {
     }
 
-    public static String describe(long id, long[] args) {
+    public static String describe(long id, long[] args, int argCount) {
         final StringBuilder builder = new StringBuilder();
         builder.append("<id=").append(id).append(" - ");
-        for (int i = 0; i < args.length; i++) {
+        for (int i = 0; i < argCount; i++) {
             builder.append("op").append(i).append('=').append(args[i]);
-            if (i != args.length - 1) {
+            if (i != argCount - 1) {
                 builder.append(", ");
             }
         }
@@ -47,8 +47,8 @@ public final class Records {
         return builder.toString();
     }
 
-    public static int[] toIntegers(long[] args) {
-        int[] values = new int[args.length];
+    public static int[] toIntegers(long[] args, int argCount) {
+        int[] values = new int[argCount];
         for (int i = 0; i < values.length; i++) {
             values[i] = (int) args[i];
         }
@@ -63,14 +63,6 @@ public final class Records {
         } else {
             return v >>> 1;
         }
-    }
-
-    public static String toString(long[] operands) {
-        return toString(operands, 0, operands.length);
-    }
-
-    public static String toString(long[] operands, int from) {
-        return toString(operands, from, operands.length);
     }
 
     public static String toString(long[] operands, int from, int to) {

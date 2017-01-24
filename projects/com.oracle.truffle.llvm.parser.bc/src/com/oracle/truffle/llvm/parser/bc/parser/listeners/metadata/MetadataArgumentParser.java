@@ -55,13 +55,16 @@ public class MetadataArgumentParser implements Iterator<Type> {
 
     private final long[] args;
 
+    private final int argCount;
+
     private int index = 0;
 
-    public MetadataArgumentParser(Types types, List<Type> symbols, long[] args) {
+    MetadataArgumentParser(Types types, List<Type> symbols, long[] args, int argCount) {
         super();
         this.types = types;
         this.symbols = symbols;
         this.args = args;
+        this.argCount = argCount;
     }
 
     @Override
@@ -80,7 +83,7 @@ public class MetadataArgumentParser implements Iterator<Type> {
         return get(index);
     }
 
-    public static Type typeValToType(Types types, List<Type> symbols, long typeId, long val) {
+    static Type typeValToType(Types types, List<Type> symbols, long typeId, long val) {
         Type typeOfArgument = types.get(typeId);
 
         if (typeOfArgument instanceof IntegerConstantType) {
@@ -100,19 +103,19 @@ public class MetadataArgumentParser implements Iterator<Type> {
     }
 
     protected Type get(int i) {
-        assert (args.length >= i * 2 + 1);
+        assert (argCount >= i * 2 + 1);
 
         return typeValToType(types, symbols, args[i * 2], args[(i * 2) + 1]);
     }
 
     public int remaining() {
-        if (args.length == 0) {
+        if (argCount == 0) {
             return 0;
         }
 
-        assert (args.length >= index * 2);
+        assert (argCount >= index * 2);
 
-        return (args.length / 2) - index;
+        return (argCount / 2) - index;
     }
 
     public void rewind() {
@@ -121,13 +124,14 @@ public class MetadataArgumentParser implements Iterator<Type> {
 
     @Override
     public String toString() {
-        String s = "MetadataArgumentParser [";
-        for (int i = index; i < (args.length / 2); i++) {
-            s += get(i);
-            if (i < ((args.length / 2) - 1)) {
-                s += ", ";
+        final StringBuilder s = new StringBuilder("MetadataArgumentParser [");
+        for (int i = index; i < (argCount / 2); i++) {
+            s.append(get(i));
+            if (i < ((argCount / 2) - 1)) {
+                s.append(", ");
             }
         }
-        return s + "]";
+        s.append(']');
+        return s.toString();
     }
 }
