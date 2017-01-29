@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -99,7 +100,10 @@ public final class LLVMLifetimeAnalysis {
 
     public static LLVMLifetimeAnalysis getResult(FunctionDefinition functionDefinition, FrameDescriptor frameDescriptor, Map<InstructionBlock, List<LLVMPhiManager.Phi>> phiRefs) {
         LLVMParserAsserts.assertNoNullElement(frameDescriptor.getSlots());
-        final LLVMLifetimeAnalysisVisitor visitor = new LLVMLifetimeAnalysisVisitor(frameDescriptor, functionDefinition, phiRefs);
+
+        final Map<String, FrameSlot> frameSlotMap = frameDescriptor.getIdentifiers().stream().collect(Collectors.toMap(k -> (String) k, frameDescriptor::findFrameSlot));
+
+        final LLVMLifetimeAnalysisVisitor visitor = new LLVMLifetimeAnalysisVisitor(frameSlotMap, functionDefinition, phiRefs);
         final LLVMLifetimeAnalysis lifetimes = visitor.visit();
         if (!LLVMLogger.TARGET_NONE.equals(LLVMOptions.DEBUG.printLifetimeAnalysisStatistics())) {
             printResult(functionDefinition, lifetimes);
@@ -136,13 +140,13 @@ public final class LLVMLifetimeAnalysis {
 
     private static final class LLVMReadVisitor {
 
-        static List<FrameSlot> getReads(Instruction instruction, FrameDescriptor frame, boolean alsoCountPhiUsage) {
+        static List<FrameSlot> getReads(Instruction instruction, Map<String, FrameSlot> frameSlotMap, boolean alsoCountPhiUsage) {
             final List<FrameSlot> reads = new ArrayList<>();
             instruction.accept(new InstructionVisitor() {
 
                 private void resolve(Symbol symbol) {
                     if (symbol.hasName() && !(symbol instanceof GlobalValueSymbol || symbol instanceof FunctionType)) {
-                        final FrameSlot frameSlot = frame.findFrameSlot(((ValueSymbol) symbol).getName());
+                        final FrameSlot frameSlot = frameSlotMap.get(((ValueSymbol) symbol).getName());
                         if (frameSlot == null) {
                             throw new AssertionError("No Frameslot for ValueSymbol: " + symbol);
                         } else {
@@ -300,7 +304,7 @@ public final class LLVMLifetimeAnalysis {
 
         private final List<InstructionBlock> basicBlocks;
 
-        private final FrameDescriptor frame;
+        private final Map<String, FrameSlot> frameSlotMap;
 
         private final FunctionDefinition functionDefinition;
 
@@ -329,15 +333,15 @@ public final class LLVMLifetimeAnalysis {
          */
         private final Map<Instruction, Set<FrameSlot>> out = new HashMap<>();
 
-        LLVMLifetimeAnalysisVisitor(FrameDescriptor frame, FunctionDefinition functionDefinition, Map<InstructionBlock, List<LLVMPhiManager.Phi>> phiRefs) {
-            this.frame = frame;
+        LLVMLifetimeAnalysisVisitor(Map<String, FrameSlot> frame, FunctionDefinition functionDefinition, Map<InstructionBlock, List<LLVMPhiManager.Phi>> phiRefs) {
+            this.frameSlotMap = frame;
             this.functionDefinition = functionDefinition;
             this.phiRefs = phiRefs;
             this.basicBlocks = new ArrayList<>(functionDefinition.getBlocks());
         }
 
         private FrameSlot getFrameSlot(String name) {
-            final FrameSlot frameSlot = frame.findFrameSlot(name);
+            final FrameSlot frameSlot = frameSlotMap.get(name);
             if (frameSlot == null) {
                 throw new AssertionError("No FrameSlot with name: " + name);
             } else {
@@ -359,7 +363,7 @@ public final class LLVMLifetimeAnalysis {
             functionDefinition.accept(block -> {
                 for (int i = 0; i < block.getInstructionCount(); i++) {
                     final Instruction inst = block.getInstruction(i);
-                    final List<FrameSlot> currentInstructionReads = LLVMReadVisitor.getReads(inst, frame, false);
+                    final List<FrameSlot> currentInstructionReads = LLVMReadVisitor.getReads(inst, frameSlotMap, false);
                     LLVMParserAsserts.assertNoNullElement(currentInstructionReads);
                     instructionReads.put(inst, currentInstructionReads);
                 }
@@ -485,7 +489,7 @@ public final class LLVMLifetimeAnalysis {
                             bbBeginKills.put(bas, deadAtBegin);
                         }
                         if (inst instanceof ReturnInstruction || inst instanceof UnreachableInstruction) {
-                            kills.put(inst, new HashSet<>(frame.getSlots()));
+                            kills.put(inst, new HashSet<>(frameSlotMap.values()));
                         }
                     }
                     kills.put(inst, instructionKills);
