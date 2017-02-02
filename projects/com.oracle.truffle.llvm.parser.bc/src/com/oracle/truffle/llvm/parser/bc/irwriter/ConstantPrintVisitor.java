@@ -30,7 +30,6 @@
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
 import java.math.BigInteger;
-import java.util.Locale;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.AsmDialect;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
@@ -61,11 +60,11 @@ import com.oracle.truffle.llvm.runtime.types.IntegerType;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
-final class ConstantPrintVisitor implements ConstantVisitor {
+class ConstantPrintVisitor implements ConstantVisitor {
 
-    private final LLVMPrintVersion.LLVMPrintVisitors visitors;
+    protected final LLVMPrintVersion.LLVMPrintVisitors visitors;
 
-    private final LLVMIRPrinter.PrintTarget out;
+    protected final LLVMIRPrinter.PrintTarget out;
 
     ConstantPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
         this.visitors = visitors;
@@ -175,12 +174,14 @@ final class ConstantPrintVisitor implements ConstantVisitor {
 
     @Override
     public void visit(DoubleConstant doubleConstant) {
-        out.print(String.format(Locale.ROOT, "%.15f", doubleConstant.getValue()));
+        final long bits = Double.doubleToRawLongBits(doubleConstant.getValue());
+        out.print(String.format("0x%x", bits));
     }
 
     @Override
     public void visit(FloatConstant floatConstant) {
-        out.print(String.format(Locale.ROOT, "%.6f", floatConstant.getValue()));
+        final long bits = Double.doubleToRawLongBits(floatConstant.getValue());
+        out.print(String.format("0x%x", bits));
     }
 
     private static final int HEX_MASK = 0xf;
@@ -219,7 +220,7 @@ final class ConstantPrintVisitor implements ConstantVisitor {
         visitors.getTypeVisitor().printFormalArguments(functionDefinition);
     }
 
-    private static final String LLVMIR_LABEL_GET_ELEMENT_POINTER = "getelementptr";
+    static final String LLVMIR_LABEL_GET_ELEMENT_POINTER = "getelementptr";
 
     @Override
     public void visit(GetElementPointerConstant getElementPointerConstant) {

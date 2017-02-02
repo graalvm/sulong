@@ -33,13 +33,19 @@ enum LLVMPrintVersion {
     LLVM_3_2(
                     ModelPrintVisitor::new,
                     FunctionPrintVisitor::new,
-                    InstructionV32PrintVisitor::new,
+                    InstructionPrintVisitor::new,
                     ConstantPrintVisitor::new,
+                    TypePrintVisitor::new),
+    LLVM_3_8(
+                    ModelPrintVisitorV38::new,
+                    FunctionPrintVisitor::new,
+                    InstructionPrintVisitorV38::new,
+                    ConstantPrintVisitorV38::new,
                     TypePrintVisitor::new),
     DEFAULT(
                     ModelPrintVisitor::new,
                     FunctionPrintVisitor::new,
-                    InstructionV32PrintVisitor::new,
+                    InstructionPrintVisitor::new,
                     ConstantPrintVisitor::new,
                     TypePrintVisitor::new);
 
@@ -55,7 +61,7 @@ enum LLVMPrintVersion {
 
     @FunctionalInterface
     private interface InstructionPrinter {
-        InstructionV32PrintVisitor instantiate(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target);
+        InstructionPrintVisitor instantiate(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target);
     }
 
     @FunctionalInterface
@@ -91,7 +97,7 @@ enum LLVMPrintVersion {
         return functionVisitor.instantiate(out, target);
     }
 
-    private InstructionV32PrintVisitor createInstructionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
+    private InstructionPrintVisitor createInstructionPrintVisitor(LLVMPrintVisitors out, LLVMIRPrinter.PrintTarget target) {
         return instructionVisitor.instantiate(out, target);
     }
 
@@ -111,7 +117,7 @@ enum LLVMPrintVersion {
 
         private final ModelPrintVisitor modelVisitor;
         private final FunctionPrintVisitor functionVisitor;
-        private final InstructionV32PrintVisitor instructionVisitor;
+        private final InstructionPrintVisitor instructionVisitor;
         private final ConstantPrintVisitor constantVisitor;
         private final TypePrintVisitor typeVisitor;
 
@@ -134,7 +140,7 @@ enum LLVMPrintVersion {
             return functionVisitor;
         }
 
-        InstructionV32PrintVisitor getInstructionVisitor() {
+        InstructionPrintVisitor getInstructionVisitor() {
             return instructionVisitor;
         }
 

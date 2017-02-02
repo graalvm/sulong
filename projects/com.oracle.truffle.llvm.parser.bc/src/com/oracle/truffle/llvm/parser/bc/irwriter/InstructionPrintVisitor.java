@@ -68,22 +68,22 @@ import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
 
-final class InstructionV32PrintVisitor implements InstructionVisitor {
+class InstructionPrintVisitor implements InstructionVisitor {
 
-    private final LLVMPrintVersion.LLVMPrintVisitors visitors;
+    protected final LLVMPrintVersion.LLVMPrintVisitors visitors;
 
-    private final LLVMIRPrinter.PrintTarget out;
+    protected final LLVMIRPrinter.PrintTarget out;
 
-    InstructionV32PrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
+    InstructionPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
         this.visitors = visitors;
         this.out = target;
     }
 
-    private static final String INDENTATION = "    ";
+    static final String INDENTATION = "    ";
 
     private static final String LLVMIR_LABEL_ALLOCATE = "alloca";
 
-    private static final String LLVMIR_LABEL_ALIGN = "align";
+    static final String LLVMIR_LABEL_ALIGN = "align";
 
     @Override
     public void visit(AllocateInstruction allocate) {
@@ -135,7 +135,7 @@ final class InstructionV32PrintVisitor implements InstructionVisitor {
         out.println(String.format("%s %s %s", LLVMIR_LABEL_BRANCH, LLVMIR_LABEL_BRANCH_LABEL, branch.getSuccessor().getName()));
     }
 
-    private static final String LLVMIR_LABEL_CALL = "call";
+    static final String LLVMIR_LABEL_CALL = "call";
 
     @Override
     public void visit(CallInstruction call) {
@@ -147,7 +147,7 @@ final class InstructionV32PrintVisitor implements InstructionVisitor {
         out.println();
     }
 
-    private void printActualArgs(Call call) {
+    protected void printActualArgs(Call call) {
         out.print("(");
         for (int i = 0; i < call.getArgumentCount(); i++) {
             final Symbol arg = call.getArgument(i);
@@ -258,9 +258,9 @@ final class InstructionV32PrintVisitor implements InstructionVisitor {
         out.println(String.format(", %d", extract.getIndex()));
     }
 
-    private static final String LLVMIR_LABEL_GET_ELEMENT_POINTER = "getelementptr";
+    static final String LLVMIR_LABEL_GET_ELEMENT_POINTER = "getelementptr";
 
-    private static final String LLVMIR_LABEL_GET_ELEMENT_POINTER_INBOUNDS = "inbounds";
+    static final String LLVMIR_LABEL_GET_ELEMENT_POINTER_INBOUNDS = "inbounds";
 
     @Override
     public void visit(GetElementPointerInstruction gep) {
@@ -354,13 +354,13 @@ final class InstructionV32PrintVisitor implements InstructionVisitor {
         out.println(String.format(", %d", insert.getIndex()));
     }
 
-    private static final String LLVMIR_LABEL_LOAD = "load";
+    static final String LLVMIR_LABEL_LOAD = "load";
 
-    private static final String LLVMIR_LABEL_ATOMIC = "atomic";
+    static final String LLVMIR_LABEL_ATOMIC = "atomic";
 
-    private static final String LLVMIR_LABEL_VOLATILE = "volatile";
+    static final String LLVMIR_LABEL_VOLATILE = "volatile";
 
-    private static final String LLVMIR_LABEL_SINGLETHREAD = "singlethread";
+    static final String LLVMIR_LABEL_SINGLETHREAD = "singlethread";
 
     @Override
     public void visit(LoadInstruction load) {
@@ -622,7 +622,7 @@ final class InstructionV32PrintVisitor implements InstructionVisitor {
         out.println();
     }
 
-    private void printFunctionCall(Call call) {
+    protected void printFunctionCall(Call call) {
         out.print(LLVMIR_LABEL_CALL);
         out.print(" ");
         if (call.getCallTarget() instanceof FunctionType) {

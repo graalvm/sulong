@@ -56,6 +56,9 @@ public final class LLVMIRPrinter {
         if ("3.2".equals(llvmVersion)) {
             version = LLVMPrintVersion.LLVM_3_2;
 
+        } else if ("3.8".equals(llvmVersion)) {
+            version = LLVMPrintVersion.LLVM_3_8;
+
         } else {
             LLVMLogger.info(String.format("No explicit LLVMIR-Printer for version %s, falling back to 3.2!", llvmVersion));
             version = LLVMPrintVersion.LLVM_3_2;

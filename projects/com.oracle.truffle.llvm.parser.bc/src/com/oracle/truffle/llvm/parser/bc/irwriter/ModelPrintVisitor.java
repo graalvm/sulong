@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
+import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
@@ -43,13 +44,14 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
 import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-final class ModelPrintVisitor implements ModelVisitor {
+class ModelPrintVisitor implements ModelVisitor {
 
-    private final LLVMPrintVersion.LLVMPrintVisitors visitors;
+    protected final LLVMPrintVersion.LLVMPrintVisitors visitors;
 
-    private final LLVMIRPrinter.PrintTarget out;
+    protected final LLVMIRPrinter.PrintTarget out;
 
     ModelPrintVisitor(LLVMPrintVersion.LLVMPrintVisitors visitors, LLVMIRPrinter.PrintTarget target) {
         this.visitors = visitors;
@@ -60,7 +62,7 @@ final class ModelPrintVisitor implements ModelVisitor {
     public void ifVisitNotOverwritten(Object obj) {
     }
 
-    private static final String UNRESOLVED_FORWARD_REFERENCE = "<unresolved>";
+    static final String UNRESOLVED_FORWARD_REFERENCE = "<unresolved>";
 
     @Override
     public void visit(GlobalAlias alias) {
@@ -69,7 +71,15 @@ final class ModelPrintVisitor implements ModelVisitor {
             out.print(String.format(" %s", alias.getVisibility().toString()));
         }
         out.print(String.format(" %s", alias.getType()));
-        out.println(String.format(" %s", alias.getValue() != null ? alias.getValue() : UNRESOLVED_FORWARD_REFERENCE));
+
+        out.print(" ");
+        final Symbol val = alias.getValue();
+        if (val == null) {
+            out.print(UNRESOLVED_FORWARD_REFERENCE);
+        } else {
+            visitors.getIRWriterUtil().printInnerSymbolValue(alias.getValue());
+        }
+        out.println();
     }
 
     @Override
@@ -80,23 +90,42 @@ final class ModelPrintVisitor implements ModelVisitor {
             out.print(constant.getVisibility().toString());
             out.print(" ");
         }
-        out.print(constant.getLinkage().getIrString());
-        out.print(" constant ");
 
-        ((PointerType) constant.getType()).getPointeeType().accept(visitors.getTypeVisitor());
-        out.print(" ");
-
-        if (constant.getValue() == null || constant.getValue() instanceof NullConstant) {
-            out.print("zeroinitializer");
-
-        } else if (constant.getValue() instanceof Constant) {
-            ((Constant) constant.getValue()).accept(visitors.getConstantVisitor());
-        } else {
-            throw new AssertionError("Cannot print Global Constant with non-constant value: " + constant.getValue());
+        if (constant.getLinkage() != Linkage.EXTERNAL || constant.getValue() == null) {
+            out.print(constant.getLinkage().getIrString());
+            out.print(" ");
         }
 
-        out.print(", align ");
-        out.println(String.valueOf(1 << (constant.getAlign() - 1)));
+        out.print("constant ");
+
+        ((PointerType) constant.getType()).getPointeeType().accept(visitors.getTypeVisitor());
+
+        if (constant.getLinkage() == Linkage.EXTERNAL && constant.getValue() == null) {
+            out.println();
+            return;
+        }
+
+        out.print(" ");
+
+        if (constant.getValue() != null) {
+
+            if (constant.getValue() instanceof NullConstant) {
+                out.print("zeroinitializer");
+
+            } else if (constant.getValue() instanceof Constant) {
+                ((Constant) constant.getValue()).accept(visitors.getConstantVisitor());
+            } else {
+                throw new AssertionError("Cannot print Global Constant with non-constant value: " + constant.getValue());
+            }
+
+        }
+
+        if (constant.getAlign() > 1) {
+            out.print(", align ");
+            out.print(String.valueOf(1 << (constant.getAlign() - 1)));
+        }
+
+        out.println();
     }
 
     @Override
@@ -107,27 +136,40 @@ final class ModelPrintVisitor implements ModelVisitor {
             out.print(variable.getVisibility().toString());
             out.print(" ");
         }
-        out.print(variable.getLinkage().getIrString());
-        out.print(" global ");
+
+        if (variable.getLinkage() != Linkage.EXTERNAL || variable.getValue() == null) {
+            out.print(variable.getLinkage().getIrString());
+            out.print(" ");
+        }
+
+        out.print("global ");
 
         ((PointerType) variable.getType()).getPointeeType().accept(visitors.getTypeVisitor());
         out.print(" ");
 
-        if (variable.getValue() == null || variable.getValue() instanceof NullConstant) {
-            out.print("zeroinitializer");
+        if (variable.getValue() != null) {
 
-        } else if (variable.getValue() instanceof Constant) {
-            ((Constant) variable.getValue()).accept(visitors.getConstantVisitor());
+            if (variable.getValue() instanceof NullConstant) {
+                out.print("zeroinitializer");
 
-        } else if (variable.getValue() instanceof ValueSymbol) {
-            out.print(((ValueSymbol) variable.getValue()).getName());
+            } else if (variable.getValue() instanceof Constant) {
+                ((Constant) variable.getValue()).accept(visitors.getConstantVisitor());
 
-        } else {
-            throw new IllegalStateException("Cannot print Global with value: " + variable.getValue());
+            } else if (variable.getValue() instanceof ValueSymbol) {
+                out.print(((ValueSymbol) variable.getValue()).getName());
+
+            } else {
+                throw new IllegalStateException("Cannot print Global with value: " + variable.getValue());
+            }
+
         }
 
-        out.print(", align ");
-        out.println(String.valueOf(1 << (variable.getAlign() - 1)));
+        if (variable.getAlign() > 1) {
+            out.print(", align ");
+            out.print(String.valueOf(1 << (variable.getAlign() - 1)));
+        }
+
+        out.println();
     }
 
     @Override
