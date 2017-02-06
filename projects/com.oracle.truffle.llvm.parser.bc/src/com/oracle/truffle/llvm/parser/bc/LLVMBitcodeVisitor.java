@@ -114,13 +114,21 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
         final List<RootCallTarget> destructorFunctions = visitor.getDestructors();
 
         final String llvmIRTarget = LLVMOptions.DEBUG.printLLVMIR();
-        if (String.valueOf(true).equals(llvmIRTarget)) {
-            LLVMIRPrinter.printLLVMToStream(model, LLVMOptions.ENGINE.llvmVersion(), new PrintWriter(System.out));
-
-        } else if (!String.valueOf(false).equals(llvmIRTarget)) {
-            final String sourceFileName = source.getName();
-            final String actualTarget = sourceFileName.substring(0, sourceFileName.length() - ".bc".length()) + ".ll";
-            LLVMIRPrinter.printLLVMToFile(model, LLVMOptions.ENGINE.llvmVersion(), actualTarget);
+        switch (llvmIRTarget) {
+            case "true":
+                if (context.haveLoadedDynamicBitcodeLibraries()) {
+                    break;
+                }
+            case "all":
+                LLVMIRPrinter.printLLVMToStream(model, LLVMOptions.ENGINE.llvmVersion(), new PrintWriter(System.out));
+                break;
+            case "file":
+                final String sourceFileName = source.getName();
+                final String actualTarget = sourceFileName.substring(0, sourceFileName.length() - ".bc".length()) + ".out.ll";
+                LLVMIRPrinter.printLLVMToFile(model, LLVMOptions.ENGINE.llvmVersion(), actualTarget);
+                break;
+            default:
+                break;
         }
 
         final RootCallTarget mainFunctionCallTarget;
