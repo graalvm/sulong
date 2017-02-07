@@ -199,6 +199,23 @@ class OptV38(Tool):
     def run(self, inputFile, outputFile, flags):
         return mx.run([mx_sulong.findLLVMProgram('opt', ['3.8', '3.9']), '-o', outputFile] + self.passes + [inputFile])
 
+class LLVM_AS(Tool):
+    def __init__(self, supportedVersions):
+        self.name = 'llvm-as'
+        self.supportedVersions = supportedVersions
+        self.supportedLanguages = [ProgrammingLanguage.LLVMIR]
+
+    def getTool(self, inputFile):
+        inputLanguage = ProgrammingLanguage.lookupFile(inputFile)
+        if inputLanguage in self.supportedLanguages:
+            return mx_sulong.findLLVMProgram(self.name, self.supportedVersions)
+        else:
+            raise Exception('Unsupported input language')
+
+    def run(self, inputFile, flags=[]):
+        tool = self.getTool(inputFile)
+        return self.runTool([self.getTool(inputFile)] + flags + [inputFile], errorMsg='Cannot assemble %s with %s' % (inputFile, tool))
+
 Tool.CLANG = ClangCompiler()
 Tool.CLANG_C = ClangCompiler('clangc', [ProgrammingLanguage.C])
 Tool.CLANG_CPP = ClangCompiler('clangcpp', [ProgrammingLanguage.C_PLUS_PLUS])
@@ -222,6 +239,9 @@ Tool.MEM2REG_V38 = OptV38('MEM2REG', ['-mem2reg'])
 
 Tool.CPP_OPT_V38 = OptV38('CPP_OPT_v38', ['-lowerinvoke', '-prune-eh', '-simplifycfg'])
 Tool.C_OPT_V38 = OptV38('C_OPT_v38', ['-mem2reg', '-always-inline', '-jump-threading', '-simplifycfg'])
+
+Tool.LLVM_AS_33 = LLVM_AS(['3.2', '3.3'])
+Tool.LLVM_AS_38 = LLVM_AS(['3.8'])
 
 def createOutputPath(path, inputFile, outputDir):
     base, _ = os.path.splitext(inputFile)

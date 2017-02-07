@@ -85,6 +85,51 @@ def runSulongSuite38(vmArgs):
     compileSuite(['sulong38'])
     return run38(vmArgs, "com.oracle.truffle.llvm.test.alpha.SulongSuite")
 
+def runIRGeneratorSuite32(vmArgs):
+    """runs the Sulong test suite"""
+    mx_sulong.ensureDragonEggExists()
+    compileSuite(['sulong'])
+    try:
+        run32(vmArgs + ['-Dsulong.PrintLLVMIR=file'], "com.oracle.truffle.llvm.test.alpha.IRGeneratorSuite", [])
+    except:
+        pass
+    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_33)
+
+def runIRGeneratorSuite38(vmArgs):
+    """runs the Sulong test suite"""
+    mx_sulong.ensureDragonEggExists()
+    compileSuite(['sulong38'])
+    try:
+        run38(vmArgs + ['-Dsulong.PrintLLVMIR=file'], "com.oracle.truffle.llvm.test.alpha.IRGeneratorSuite", [])
+    except:
+        pass
+    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_38)
+
+def _runIRGeneratorSuite(assembler):
+    sulongSuiteCacheDir = os.path.join(_cacheDir, 'sulong')
+    print('Testing Reassembly')
+    print(sulongSuiteCacheDir)
+    failed = []
+    passed = []
+    for root, subDirs, files in os.walk(sulongSuiteCacheDir):
+        for fileName in files:
+            inputFile = os.path.join(sulongSuiteCacheDir, root, fileName)
+            if inputFile.endswith('.out.ll'):
+                if assembler.run(inputFile) == 0:
+                    print('.', end='')
+                    passed.append(inputFile)
+                else:
+                    print('E', end='')
+                    failed.append(inputFile)
+    total = len(failed) + len(passed)
+    if len(failed) != 0:
+        print('Failed ' + str(len(failed)) + ' of ' + str(total) + ' Tests!')
+        for x in range(0, len(failed)):
+            print(str(x) + ') ' + failed[x])
+    else:
+        print('Passed all ' + str(total) + ' Tests!')
+    return None
+
 def runShootoutSuite(vmArgs):
     """runs the Sulong test suite"""
     mx_sulong.ensureDragonEggExists()
@@ -240,6 +285,8 @@ testSuites = {
     'llvm' : (compileLLVMSuite, runLLVMSuite),
     'sulong' : (compileSulongSuite, runSulongSuite),
     'sulong38' : (compileV38SulongSuite, runSulongSuite38),
+    'irgenerator32' : (compileSulongSuite, runIRGeneratorSuite32),
+    'irgenerator38' : (compileV38SulongSuite, runIRGeneratorSuite38),
     'shootout' : (compileShootoutSuite, runShootoutSuite),
     'interop' : (compileInteropTests, runInteropTests),
     'tck' : (compileInteropTests, runTCKTests),

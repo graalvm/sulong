@@ -118,7 +118,7 @@ public final class LLVMBitcodeVisitor implements LLVMParserRuntime {
                         llvmIRTarget.equals("all")) {
             LLVMIRPrinter.printLLVMToStream(model, LLVMOptions.ENGINE.llvmVersion(), new PrintWriter(System.out));
         } else if (llvmIRTarget.equals("file")) {
-            final String sourceFileName = source.getName();
+            final String sourceFileName = source.getPath();
             final String actualTarget = sourceFileName.substring(0, sourceFileName.length() - ".bc".length()) + ".out.ll";
             LLVMIRPrinter.printLLVMToFile(model, LLVMOptions.ENGINE.llvmVersion(), actualTarget);
         }
