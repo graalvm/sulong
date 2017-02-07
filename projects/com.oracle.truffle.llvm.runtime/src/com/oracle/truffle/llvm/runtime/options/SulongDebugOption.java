@@ -59,7 +59,7 @@ abstract class SulongDebugOption {
     @Option(commandLineName = "PrintLifetimeAnalysisStats", help = "Prints the results of the lifetime analysis. Can be \'true\', \'false\', \'stdout\', \'stderr\' or a filepath.", name = "printLifetimeAnalysisStatistics") //
     protected static final String PRINT_LIFE_TIME_ANALYSIS_STATS = String.valueOf(false);
 
-    @Option(commandLineName = "PrintLLVMIR", help = "Prints the LLVM IR for the parsed bitcode files, if \'true\' to stdout, if \'false\' nothing, otherwise to a file called \'<sourcefilename>.ll\'.", name = "printLLVMIR") //
+    @Option(commandLineName = "PrintLLVMIR", help = "Prints the LLVM IR for the parsed bitcode files, if \'true\' or \'all\' to stdout, if \'file\' to a file called \'<sourcefilename>.out.ll\', otherwise nothing.", name = "printLLVMIR") //
     protected static final String PRINT_LLVMIR = String.valueOf(false);
 
     @Option(commandLineName = "TraceExecution", help = "Trace execution, printing each SSA assignment. Can be \'true\', \'false\', \'stdout\', \'stderr\' or a filepath.", name = "traceExecution") //
