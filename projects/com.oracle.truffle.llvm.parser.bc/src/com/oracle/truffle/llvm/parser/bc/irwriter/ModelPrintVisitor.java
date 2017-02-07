@@ -66,11 +66,15 @@ class ModelPrintVisitor implements ModelVisitor {
 
     @Override
     public void visit(GlobalAlias alias) {
+        // sulong specific toString
         out.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
         if (alias.getVisibility() != Visibility.DEFAULT) {
+            // sulong specific toString
             out.print(String.format(" %s", alias.getVisibility().toString()));
         }
-        out.print(String.format(" %s", alias.getType()));
+
+        out.print(" ");
+        alias.getType().accept(visitors.getTypeVisitor());
 
         out.print(" ");
         final Symbol val = alias.getValue();
@@ -87,12 +91,12 @@ class ModelPrintVisitor implements ModelVisitor {
         out.print(constant.getName());
         out.print(" = ");
         if (constant.getVisibility() != Visibility.DEFAULT) {
-            out.print(constant.getVisibility().toString());
+            out.print(constant.getVisibility().toString()); // sulong specific toString
             out.print(" ");
         }
 
         if (constant.getLinkage() != Linkage.EXTERNAL || constant.getValue() == null) {
-            out.print(constant.getLinkage().getIrString());
+            out.print(constant.getLinkage().getIrString()); // sulong specific toString
             out.print(" ");
         }
 
@@ -133,12 +137,12 @@ class ModelPrintVisitor implements ModelVisitor {
         out.print(variable.getName());
         out.print(" = ");
         if (variable.getVisibility() != Visibility.DEFAULT) {
-            out.print(variable.getVisibility().toString());
+            out.print(variable.getVisibility().toString()); // sulong specific toString
             out.print(" ");
         }
 
         if (variable.getLinkage() != Linkage.EXTERNAL || variable.getValue() == null) {
-            out.print(variable.getLinkage().getIrString());
+            out.print(variable.getLinkage().getIrString()); // sulong specific toString
             out.print(" ");
         }
 

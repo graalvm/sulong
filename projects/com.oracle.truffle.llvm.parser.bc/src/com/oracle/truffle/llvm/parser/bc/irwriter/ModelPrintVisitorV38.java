@@ -41,9 +41,11 @@ final class ModelPrintVisitorV38 extends ModelPrintVisitor {
 
     @Override
     public void visit(GlobalAlias alias) {
+        // sulong specific toString
         out.print(String.format("%s = %s ", alias.getName(), alias.getLinkage().getIrString()));
 
         if (alias.getVisibility() != Visibility.DEFAULT) {
+            // sulong specific toString
             out.print(String.format("%s ", alias.getVisibility().toString()));
         }
 

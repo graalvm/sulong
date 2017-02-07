@@ -123,7 +123,7 @@ class ConstantPrintVisitor implements ConstantVisitor {
 
     @Override
     public void visit(BinaryOperationConstant binaryOperationConstant) {
-        out.print(binaryOperationConstant.getOperator().toString());
+        out.print(binaryOperationConstant.getOperator().toString()); // sulong specific toString
         out.print(" ");
         binaryOperationConstant.getType().accept(visitors.getTypeVisitor());
 
@@ -141,7 +141,7 @@ class ConstantPrintVisitor implements ConstantVisitor {
 
     @Override
     public void visit(CastConstant castConstant) {
-        out.print(castConstant.getOperator().toString());
+        out.print(castConstant.getOperator().toString()); // sulong specific toString
         out.print(" ");
         castConstant.getValue().getType().accept(visitors.getTypeVisitor());
         out.print(" ");
@@ -161,7 +161,7 @@ class ConstantPrintVisitor implements ConstantVisitor {
             out.print(LLVMIR_LABEL_COMPARE);
         }
         out.print(" ");
-        out.print(compareConstant.getOperator().toString());
+        out.print(compareConstant.getOperator().toString()); // sulong specific toString
         out.print(" ");
         compareConstant.getType().accept(visitors.getTypeVisitor());
         out.print(" ");

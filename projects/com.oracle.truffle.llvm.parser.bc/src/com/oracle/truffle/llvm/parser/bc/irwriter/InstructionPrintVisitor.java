@@ -89,11 +89,15 @@ class InstructionPrintVisitor implements InstructionVisitor {
     public void visit(AllocateInstruction allocate) {
         out.print(INDENTATION);
         // <result> = alloca <type>
-        out.print(String.format("%s = %s %s", allocate.getName(), LLVMIR_LABEL_ALLOCATE, allocate.getPointeeType()));
+
+        out.print(String.format("%s = %s ", allocate.getName(), LLVMIR_LABEL_ALLOCATE));
+        allocate.getPointeeType().accept(visitors.getTypeVisitor());
 
         // [, <ty> <NumElements>]
         if (!(allocate.getCount() instanceof IntegerConstant && ((IntegerConstant) allocate.getCount()).getValue() == 1)) {
-            out.print(String.format(", %s %s", allocate.getCount().getType(), allocate.getCount()));
+            out.print(", ");
+            allocate.getCount().getType().accept(visitors.getTypeVisitor());
+            out.print(String.format(" %s", allocate.getCount()));
         }
 
         // [, align <alignment>]
@@ -108,6 +112,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
     public void visit(BinaryOperationInstruction operation) {
         out.print(INDENTATION);
         // <result> = <op>
+        // sulong specific toString
         out.print(String.format("%s = %s ", operation.getName(), operation.getOperator()));
 
         // { <flag>}*
@@ -166,6 +171,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
     @Override
     public void visit(CastInstruction cast) {
         out.print(INDENTATION);
+        // sulong specific toString
         out.print(String.format("%s = %s ", cast.getName(), cast.getOperator()));
         cast.getValue().getType().accept(visitors.getTypeVisitor());
         out.print(" ");
@@ -191,7 +197,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
             out.print(LLVMIR_LABEL_COMPARE);
         }
 
-        out.print(operation.getOperator().toString());
+        out.print(operation.getOperator().toString()); // sulong specific toString
         out.print(" ");
         operation.getBaseType().accept(visitors.getTypeVisitor());
         out.print(" ");
@@ -527,7 +533,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
             }
 
             out.print(" ");
-            out.print(store.getAtomicOrdering().toString());
+            out.print(store.getAtomicOrdering().toString()); // sulong specific toString
         }
 
         if (store.getAlign() != 0) {

@@ -112,7 +112,7 @@ final class InstructionPrintVisitorV38 extends InstructionPrintVisitor {
             }
 
             out.print(" ");
-            out.print(load.getAtomicOrdering().toString());
+            out.print(load.getAtomicOrdering().toString()); // sulong specific toString
         }
 
         if (load.getAlign() != 0) {
