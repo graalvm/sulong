@@ -33,6 +33,7 @@ import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
+import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
@@ -197,7 +198,30 @@ class ModelPrintVisitor implements ModelVisitor {
         function.getReturnType().accept(visitors.getTypeVisitor());
 
         out.print(String.format(" %s", function.getName()));
-        visitors.getTypeVisitor().printFormalArguments(function);
+
+        out.print("(");
+
+        boolean firstIteration = true;
+        for (FunctionParameter param : function.getParameters()) {
+            if (!firstIteration) {
+                out.print(", ");
+            } else {
+                firstIteration = false;
+            }
+            param.getType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+            out.print(param.getName());
+        }
+
+        if (function.isVarArg()) {
+            if (!firstIteration) {
+                out.print(", ");
+            }
+
+            out.print("...");
+        }
+
+        out.print(")");
 
         out.println(" {");
         function.accept(visitors.getFunctionVisitor());

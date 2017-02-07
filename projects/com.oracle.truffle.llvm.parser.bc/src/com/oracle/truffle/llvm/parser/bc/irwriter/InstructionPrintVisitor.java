@@ -198,9 +198,10 @@ class InstructionPrintVisitor implements InstructionVisitor {
             out.print(LLVMIR_LABEL_COMPARE);
         }
 
+        out.print(" ");
         out.print(operation.getOperator().toString()); // sulong specific toString
         out.print(" ");
-        operation.getBaseType().accept(visitors.getTypeVisitor());
+        operation.getLHS().getType().accept(visitors.getTypeVisitor());
         out.print(" ");
         visitors.getIRWriterUtil().printInnerSymbolValue(operation.getLHS());
         out.print(", ");
