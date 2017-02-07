@@ -80,7 +80,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
         this.out = target;
     }
 
-    static final String INDENTATION = "    ";
+    static final String INDENTATION = "  ";
 
     private static final String LLVMIR_LABEL_ALLOCATE = "alloca";
 
