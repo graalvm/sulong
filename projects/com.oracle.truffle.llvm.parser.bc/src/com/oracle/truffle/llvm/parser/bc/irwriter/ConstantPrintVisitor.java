@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
 import java.math.BigInteger;
+import java.util.Locale;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.AsmDialect;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
@@ -174,14 +175,12 @@ class ConstantPrintVisitor implements ConstantVisitor {
 
     @Override
     public void visit(DoubleConstant doubleConstant) {
-        final long bits = Double.doubleToRawLongBits(doubleConstant.getValue());
-        out.print(String.format("0x%x", bits));
+        out.print(String.format(Locale.ROOT, "%e", doubleConstant.getValue()));
     }
 
     @Override
     public void visit(FloatConstant floatConstant) {
-        final long bits = Double.doubleToRawLongBits(floatConstant.getValue());
-        out.print(String.format("0x%x", bits));
+        out.print(String.format(Locale.ROOT, "%e", floatConstant.getValue()));
     }
 
     private static final int HEX_MASK = 0xf;
