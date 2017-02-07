@@ -539,8 +539,10 @@ class InstructionPrintVisitor implements InstructionVisitor {
         }
 
         if (store.getAlign() != 0) {
-            out.println(String.format(", %s %d", LLVMIR_LABEL_ALIGN, 1 << (store.getAlign() - 1)));
+            out.print(String.format(", %s %d", LLVMIR_LABEL_ALIGN, 1 << (store.getAlign() - 1)));
         }
+
+        out.println();
     }
 
     private static final String LLVMIR_LABEL_SWITCH = "switch";

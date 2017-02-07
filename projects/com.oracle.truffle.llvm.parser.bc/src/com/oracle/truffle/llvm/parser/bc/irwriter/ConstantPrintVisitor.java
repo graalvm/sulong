@@ -107,9 +107,9 @@ class ConstantPrintVisitor implements ConstantVisitor {
 
     @Override
     public void visit(VectorConstant vectorConstant) {
-        out.print("[ ");
+        out.print("< ");
         visitAggregateElements(vectorConstant);
-        out.print(" ]");
+        out.print(" >");
     }
 
     @Override
@@ -143,12 +143,13 @@ class ConstantPrintVisitor implements ConstantVisitor {
     @Override
     public void visit(CastConstant castConstant) {
         out.print(castConstant.getOperator().toString()); // sulong specific toString
-        out.print(" ");
+        out.print(" (");
         castConstant.getValue().getType().accept(visitors.getTypeVisitor());
         out.print(" ");
         visitors.getIRWriterUtil().printInnerSymbolValue(castConstant.getValue());
-        out.print(" ");
+        out.print(" to ");
         castConstant.getType().accept(visitors.getTypeVisitor());
+        out.print(")");
     }
 
     private static final String LLVMIR_LABEL_COMPARE = "icmp";
