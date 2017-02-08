@@ -29,8 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
-import java.util.stream.Collectors;
-
+import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.enums.AtomicOrdering;
 import com.oracle.truffle.llvm.parser.api.model.enums.Flag;
 import com.oracle.truffle.llvm.parser.api.model.enums.SynchronizationScope;
@@ -138,7 +137,9 @@ class InstructionPrintVisitor implements InstructionVisitor {
     @Override
     public void visit(BranchInstruction branch) {
         out.print(INDENTATION);
-        out.println(String.format("%s %s %s", LLVMIR_LABEL_BRANCH, LLVMIR_LABEL_BRANCH_LABEL, branch.getSuccessor().getName()));
+        out.print(String.format("%s %s", LLVMIR_LABEL_BRANCH, LLVMIR_LABEL_BRANCH_LABEL));
+        visitors.getIRWriterUtil().printBlockName(branch.getSuccessor());
+        out.println();
     }
 
     static final String LLVMIR_LABEL_CALL = "call";
@@ -223,11 +224,12 @@ class InstructionPrintVisitor implements InstructionVisitor {
         out.print(", ");
         out.print(LLVMIR_LABEL_BRANCH_LABEL);
         out.print(" ");
-        out.print(branch.getTrueSuccessor().getName());
+        visitors.getIRWriterUtil().printBlockName(branch.getTrueSuccessor());
         out.print(", ");
         out.print(LLVMIR_LABEL_BRANCH_LABEL);
         out.print(" ");
-        out.println(branch.getFalseSuccessor().getName());
+        visitors.getIRWriterUtil().printBlockName(branch.getFalseSuccessor());
+        out.println();
     }
 
     private static final String LLVMIR_LABEL_EXTRACT_ELEMENT = "extractelement";
@@ -309,13 +311,14 @@ class InstructionPrintVisitor implements InstructionVisitor {
         branch.getAddress().getType().accept(visitors.getTypeVisitor());
         out.print(" ");
         visitors.getIRWriterUtil().printInnerSymbolValue(branch.getAddress());
-
-        // @formatter:off
-        out.println(String.format(", [ %s ]",
-                        branch.getSuccessors().stream().map(s ->
-                             String.format("%s %s", LLVMIR_LABEL_BRANCH_LABEL, s.getName())
-                        ).collect(Collectors.joining(", "))));
-        // @formatter:on
+        out.print(", [ ");
+        for (int i = 0; i < branch.getSuccessorCount(); i++) {
+            if (i != 0) {
+                out.print(", ");
+            }
+            visitors.getIRWriterUtil().printBlockName(branch.getSuccessor(i));
+        }
+        out.println(" ]");
     }
 
     private static final String LLVMIR_LABEL_INSERT_ELEMENT = "insertelement";
@@ -427,7 +430,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
             out.print("[ ");
             visitors.getIRWriterUtil().printInnerSymbolValue(phi.getValue(i));
             out.print(", ");
-            out.print(phi.getBlock(i).getName());
+            visitors.getIRWriterUtil().printBlockName(phi.getBlock(i));
             out.print(" ]");
         }
 
@@ -560,7 +563,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
         out.print(", ");
         out.print(LLVMIR_LABEL_BRANCH_LABEL);
         out.print(" ");
-        out.print(select.getDefaultBlock().getName());
+        visitors.getIRWriterUtil().printBlockName(select.getDefaultBlock());
 
         out.print(" [ ");
         for (int i = 0; i < select.getCaseCount(); i++) {
@@ -571,14 +574,14 @@ class InstructionPrintVisitor implements InstructionVisitor {
             }
 
             final Symbol val = select.getCaseValue(i);
-            final Symbol blk = select.getCaseBlock(i);
+            final InstructionBlock blk = select.getCaseBlock(i);
             val.getType().accept(visitors.getTypeVisitor());
             out.print(" ");
             visitors.getIRWriterUtil().printInnerSymbolValue(val);
             out.print(", ");
             out.print(LLVMIR_LABEL_BRANCH_LABEL);
             out.print(" ");
-            visitors.getIRWriterUtil().printInnerSymbolValue(blk);
+            visitors.getIRWriterUtil().printBlockName(blk);
         }
         out.println(" ]");
     }
@@ -598,7 +601,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
         out.print(", ");
         out.print(LLVMIR_LABEL_BRANCH_LABEL);
         out.print(" ");
-        out.print(select.getDefaultBlock().getName());
+        visitors.getIRWriterUtil().printBlockName(select.getDefaultBlock());
 
         out.print(" [ ");
         for (int i = 0; i < select.getCaseCount(); i++) {
@@ -612,7 +615,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
             out.print(String.format(" %d, ", select.getCaseValue(i)));
             out.print(LLVMIR_LABEL_BRANCH_LABEL);
             out.print(" ");
-            visitors.getIRWriterUtil().printInnerSymbolValue(select.getCaseBlock(i));
+            visitors.getIRWriterUtil().printBlockName(select.getCaseBlock(i));
         }
         out.println(" ]");
     }

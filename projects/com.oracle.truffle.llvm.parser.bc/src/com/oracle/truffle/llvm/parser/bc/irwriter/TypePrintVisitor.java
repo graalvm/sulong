@@ -44,7 +44,7 @@ import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.VectorType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataConstantPointerType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataConstantType;
-import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
 final class TypePrintVisitor implements TypeVisitor {
@@ -142,7 +142,7 @@ final class TypePrintVisitor implements TypeVisitor {
 
     @Override
     public void visit(StructureType structureType) {
-        if (ValueSymbol.UNKNOWN.equals(structureType.getName())) {
+        if (LLVMIdentifier.UNKNOWN.equals(structureType.getName())) {
             printStructDeclaration(structureType);
 
         } else {

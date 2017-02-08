@@ -31,7 +31,7 @@ package com.oracle.truffle.llvm.parser.bc.irwriter;
 
 import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
-import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 
 final class FunctionPrintVisitor implements FunctionVisitor {
 
@@ -44,20 +44,21 @@ final class FunctionPrintVisitor implements FunctionVisitor {
         this.out = target;
     }
 
+    private static final String LABEL_PREFIX = "; <label>:";
+
     @Override
     public void visit(InstructionBlock block) {
-        if (!block.getName().equals(ValueSymbol.UNKNOWN)) {
-            if (isNamedLabel(block.getName())) {
-                out.println(String.format("%s:", block.getName().substring(1)));
-            } else {
-                out.println(String.format("; <label>:%s:", block.getName().substring(1)));
+        final String blockName = block.getName();
+        if (LLVMIdentifier.isImplicitBlockName(blockName)) {
+            final String label = LLVMIdentifier.extractLabelFromImplicitBlockName(blockName);
+            if (!String.valueOf(0).equals(label)) {
+                out.print(LABEL_PREFIX);
+                out.println(label);
             }
+        } else if (!blockName.equals(LLVMIdentifier.UNKNOWN)) {
+            out.println(String.format("%s:", blockName.substring(1)));
         }
         block.accept(visitors.getInstructionVisitor());
         out.println();
-    }
-
-    private static boolean isNamedLabel(String label) {
-        return !label.substring(1).matches("^[0-9]+$");
     }
 }

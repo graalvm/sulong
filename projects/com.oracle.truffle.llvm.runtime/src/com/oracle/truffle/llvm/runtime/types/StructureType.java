@@ -35,12 +35,13 @@ import java.util.Objects;
 import com.oracle.truffle.llvm.runtime.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock.MetadataReference;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
 public class StructureType implements AggregateType, ValueSymbol {
 
-    private String name = ValueSymbol.UNKNOWN;
+    private String name = LLVMIdentifier.UNKNOWN;
 
     private final boolean isPacked;
 
@@ -150,7 +151,7 @@ public class StructureType implements AggregateType, ValueSymbol {
 
     @Override
     public void setName(String name) {
-        this.name = name;
+        this.name = LLVMIdentifier.toTypeIdentifier(name);
     }
 
     public String toDeclarationString() {
@@ -225,10 +226,10 @@ public class StructureType implements AggregateType, ValueSymbol {
 
     @Override
     public String toString() {
-        if (name.equals(ValueSymbol.UNKNOWN)) {
+        if (name.equals(LLVMIdentifier.UNKNOWN)) {
             return toDeclarationString();
         } else {
-            return "%" + name;
+            return name;
         }
     }
 }

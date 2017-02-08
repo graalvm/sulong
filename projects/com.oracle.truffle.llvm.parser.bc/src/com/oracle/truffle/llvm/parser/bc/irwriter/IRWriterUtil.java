@@ -29,7 +29,9 @@
  */
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
+import com.oracle.truffle.llvm.parser.api.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
@@ -53,6 +55,16 @@ final class IRWriterUtil {
 
         } else {
             throw new IllegalStateException("Cannot print this value: " + symbol);
+        }
+    }
+
+    void printBlockName(InstructionBlock block) {
+        final String name = block.getName();
+        if (LLVMIdentifier.isImplicitBlockName(name)) {
+            out.print("%");
+            out.print(LLVMIdentifier.extractLabelFromImplicitBlockName(name));
+        } else {
+            out.print(name);
         }
     }
 }

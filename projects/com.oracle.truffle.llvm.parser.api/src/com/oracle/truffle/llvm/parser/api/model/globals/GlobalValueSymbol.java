@@ -34,6 +34,7 @@ import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
@@ -45,7 +46,7 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
 
     private final int align;
 
-    private String name = ValueSymbol.UNKNOWN;
+    private String name = LLVMIdentifier.UNKNOWN;
 
     private Symbol value = null;
 
@@ -110,7 +111,7 @@ public abstract class GlobalValueSymbol implements ValueSymbol {
 
     @Override
     public void setName(String name) {
-        this.name = "@" + name;
+        this.name = LLVMIdentifier.toGlobalIdentifier(name);
     }
 
     @Override

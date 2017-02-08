@@ -45,6 +45,7 @@ import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
 import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
@@ -242,7 +243,7 @@ class ModelPrintVisitor implements ModelVisitor {
 
     @Override
     public void visit(Type type) {
-        if (type instanceof StructureType && !((StructureType) type).getName().equals(ValueSymbol.UNKNOWN)) {
+        if (type instanceof StructureType && !((StructureType) type).getName().equals(LLVMIdentifier.UNKNOWN)) {
             final StructureType actualType = (StructureType) type;
             out.print(String.format("%%%s = type ", actualType.getName()));
             visitors.getTypeVisitor().printStructDeclaration(actualType);
