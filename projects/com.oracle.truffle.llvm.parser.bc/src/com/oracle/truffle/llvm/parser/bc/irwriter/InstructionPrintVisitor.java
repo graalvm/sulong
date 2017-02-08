@@ -155,7 +155,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
         out.println();
     }
 
-    protected void printActualArgs(Call call) {
+    void printActualArgs(Call call) {
         out.print("(");
         for (int i = 0; i < call.getArgumentCount(); i++) {
             final Symbol arg = call.getArgument(i);
@@ -695,7 +695,9 @@ class InstructionPrintVisitor implements InstructionVisitor {
                 throw new AssertionError("unexpected target type: " + targetType.getClass().getName());
             }
 
-        } else if (call.getCallTarget() instanceof Constant) {
+        } else if (callTarget instanceof Constant) {
+            callTarget.getType().accept(visitors.getTypeVisitor());
+            out.print(" ");
             ((Constant) callTarget).accept(visitors.getConstantVisitor());
 
         } else {
