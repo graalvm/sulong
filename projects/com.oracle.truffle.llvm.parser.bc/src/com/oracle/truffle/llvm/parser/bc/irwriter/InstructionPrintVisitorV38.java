@@ -32,6 +32,7 @@ package com.oracle.truffle.llvm.parser.bc.irwriter;
 import com.oracle.truffle.llvm.parser.api.model.enums.AtomicOrdering;
 import com.oracle.truffle.llvm.parser.api.model.enums.SynchronizationScope;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.InlineAsmConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Call;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.CallInstruction;
@@ -41,6 +42,7 @@ import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
+import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
 final class InstructionPrintVisitorV38 extends InstructionPrintVisitor {
 
@@ -127,7 +129,8 @@ final class InstructionPrintVisitorV38 extends InstructionPrintVisitor {
     protected void printFunctionCall(Call call) {
         out.print(LLVMIR_LABEL_CALL);
         out.print(" ");
-        if (call.getCallTarget() instanceof FunctionType) {
+        final Symbol callTarget = call.getCallTarget();
+        if (callTarget instanceof FunctionType) {
             // <ty>
             final FunctionType decl = (FunctionType) call.getCallTarget();
 
@@ -140,32 +143,52 @@ final class InstructionPrintVisitorV38 extends InstructionPrintVisitor {
             }
             out.print(String.format(" %s", decl.getName()));
 
-        } else if (call.getCallTarget() instanceof CallInstruction) {
-            final FunctionType decl = ((CallInstruction) call.getCallTarget()).getCallType();
+        } else if (callTarget instanceof CallInstruction) {
+            final FunctionType decl = ((CallInstruction) callTarget).getCallType();
             decl.getReturnType().accept(visitors.getTypeVisitor());
-            out.print(String.format(" %s", ((CallInstruction) call.getCallTarget()).getName()));
+            out.print(String.format(" %s", ((CallInstruction) callTarget).getName()));
 
-        } else if (call.getCallTarget() instanceof LoadInstruction) {
-            Type targetType = ((LoadInstruction) call.getCallTarget()).getSource().getType();
+        } else if (callTarget instanceof FunctionParameter) {
+            callTarget.getType().accept(visitors.getTypeVisitor());
+            out.print(String.format(" %s ", ((FunctionParameter) callTarget).getName()));
+
+        } else if (callTarget instanceof ValueSymbol) {
+            Type targetType;
+            if (callTarget instanceof LoadInstruction) {
+                targetType = ((LoadInstruction) callTarget).getSource().getType();
+            } else {
+                targetType = callTarget.getType();
+            }
+
             while (targetType instanceof PointerType) {
                 targetType = ((PointerType) targetType).getPointeeType();
             }
 
             if (targetType instanceof FunctionType) {
-                ((FunctionType) targetType).getReturnType().accept(visitors.getTypeVisitor());
+                final FunctionType decl = (FunctionType) targetType;
+
+                decl.getReturnType().accept(visitors.getTypeVisitor());
+
+                if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
+                    out.print(" ");
+                    visitors.getTypeVisitor().printFormalArguments(decl);
+                    out.print("*");
+                }
+
                 out.print(" ");
-                visitors.getIRWriterUtil().printInnerSymbolValue(call.getCallTarget());
+                visitors.getIRWriterUtil().printInnerSymbolValue(callTarget);
 
             } else {
                 throw new AssertionError("unexpected target type: " + targetType.getClass().getName());
             }
 
-        } else if (call.getCallTarget() instanceof FunctionParameter) {
-            call.getCallTarget().getType().accept(visitors.getTypeVisitor());
-            out.print(String.format(" %s ", ((FunctionParameter) call.getCallTarget()).getName()));
-
-        } else if (call.getCallTarget() instanceof InlineAsmConstant) {
+        } else if (callTarget instanceof InlineAsmConstant) {
             ((InlineAsmConstant) call.getCallTarget()).accept(visitors.getConstantVisitor());
+
+        } else if (callTarget instanceof Constant) {
+            callTarget.getType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+            ((Constant) callTarget).accept(visitors.getConstantVisitor());
 
         } else {
             throw new AssertionError("unexpected target type: " + call.getCallTarget().getClass().getName());
