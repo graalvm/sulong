@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
+import com.oracle.truffle.llvm.parser.api.model.enums.CastOperator;
 import com.oracle.truffle.llvm.parser.api.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
@@ -36,18 +37,18 @@ import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalConstant;
+import com.oracle.truffle.llvm.parser.api.model.globals.GlobalValueSymbol;
 import com.oracle.truffle.llvm.parser.api.model.globals.GlobalVariable;
-import com.oracle.truffle.llvm.parser.api.model.symbols.constants.Constant;
-import com.oracle.truffle.llvm.parser.api.model.symbols.constants.NullConstant;
+import com.oracle.truffle.llvm.parser.api.model.symbols.constants.CastConstant;
 import com.oracle.truffle.llvm.parser.api.model.target.ModuleID;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
+import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
-import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
 class ModelPrintVisitor implements ModelVisitor {
 
@@ -66,117 +67,65 @@ class ModelPrintVisitor implements ModelVisitor {
 
     static final String UNRESOLVED_FORWARD_REFERENCE = "<unresolved>";
 
+    private void printGlobal(String keyword, GlobalValueSymbol global) {
+        out.print(global.getName());
+        out.print(" = ");
+
+        if (global.getLinkage() != Linkage.EXTERNAL || global.getValue() == null) {
+            out.print(global.getLinkage().getIrString()); // sulong specific toString
+            out.print(" ");
+        }
+
+        if (global.getVisibility() != Visibility.DEFAULT) {
+            out.print(global.getVisibility().toString()); // sulong specific toString
+            out.print(" ");
+        }
+
+        out.print(keyword);
+        out.print(" ");
+
+        final Symbol value = global.getValue();
+        if (value instanceof FunctionType) {
+            new PointerType((FunctionType) value).accept(visitors.getTypeVisitor());
+            out.print(" ");
+
+        } else if (!(value instanceof CastConstant && ((CastConstant) value).getOperator() == CastOperator.BITCAST)) {
+            ((PointerType) global.getType()).getPointeeType().accept(visitors.getTypeVisitor());
+            out.print(" ");
+        }
+
+        if (value != null) {
+            visitors.getIRWriterUtil().printInnerSymbolValue(value);
+        }
+
+        if (global.getAlign() > 1) {
+            out.print(", align ");
+            out.print(String.valueOf(1 << (global.getAlign() - 1)));
+        }
+
+        out.println();
+
+    }
+
+    private static final String LLVMIR_LABEL_ALIAS = "alias";
+
     @Override
     public void visit(GlobalAlias alias) {
-        // sulong specific toString
-        out.print(String.format("%s = alias %s", alias.getName(), alias.getLinkage()));
-        if (alias.getVisibility() != Visibility.DEFAULT) {
-            // sulong specific toString
-            out.print(String.format(" %s", alias.getVisibility().toString()));
-        }
-
-        out.print(" ");
-        alias.getType().accept(visitors.getTypeVisitor());
-
-        out.print(" ");
-        final Symbol val = alias.getValue();
-        if (val == null) {
-            out.print(UNRESOLVED_FORWARD_REFERENCE);
-        } else {
-            visitors.getIRWriterUtil().printInnerSymbolValue(alias.getValue());
-        }
-        out.println();
+        printGlobal(LLVMIR_LABEL_ALIAS, alias);
     }
+
+    private static final String LLVMIR_LABEL_CONSTANT = "constant";
 
     @Override
     public void visit(GlobalConstant constant) {
-        out.print(constant.getName());
-        out.print(" = ");
-        if (constant.getLinkage() != Linkage.EXTERNAL || constant.getValue() == null) {
-            out.print(constant.getLinkage().getIrString()); // sulong specific toString
-            out.print(" ");
-        }
-
-        if (constant.getVisibility() != Visibility.DEFAULT) {
-            out.print(constant.getVisibility().toString()); // sulong specific toString
-            out.print(" ");
-        }
-
-        out.print("constant ");
-
-        ((PointerType) constant.getType()).getPointeeType().accept(visitors.getTypeVisitor());
-
-        if (constant.getLinkage() == Linkage.EXTERNAL && constant.getValue() == null) {
-            out.println();
-            return;
-        }
-
-        out.print(" ");
-
-        if (constant.getValue() != null) {
-
-            if (constant.getValue() instanceof NullConstant) {
-                out.print(ConstantPrintVisitor.LLVMIR_LABEL_ZEROINITIALIZER);
-
-            } else if (constant.getValue() instanceof Constant) {
-                ((Constant) constant.getValue()).accept(visitors.getConstantVisitor());
-            } else {
-                throw new AssertionError("Cannot print Global Constant with non-constant value: " + constant.getValue());
-            }
-
-        }
-
-        if (constant.getAlign() > 1) {
-            out.print(", align ");
-            out.print(String.valueOf(1 << (constant.getAlign() - 1)));
-        }
-
-        out.println();
+        printGlobal(LLVMIR_LABEL_CONSTANT, constant);
     }
+
+    private static final String LLVMIR_LABEL_GLOBAL = "global";
 
     @Override
     public void visit(GlobalVariable variable) {
-        out.print(variable.getName());
-        out.print(" = ");
-
-        if (variable.getLinkage() != Linkage.EXTERNAL || variable.getValue() == null) {
-            out.print(variable.getLinkage().getIrString()); // sulong specific toString
-            out.print(" ");
-        }
-
-        if (variable.getVisibility() != Visibility.DEFAULT) {
-            out.print(variable.getVisibility().toString()); // sulong specific toString
-            out.print(" ");
-        }
-
-        out.print("global ");
-
-        ((PointerType) variable.getType()).getPointeeType().accept(visitors.getTypeVisitor());
-        out.print(" ");
-
-        if (variable.getValue() != null) {
-
-            if (variable.getValue() instanceof NullConstant) {
-                out.print(ConstantPrintVisitor.LLVMIR_LABEL_ZEROINITIALIZER);
-
-            } else if (variable.getValue() instanceof Constant) {
-                ((Constant) variable.getValue()).accept(visitors.getConstantVisitor());
-
-            } else if (variable.getValue() instanceof ValueSymbol) {
-                out.print(((ValueSymbol) variable.getValue()).getName());
-
-            } else {
-                throw new IllegalStateException("Cannot print Global with value: " + variable.getValue());
-            }
-
-        }
-
-        if (variable.getAlign() > 1) {
-            out.print(", align ");
-            out.print(String.valueOf(1 << (variable.getAlign() - 1)));
-        }
-
-        out.println();
+        printGlobal(LLVMIR_LABEL_GLOBAL, variable);
     }
 
     @Override
