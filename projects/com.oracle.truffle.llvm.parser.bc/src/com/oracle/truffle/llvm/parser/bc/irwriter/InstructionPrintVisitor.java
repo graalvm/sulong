@@ -654,16 +654,8 @@ class InstructionPrintVisitor implements InstructionVisitor {
 
         } else if (call.getCallTarget() instanceof CallInstruction) {
             final FunctionType decl = ((CallInstruction) call.getCallTarget()).getCallType();
-
             decl.getReturnType().accept(visitors.getTypeVisitor());
-
-            if (decl.isVarArg() || (decl.getReturnType() instanceof PointerType && ((PointerType) decl.getReturnType()).getPointeeType() instanceof FunctionType)) {
-
-                out.print(" ");
-                visitors.getTypeVisitor().printFormalArguments(decl);
-                out.print("*");
-            }
-            out.print(String.format(" %s", decl.getName()));
+            out.print(String.format(" %s", ((CallInstruction) call.getCallTarget()).getName()));
 
         } else if (call.getCallTarget() instanceof FunctionParameter) {
             call.getCallTarget().getType().accept(visitors.getTypeVisitor());
@@ -674,7 +666,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
             if (call.getCallTarget() instanceof LoadInstruction) {
                 targetType = ((LoadInstruction) call.getCallTarget()).getSource().getType();
             } else {
-                targetType = ((ValueSymbol) call.getCallTarget()).getType();
+                targetType = call.getCallTarget().getType();
             }
 
             while (targetType instanceof PointerType) {

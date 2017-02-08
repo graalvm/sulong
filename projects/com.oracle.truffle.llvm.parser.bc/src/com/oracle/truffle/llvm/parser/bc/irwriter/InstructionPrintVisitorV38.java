@@ -34,6 +34,7 @@ import com.oracle.truffle.llvm.parser.api.model.enums.SynchronizationScope;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.InlineAsmConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Call;
+import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.CallInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.GetElementPointerInstruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.LoadInstruction;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
@@ -138,6 +139,11 @@ final class InstructionPrintVisitorV38 extends InstructionPrintVisitor {
                 visitors.getTypeVisitor().printFormalArguments(decl);
             }
             out.print(String.format(" %s", decl.getName()));
+
+        } else if (call.getCallTarget() instanceof CallInstruction) {
+            final FunctionType decl = ((CallInstruction) call.getCallTarget()).getCallType();
+            decl.getReturnType().accept(visitors.getTypeVisitor());
+            out.print(String.format(" %s", ((CallInstruction) call.getCallTarget()).getName()));
 
         } else if (call.getCallTarget() instanceof LoadInstruction) {
             Type targetType = ((LoadInstruction) call.getCallTarget()).getSource().getType();
