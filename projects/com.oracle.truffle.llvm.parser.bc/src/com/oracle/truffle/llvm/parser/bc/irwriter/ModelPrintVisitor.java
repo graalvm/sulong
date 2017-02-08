@@ -92,13 +92,13 @@ class ModelPrintVisitor implements ModelVisitor {
     public void visit(GlobalConstant constant) {
         out.print(constant.getName());
         out.print(" = ");
-        if (constant.getVisibility() != Visibility.DEFAULT) {
-            out.print(constant.getVisibility().toString()); // sulong specific toString
+        if (constant.getLinkage() != Linkage.EXTERNAL || constant.getValue() == null) {
+            out.print(constant.getLinkage().getIrString()); // sulong specific toString
             out.print(" ");
         }
 
-        if (constant.getLinkage() != Linkage.EXTERNAL || constant.getValue() == null) {
-            out.print(constant.getLinkage().getIrString()); // sulong specific toString
+        if (constant.getVisibility() != Visibility.DEFAULT) {
+            out.print(constant.getVisibility().toString()); // sulong specific toString
             out.print(" ");
         }
 
@@ -138,13 +138,14 @@ class ModelPrintVisitor implements ModelVisitor {
     public void visit(GlobalVariable variable) {
         out.print(variable.getName());
         out.print(" = ");
-        if (variable.getVisibility() != Visibility.DEFAULT) {
-            out.print(variable.getVisibility().toString()); // sulong specific toString
-            out.print(" ");
-        }
 
         if (variable.getLinkage() != Linkage.EXTERNAL || variable.getValue() == null) {
             out.print(variable.getLinkage().getIrString()); // sulong specific toString
+            out.print(" ");
+        }
+
+        if (variable.getVisibility() != Visibility.DEFAULT) {
+            out.print(variable.getVisibility().toString()); // sulong specific toString
             out.print(" ");
         }
 
