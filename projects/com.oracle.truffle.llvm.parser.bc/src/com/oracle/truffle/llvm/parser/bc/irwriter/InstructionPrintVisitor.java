@@ -316,6 +316,8 @@ class InstructionPrintVisitor implements InstructionVisitor {
             if (i != 0) {
                 out.print(", ");
             }
+            out.print(LLVMIR_LABEL_BRANCH_LABEL);
+            out.print(" ");
             visitors.getIRWriterUtil().printBlockName(branch.getSuccessor(i));
         }
         out.println(" ]");

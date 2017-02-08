@@ -116,7 +116,7 @@ class ModelPrintVisitor implements ModelVisitor {
         if (constant.getValue() != null) {
 
             if (constant.getValue() instanceof NullConstant) {
-                out.print("zeroinitializer");
+                out.print(ConstantPrintVisitor.LLVMIR_LABEL_ZEROINITIALIZER);
 
             } else if (constant.getValue() instanceof Constant) {
                 ((Constant) constant.getValue()).accept(visitors.getConstantVisitor());
@@ -157,7 +157,7 @@ class ModelPrintVisitor implements ModelVisitor {
         if (variable.getValue() != null) {
 
             if (variable.getValue() instanceof NullConstant) {
-                out.print("zeroinitializer");
+                out.print(ConstantPrintVisitor.LLVMIR_LABEL_ZEROINITIALIZER);
 
             } else if (variable.getValue() instanceof Constant) {
                 ((Constant) variable.getValue()).accept(visitors.getConstantVisitor());

@@ -54,11 +54,7 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.BigIntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ConstantVisitor;
-import com.oracle.truffle.llvm.runtime.types.ArrayType;
-import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
-import com.oracle.truffle.llvm.runtime.types.FunctionType;
-import com.oracle.truffle.llvm.runtime.types.IntegerType;
-import com.oracle.truffle.llvm.runtime.types.PointerType;
+import com.oracle.truffle.llvm.runtime.types.*;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
 class ConstantPrintVisitor implements ConstantVisitor {
@@ -135,9 +131,16 @@ class ConstantPrintVisitor implements ConstantVisitor {
         visitors.getIRWriterUtil().printInnerSymbolValue(binaryOperationConstant.getRHS());
     }
 
+    private static final String LLVMIR_LABEL_BLOCKADDRESS = "blockaddress";
+
     @Override
     public void visit(BlockAddressConstant blockAddressConstant) {
-        out.print(String.format("label %s", blockAddressConstant.getInstructionBlock().getName()));
+        out.print(LLVMIR_LABEL_BLOCKADDRESS);
+        out.print(" (");
+        out.print(blockAddressConstant.getFunction().getName());
+        out.print(", ");
+        visitors.getIRWriterUtil().printBlockName(blockAddressConstant.getInstructionBlock());
+        out.print(")");
     }
 
     @Override
@@ -301,6 +304,8 @@ class ConstantPrintVisitor implements ConstantVisitor {
         }
     }
 
+    static final String LLVMIR_LABEL_ZEROINITIALIZER = "zeroinitializer";
+
     @Override
     public void visit(NullConstant nullConstant) {
         if (nullConstant.getType() instanceof IntegerType) {
@@ -312,6 +317,8 @@ class ConstantPrintVisitor implements ConstantVisitor {
 
         } else if (nullConstant.getType() instanceof FloatingPointType) {
             out.print(String.valueOf(0.0));
+        } else if (nullConstant.getType() instanceof AggregateType) {
+            out.print(LLVMIR_LABEL_ZEROINITIALIZER);
         } else {
             out.print("null");
         }
