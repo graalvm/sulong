@@ -56,7 +56,6 @@ public abstract class ModuleVersionHelper {
 
         @Override
         public void createGlobalVariable(Module m, long[] args) {
-            // Checkstyle: stop magic number name check
             Type type = m.types.get(args[0]);
             boolean isConstant = (args[1] & 1) == 1;
             int initialiser = (int) args[2];
@@ -67,7 +66,6 @@ public abstract class ModuleVersionHelper {
             if (args.length >= 7) {
                 visibility = args[6];
             }
-            // Checkstyle: resume magic number name check
 
             m.generator.createGlobal(type, isConstant, initialiser, align, linkage, visibility);
             m.symbols.add(type);
@@ -91,7 +89,6 @@ public abstract class ModuleVersionHelper {
 
         @Override
         public void createGlobalVariable(Module m, long[] args) {
-            // Checkstyle: stop magic number name check
             Type type = new PointerType(m.types.get(args[0]));
             boolean isConstant = (args[1] & 1) == 1;
             int initialiser = (int) args[2];
@@ -102,7 +99,6 @@ public abstract class ModuleVersionHelper {
             if (args.length >= 7) {
                 visibility = args[6];
             }
-            // Checkstyle: resume magic number name check
 
             m.generator.createGlobal(type, isConstant, initialiser, align, linkage, visibility);
             m.symbols.add(type);
