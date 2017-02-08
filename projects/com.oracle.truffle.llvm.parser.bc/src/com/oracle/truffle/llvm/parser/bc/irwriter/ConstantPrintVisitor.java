@@ -125,14 +125,17 @@ class ConstantPrintVisitor implements ConstantVisitor {
     @Override
     public void visit(BinaryOperationConstant binaryOperationConstant) {
         out.print(binaryOperationConstant.getOperator().toString()); // sulong specific toString
-        out.print(" ");
-        binaryOperationConstant.getType().accept(visitors.getTypeVisitor());
 
+        out.print(" (");
+        binaryOperationConstant.getLHS().getType().accept(visitors.getTypeVisitor());
         out.print(" ");
         visitors.getIRWriterUtil().printInnerSymbolValue(binaryOperationConstant.getLHS());
 
         out.print(", ");
+        binaryOperationConstant.getRHS().getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
         visitors.getIRWriterUtil().printInnerSymbolValue(binaryOperationConstant.getRHS());
+        out.print(")");
     }
 
     private static final String LLVMIR_LABEL_BLOCKADDRESS = "blockaddress";
@@ -171,14 +174,17 @@ class ConstantPrintVisitor implements ConstantVisitor {
         }
         out.print(" ");
         out.print(compareConstant.getOperator().toString()); // sulong specific toString
-        out.print(" ");
-        compareConstant.getType().accept(visitors.getTypeVisitor());
-        out.print(" ");
+        out.print(" (");
 
+        compareConstant.getLHS().getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
         visitors.getIRWriterUtil().printInnerSymbolValue(compareConstant.getLHS());
 
         out.print(", ");
+        compareConstant.getRHS().getType().accept(visitors.getTypeVisitor());
+        out.print(" ");
         visitors.getIRWriterUtil().printInnerSymbolValue(compareConstant.getRHS());
+        out.print(")");
     }
 
     @Override
@@ -314,7 +320,7 @@ class ConstantPrintVisitor implements ConstantVisitor {
         }
     }
 
-    static final String LLVMIR_LABEL_ZEROINITIALIZER = "zeroinitializer";
+    private static final String LLVMIR_LABEL_ZEROINITIALIZER = "zeroinitializer";
 
     @Override
     public void visit(NullConstant nullConstant) {
