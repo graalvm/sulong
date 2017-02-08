@@ -30,7 +30,6 @@
 package com.oracle.truffle.llvm.parser.bc.irwriter;
 
 import java.math.BigInteger;
-import java.util.Locale;
 
 import com.oracle.truffle.llvm.parser.api.model.enums.AsmDialect;
 import com.oracle.truffle.llvm.parser.api.model.functions.FunctionDeclaration;
@@ -54,7 +53,12 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.BigIntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ConstantVisitor;
-import com.oracle.truffle.llvm.runtime.types.*;
+import com.oracle.truffle.llvm.runtime.types.AggregateType;
+import com.oracle.truffle.llvm.runtime.types.ArrayType;
+import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
+import com.oracle.truffle.llvm.runtime.types.FunctionType;
+import com.oracle.truffle.llvm.runtime.types.IntegerType;
+import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
 class ConstantPrintVisitor implements ConstantVisitor {
@@ -179,12 +183,18 @@ class ConstantPrintVisitor implements ConstantVisitor {
 
     @Override
     public void visit(DoubleConstant doubleConstant) {
-        out.print(String.format(Locale.ROOT, "%e", doubleConstant.getValue()));
+        // see http://llvm.org/releases/3.2/docs/LangRef.html#simpleconstants for
+        // why we cannot use String.format(Locale.ROOT, "%e", doubleConstant.getValue())
+        final long bits = Double.doubleToRawLongBits(doubleConstant.getValue());
+        out.print(String.format("0x%x", bits));
     }
 
     @Override
     public void visit(FloatConstant floatConstant) {
-        out.print(String.format(Locale.ROOT, "%e", floatConstant.getValue()));
+        // see http://llvm.org/releases/3.2/docs/LangRef.html#simpleconstants for
+        // why we cannot use String.format(Locale.ROOT, "%e", doubleConstant.getValue())
+        final long bits = Double.doubleToRawLongBits(floatConstant.getValue());
+        out.print(String.format("0x%x", bits));
     }
 
     private static final int HEX_MASK = 0xf;
