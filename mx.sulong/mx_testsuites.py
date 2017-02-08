@@ -93,7 +93,7 @@ def runIRGeneratorSuite32(vmArgs):
         run32(vmArgs + ['-Dsulong.PrintLLVMIR=file'], "com.oracle.truffle.llvm.test.alpha.IRGeneratorSuite", [])
     except:
         pass
-    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_33)
+    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_32)
 
 def runIRGeneratorSuite38(vmArgs):
     """runs the Sulong test suite"""
