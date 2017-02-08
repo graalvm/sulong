@@ -137,7 +137,7 @@ class InstructionPrintVisitor implements InstructionVisitor {
     @Override
     public void visit(BranchInstruction branch) {
         out.print(INDENTATION);
-        out.print(String.format("%s %s", LLVMIR_LABEL_BRANCH, LLVMIR_LABEL_BRANCH_LABEL));
+        out.print(String.format("%s %s ", LLVMIR_LABEL_BRANCH, LLVMIR_LABEL_BRANCH_LABEL));
         visitors.getIRWriterUtil().printBlockName(branch.getSuccessor());
         out.println();
     }
