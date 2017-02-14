@@ -111,7 +111,7 @@ def _runIRGeneratorSuite(assembler):
     print(sulongSuiteCacheDir)
     failed = []
     passed = []
-    for root, subDirs, files in os.walk(sulongSuiteCacheDir):
+    for root, _, files in os.walk(sulongSuiteCacheDir):
         for fileName in files:
             inputFile = os.path.join(sulongSuiteCacheDir, root, fileName)
             if inputFile.endswith('.out.ll'):
