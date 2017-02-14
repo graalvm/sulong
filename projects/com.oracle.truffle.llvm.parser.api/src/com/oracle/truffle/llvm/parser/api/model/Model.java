@@ -31,13 +31,15 @@ package com.oracle.truffle.llvm.parser.api.model;
 
 import com.oracle.truffle.llvm.parser.api.model.generators.ApplicationGenerator;
 import com.oracle.truffle.llvm.parser.api.model.generators.ModuleGenerator;
+import com.oracle.truffle.llvm.parser.api.model.target.ModuleID;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 
 public final class Model implements ApplicationGenerator {
 
-    private final ModelModule module = new ModelModule();
+    private final ModelModule module;
 
-    public Model() {
+    public Model(final String moduleID) {
+        this.module = new ModelModule(new ModuleID(moduleID));
     }
 
     public void accept(ModelVisitor visitor) {

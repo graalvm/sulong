@@ -59,13 +59,14 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.BigInt
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.api.model.symbols.instructions.ValueInstruction;
+import com.oracle.truffle.llvm.parser.api.model.visitors.ConstantVisitor;
 import com.oracle.truffle.llvm.parser.api.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.IntegerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock;
-import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 
 public final class FunctionDefinition extends FunctionType implements Constant, FunctionGenerator {
 
@@ -85,6 +86,11 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
         super(type.getReturnType(), type.getArgumentTypes(), type.isVarArg());
         this.metadata = metadata;
         namesToTypes = new HashMap<>();
+    }
+
+    @Override
+    public void accept(ConstantVisitor visitor) {
+        visitor.visit(this);
     }
 
     public void accept(FunctionVisitor visitor) {
@@ -117,25 +123,25 @@ public final class FunctionDefinition extends FunctionType implements Constant, 
 
         // in K&R style function declarations the parameters are not assigned names
         for (final FunctionParameter parameter : parameters) {
-            if (ValueSymbol.UNKNOWN.equals(parameter.getName())) {
+            if (LLVMIdentifier.UNKNOWN.equals(parameter.getName())) {
                 parameter.setName(String.valueOf(symbolIndex++));
             }
             namesToTypes.put(parameter.getName(), parameter.getType());
         }
 
-        final Set<String> explicitBlockNames = Arrays.stream(blocks).map(InstructionBlock::getName).filter(blockName -> !ValueSymbol.UNKNOWN.equals(blockName)).collect(Collectors.toSet());
+        final Set<String> blockNames = Arrays.stream(blocks).map(InstructionBlock::getName).filter(blockName -> !LLVMIdentifier.UNKNOWN.equals(blockName)).collect(Collectors.toSet());
         for (final InstructionBlock block : blocks) {
-            if (block.getName().equals(ValueSymbol.UNKNOWN)) {
+            if (block.getName().equals(LLVMIdentifier.UNKNOWN)) {
                 do {
-                    block.setName(String.valueOf(symbolIndex++));
+                    block.setImplicitName(symbolIndex++);
                     // avoid name clashes
-                } while (explicitBlockNames.contains(block.getName()));
+                } while (blockNames.contains(block.getName()));
             }
             for (int i = 0; i < block.getInstructionCount(); i++) {
                 final Instruction instruction = block.getInstruction(i);
                 if (instruction instanceof ValueInstruction) {
                     final ValueInstruction value = (ValueInstruction) instruction;
-                    if (value.getName().equals(ValueSymbol.UNKNOWN)) {
+                    if (value.getName().equals(LLVMIdentifier.UNKNOWN)) {
                         value.setName(String.valueOf(symbolIndex++));
                     }
                     namesToTypes.put(value.getName(), value.getType());

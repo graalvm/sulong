@@ -57,7 +57,8 @@ public enum Visibility {
         return DEFAULT;
     }
 
-    public String getIrString() {
+    @Override
+    public String toString() {
         return irString;
     }
 }

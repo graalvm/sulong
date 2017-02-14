@@ -85,6 +85,58 @@ def runSulongSuite38(vmArgs):
     compileSuite(['sulong38'])
     return run38(vmArgs, "com.oracle.truffle.llvm.test.alpha.SulongSuite")
 
+def runIRGeneratorSuite32(vmArgs):
+    """runs the Sulong test suite"""
+    mx_sulong.ensureDragonEggExists()
+    compileSuite(['sulong'])
+    try:
+        run32(vmArgs + ['-Dsulong.PrintLLVMIR=file'], "com.oracle.truffle.llvm.test.alpha.IRGeneratorSuite", [])
+    except:
+        pass
+    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_32, mx_tools.Tool.LLVM_LLI_32)
+
+def runIRGeneratorSuite38(vmArgs):
+    """runs the Sulong test suite"""
+    mx_sulong.ensureDragonEggExists()
+    compileSuite(['sulong38'])
+    try:
+        run38(vmArgs + ['-Dsulong.PrintLLVMIR=file'], "com.oracle.truffle.llvm.test.alpha.IRGeneratorSuite", [])
+    except:
+        pass
+    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_38, mx_tools.Tool.LLVM_LLI_38)
+
+def _runIRGeneratorSuite(assembler, lli):
+    sulongSuiteCacheDir = os.path.join(_cacheDir, 'sulong')
+    print('Testing Reassembly')
+    print(sulongSuiteCacheDir)
+    failed = []
+    passed = []
+    for root, _, files in os.walk(sulongSuiteCacheDir):
+        for fileName in files:
+            inputFile = os.path.join(sulongSuiteCacheDir, root, fileName)
+            if inputFile.endswith('.out.ll'):
+                if assembler.run(inputFile) == 0:
+                    exit_code_ref = lli.run(inputFile[:-7] + ".bc")
+                    exit_code_out = lli.run(inputFile[:-7] + ".out.bc")
+                    if exit_code_ref == exit_code_out:
+                        print('.', end='')
+                        passed.append(inputFile)
+                    else:
+                        print('E', end='')
+                        failed.append(inputFile)
+                else:
+                    print('E', end='')
+                    failed.append(inputFile)
+    total = len(failed) + len(passed)
+    print()
+    if len(failed) != 0:
+        mx.log_error('Failed ' + str(len(failed)) + ' of ' + str(total) + ' Tests!')
+        for x in range(0, len(failed)):
+            mx.log_error(str(x) + ') ' + failed[x])
+    else:
+        mx.log('Passed all ' + str(total) + ' Tests!')
+    return None
+
 def runShootoutSuite(vmArgs):
     """runs the Sulong test suite"""
     mx_sulong.ensureDragonEggExists()
@@ -240,6 +292,8 @@ testSuites = {
     'llvm' : (compileLLVMSuite, runLLVMSuite),
     'sulong' : (compileSulongSuite, runSulongSuite),
     'sulong38' : (compileV38SulongSuite, runSulongSuite38),
+    'irgenerator32' : (compileSulongSuite, runIRGeneratorSuite32),
+    'irgenerator38' : (compileV38SulongSuite, runIRGeneratorSuite38),
     'shootout' : (compileShootoutSuite, runShootoutSuite),
     'interop' : (compileInteropTests, runInteropTests),
     'tck' : (compileInteropTests, runTCKTests),

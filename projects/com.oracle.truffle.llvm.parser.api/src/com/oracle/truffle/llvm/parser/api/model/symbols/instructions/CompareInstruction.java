@@ -32,25 +32,35 @@ package com.oracle.truffle.llvm.parser.api.model.symbols.instructions;
 import com.oracle.truffle.llvm.parser.api.model.enums.CompareOperator;
 import com.oracle.truffle.llvm.parser.api.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.api.model.visitors.InstructionVisitor;
+import com.oracle.truffle.llvm.runtime.types.IntegerType;
 import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.VectorType;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
 public final class CompareInstruction extends ValueInstruction {
 
     private final CompareOperator operator;
 
+    private final Type baseType;
+
     private Symbol lhs;
 
     private Symbol rhs;
 
     private CompareInstruction(Type type, CompareOperator operator) {
-        super(type);
+        // The comparison performed always yields either an i1 or vector of i1 result
+        super(type instanceof VectorType ? new VectorType(IntegerType.BOOLEAN, ((VectorType) type).getLength()) : IntegerType.BOOLEAN);
+        this.baseType = type;
         this.operator = operator;
     }
 
     @Override
     public void accept(InstructionVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public Type getBaseType() {
+        return baseType;
     }
 
     public Symbol getLHS() {

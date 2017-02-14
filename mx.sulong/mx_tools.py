@@ -61,20 +61,20 @@ class Tool(object):
     def supports(self, language):
         return language in self.supportedLanguages
 
-    def runTool(self, args, errorMsg=None):
+    def runTool(self, args, errorMsg=None, **kwargs):
         try:
             if not mx.get_opts().verbose:
                 f = open(os.devnull, 'w')
-                ret = mx.run(args, out=f, err=f)
+                ret = mx.run(args, out=f, err=f, **kwargs)
             else:
                 f = None
-                ret = mx.run(args)
+                ret = mx.run(args, *kwargs)
         except SystemExit:
             ret = -1
             if errorMsg is None:
-                print('\nError: Cannot run %s' % args)
+                mx.log_error('\nError: Cannot run %s' % args)
             else:
-                print('\nError: %s\n%s' % (errorMsg, ' '.join(args)))
+                mx.log_error('\nError: %s\n%s' % (errorMsg, ' '.join(args)))
         if f is not None:
             f.close()
         return ret
@@ -199,6 +199,26 @@ class OptV38(Tool):
     def run(self, inputFile, outputFile, flags):
         return mx.run([mx_sulong.findLLVMProgram('opt', ['3.8', '3.9']), '-o', outputFile] + self.passes + [inputFile])
 
+class LlvmAS(Tool):
+    def __init__(self, supportedVersions):
+        self.supportedVersions = supportedVersions
+
+    def run(self, inputFile, flags=None):
+        if flags is None:
+            flags = []
+        tool = mx_sulong.findLLVMProgram('llvm-as', self.supportedVersions)
+        return self.runTool([tool] + flags + [inputFile], errorMsg='Cannot assemble %s with %s' % (inputFile, tool))
+
+class LlvmLLI(Tool):
+    def __init__(self, supportedVersions):
+        self.supportedVersions = supportedVersions
+
+    def run(self, inputFile, flags=None):
+        if flags is None:
+            flags = []
+        tool = mx_sulong.findLLVMProgram('lli', self.supportedVersions)
+        return self.runTool([tool] + flags + [inputFile], nonZeroIsFatal=False, errorMsg='Cannot run %s with %s' % (inputFile, tool))
+
 Tool.CLANG = ClangCompiler()
 Tool.CLANG_C = ClangCompiler('clangc', [ProgrammingLanguage.C])
 Tool.CLANG_CPP = ClangCompiler('clangcpp', [ProgrammingLanguage.C_PLUS_PLUS])
@@ -222,6 +242,12 @@ Tool.MEM2REG_V38 = OptV38('MEM2REG', ['-mem2reg'])
 
 Tool.CPP_OPT_V38 = OptV38('CPP_OPT_v38', ['-lowerinvoke', '-prune-eh', '-simplifycfg'])
 Tool.C_OPT_V38 = OptV38('C_OPT_v38', ['-mem2reg', '-always-inline', '-jump-threading', '-simplifycfg'])
+
+Tool.LLVM_AS_32 = LlvmAS(['3.2', '3.3'])
+Tool.LLVM_AS_38 = LlvmAS(['3.8', '3.9'])
+
+Tool.LLVM_LLI_32 = LlvmLLI(['3.2', '3.3'])
+Tool.LLVM_LLI_38 = LlvmLLI(['3.8', '3.9'])
 
 def createOutputPath(path, inputFile, outputDir):
     base, _ = os.path.splitext(inputFile)

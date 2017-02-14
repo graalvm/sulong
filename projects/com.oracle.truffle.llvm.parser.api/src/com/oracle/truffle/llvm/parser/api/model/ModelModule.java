@@ -55,6 +55,7 @@ import com.oracle.truffle.llvm.parser.api.model.symbols.constants.UndefinedConst
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.floatingpoint.FloatingPointConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.BigIntegerConstant;
 import com.oracle.truffle.llvm.parser.api.model.symbols.constants.integer.IntegerConstant;
+import com.oracle.truffle.llvm.parser.api.model.target.ModuleID;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
 import com.oracle.truffle.llvm.parser.api.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
@@ -65,6 +66,8 @@ import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
 public final class ModelModule implements ModuleGenerator {
+
+    private final ModuleID moduleID;
 
     private final List<Type> types = new ArrayList<>();
 
@@ -91,10 +94,15 @@ public final class ModelModule implements ModuleGenerator {
         return targetDataLayout;
     }
 
-    public ModelModule() {
+    public ModelModule(ModuleID moduleID) {
+        this.moduleID = moduleID;
     }
 
     public void accept(ModelVisitor visitor) {
+        visitor.visit(moduleID);
+        if (targetDataLayout != null) {
+            visitor.visit(targetDataLayout);
+        }
         types.forEach(visitor::visit);
         for (GlobalValueSymbol variable : globals) {
             variable.accept(visitor);
@@ -104,8 +112,8 @@ public final class ModelModule implements ModuleGenerator {
     }
 
     @Override
-    public void createAlias(Type type, int aliasedValue, long linkage) {
-        GlobalAlias alias = new GlobalAlias(type, aliasedValue, linkage);
+    public void createAlias(Type type, int aliasedValue, long linkage, long visibility) {
+        GlobalAlias alias = GlobalAlias.create(type, aliasedValue, linkage, visibility);
 
         symbols.addSymbol(alias);
         globals.add(alias);
@@ -200,12 +208,12 @@ public final class ModelModule implements ModuleGenerator {
     }
 
     @Override
-    public void createGlobal(Type type, boolean isConstant, int initialiser, int align, long linkage) {
+    public void createGlobal(Type type, boolean isConstant, int initialiser, int align, long linkage, long visibility) {
         final GlobalValueSymbol global;
         if (isConstant) {
-            global = GlobalConstant.create(type, initialiser, align, linkage);
+            global = GlobalConstant.create(type, initialiser, align, linkage, visibility);
         } else {
-            global = GlobalVariable.create(type, initialiser, align, linkage);
+            global = GlobalVariable.create(type, initialiser, align, linkage, visibility);
         }
         symbols.addSymbol(global);
         globals.add(global);

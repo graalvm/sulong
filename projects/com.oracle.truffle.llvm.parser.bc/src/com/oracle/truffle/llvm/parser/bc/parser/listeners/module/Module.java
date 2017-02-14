@@ -32,6 +32,7 @@ package com.oracle.truffle.llvm.parser.bc.parser.listeners.module;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.llvm.parser.api.model.enums.Visibility;
 import com.oracle.truffle.llvm.parser.api.model.generators.FunctionGenerator;
 import com.oracle.truffle.llvm.parser.api.model.generators.ModuleGenerator;
 import com.oracle.truffle.llvm.parser.api.model.target.TargetDataLayout;
@@ -160,7 +161,7 @@ public class Module implements ParserListener {
         int value = (int) args[1];
         long linkage = args[2];
 
-        generator.createAlias(type, value, linkage);
+        generator.createAlias(type, value, linkage, Visibility.DEFAULT.ordinal());
         symbols.add(type);
     }
 
@@ -183,7 +184,7 @@ public class Module implements ParserListener {
         long linkage = args[i++];
         int align = (int) args[i];
 
-        generator.createGlobal(type, isConstant, initialiser, align, linkage);
+        generator.createGlobal(type, isConstant, initialiser, align, linkage, Visibility.DEFAULT.ordinal());
         symbols.add(type);
     }
 }
