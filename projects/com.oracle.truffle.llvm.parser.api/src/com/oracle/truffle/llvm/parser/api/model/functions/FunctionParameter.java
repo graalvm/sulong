@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.parser.api.model.functions;
 
 import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
 public final class FunctionParameter implements ValueSymbol {
@@ -38,7 +39,7 @@ public final class FunctionParameter implements ValueSymbol {
 
     private final int index;
 
-    private String name = ValueSymbol.UNKNOWN;
+    private String name = LLVMIdentifier.UNKNOWN;
 
     public FunctionParameter(Type type, int index) {
         this.type = type;
@@ -56,7 +57,7 @@ public final class FunctionParameter implements ValueSymbol {
 
     @Override
     public void setName(String name) {
-        this.name = "%" + name;
+        this.name = LLVMIdentifier.toLocalIdentifier(name);
     }
 
     @Override
