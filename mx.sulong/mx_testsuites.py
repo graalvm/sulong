@@ -93,7 +93,7 @@ def runIRGeneratorSuite32(vmArgs):
         run32(vmArgs + ['-Dsulong.PrintLLVMIR=file'], "com.oracle.truffle.llvm.test.alpha.IRGeneratorSuite", [])
     except:
         pass
-    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_32)
+    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_32, mx_tools.Tool.LLVM_LLI_32)
 
 def runIRGeneratorSuite38(vmArgs):
     """runs the Sulong test suite"""
@@ -103,9 +103,9 @@ def runIRGeneratorSuite38(vmArgs):
         run38(vmArgs + ['-Dsulong.PrintLLVMIR=file'], "com.oracle.truffle.llvm.test.alpha.IRGeneratorSuite", [])
     except:
         pass
-    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_38)
+    return _runIRGeneratorSuite(mx_tools.Tool.LLVM_AS_38, mx_tools.Tool.LLVM_LLI_38)
 
-def _runIRGeneratorSuite(assembler):
+def _runIRGeneratorSuite(assembler, lli):
     sulongSuiteCacheDir = os.path.join(_cacheDir, 'sulong')
     print('Testing Reassembly')
     print(sulongSuiteCacheDir)
@@ -116,18 +116,25 @@ def _runIRGeneratorSuite(assembler):
             inputFile = os.path.join(sulongSuiteCacheDir, root, fileName)
             if inputFile.endswith('.out.ll'):
                 if assembler.run(inputFile) == 0:
-                    print('.', end='')
-                    passed.append(inputFile)
+                    exit_code_ref = lli.run(inputFile[:-7] + ".bc")
+                    exit_code_out = lli.run(inputFile[:-7] + ".out.bc")
+                    if exit_code_ref == exit_code_out:
+                        print('.', end='')
+                        passed.append(inputFile)
+                    else:
+                        print('E', end='')
+                        failed.append(inputFile)
                 else:
                     print('E', end='')
                     failed.append(inputFile)
     total = len(failed) + len(passed)
+    print()
     if len(failed) != 0:
-        print('Failed ' + str(len(failed)) + ' of ' + str(total) + ' Tests!')
+        mx.log_error('Failed ' + str(len(failed)) + ' of ' + str(total) + ' Tests!')
         for x in range(0, len(failed)):
-            print(str(x) + ') ' + failed[x])
+            mx.log_error(str(x) + ') ' + failed[x])
     else:
-        print('Passed all ' + str(total) + ' Tests!')
+        mx.log('Passed all ' + str(total) + ' Tests!')
     return None
 
 def runShootoutSuite(vmArgs):
