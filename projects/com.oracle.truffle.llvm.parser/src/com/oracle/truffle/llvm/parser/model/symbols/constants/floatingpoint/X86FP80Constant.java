@@ -31,7 +31,7 @@ package com.oracle.truffle.llvm.parser.model.symbols.constants.floatingpoint;
 
 import java.util.Arrays;
 
-import com.oracle.truffle.llvm.parser.model.visitors.AbstractConstantVisitor;
+import com.oracle.truffle.llvm.parser.model.visitors.ConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.FloatingPointType;
 
 public final class X86FP80Constant extends FloatingPointConstant {
@@ -44,7 +44,7 @@ public final class X86FP80Constant extends FloatingPointConstant {
     }
 
     @Override
-    public void accept(AbstractConstantVisitor visitor) {
+    public void accept(ConstantVisitor visitor) {
         visitor.visit(this);
     }
 

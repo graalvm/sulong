@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.oracle.truffle.llvm.parser.model.symbols.Symbols;
-import com.oracle.truffle.llvm.parser.model.visitors.AbstractConstantVisitor;
+import com.oracle.truffle.llvm.parser.model.visitors.ConstantVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
@@ -52,7 +52,7 @@ public final class GetElementPointerConstant extends AbstractConstant {
     }
 
     @Override
-    public void accept(AbstractConstantVisitor visitor) {
+    public void accept(ConstantVisitor visitor) {
         visitor.visit(this);
     }
 
