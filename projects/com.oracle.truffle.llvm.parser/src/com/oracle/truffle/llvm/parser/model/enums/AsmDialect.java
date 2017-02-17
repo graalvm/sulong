@@ -31,10 +31,20 @@ package com.oracle.truffle.llvm.parser.model.enums;
 
 public enum AsmDialect {
 
-    AT_T,
-    INTEL;
+    AT_T(""),
+    INTEL("inteldialect");
+
+    private final String irString;
 
     public static AsmDialect decode(long id) {
         return values()[(int) id];
+    }
+
+    AsmDialect(String irString) {
+        this.irString = irString;
+    }
+
+    public String getIrString() {
+        return irString;
     }
 }
