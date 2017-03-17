@@ -42,12 +42,12 @@ public enum Flag {
     FP_ALLOW_RECIPROCAL("arcp", 16),
     FP_FAST("fast", 31);
 
-    private final String isString;
+    private final String irString;
 
     private final int mask;
 
-    Flag(String isString, int mask) {
-        this.isString = isString;
+    Flag(String irString, int mask) {
+        this.irString = irString;
         this.mask = mask;
     }
 
@@ -56,7 +56,7 @@ public enum Flag {
     }
 
     public String getIrString() {
-        return isString;
+        return irString;
     }
 
     /*

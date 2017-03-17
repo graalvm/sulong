@@ -48,6 +48,10 @@ public final class FunctionType implements Type {
         return argumentTypes;
     }
 
+    public boolean isVarargs() {
+        return isVarargs;
+    }
+
     public Type getReturnType() {
         return returnType;
     }
