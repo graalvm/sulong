@@ -249,6 +249,12 @@ final class LLVMBitcodeInstructionVisitor implements InstructionVisitor {
 
     @Override
     public void visit(CompareExchangeInstruction cmpxchg) {
+        final LLVMExpressionNode ptrNode = symbols.resolve(cmpxchg.getPtr());
+        final LLVMExpressionNode cmpNode = symbols.resolve(cmpxchg.getCmp());
+        final LLVMExpressionNode newNode = symbols.resolve(cmpxchg.getReplace());
+        final Type elementType = cmpxchg.getCmp().getType();
+
+        createFrameWrite(factoryFacade.createCompareExchangeInstruction(runtime, cmpxchg.getType(), elementType, ptrNode, cmpNode, newNode), cmpxchg);
         throw new UnsupportedOperationException("Not supported yet!");
     }
 

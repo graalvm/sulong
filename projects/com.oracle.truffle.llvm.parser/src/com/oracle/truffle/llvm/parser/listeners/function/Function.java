@@ -288,10 +288,12 @@ public abstract class Function implements ParserListener {
         final Symbols functionSymbols = code.getFunctionSymbols();
         int i = 0;
 
-        final Type ptrType = symbols.get(getIndex(args[i]));
-        final int ptr = getIndex(args[++i]);
+        final Type ptrType;
+        final int ptr = getIndex(args[i]);
         if (ptr >= functionSymbols.getSize()) {
-            ++i; // type of ptr
+            ptrType = types.get(args[++i]);
+        } else {
+            ptrType = symbols.get(ptr);
         }
         final int cmp = getIndex(args[++i]);
         if (record == FunctionRecord.CMPXCHG && cmp >= functionSymbols.getSize()) {
