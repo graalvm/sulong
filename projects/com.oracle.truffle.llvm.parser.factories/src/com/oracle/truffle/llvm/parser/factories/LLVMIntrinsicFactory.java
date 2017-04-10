@@ -58,6 +58,8 @@ import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMReturnAddressFactory;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMStackRestoreNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMStackSaveNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMTrapFactory;
+import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMCopySignFactory.LLVMCopySignDoubleFactory;
+import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMCopySignFactory.LLVMCopySignFloatFactory;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMFabsFactory;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMPowFactory.LLVMPowDoubleFactory;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMPowFactory.LLVMPowFloatFactory;
@@ -122,6 +124,9 @@ final class LLVMIntrinsicFactory {
         factories.put("@llvm.returnaddress", LLVMReturnAddressFactory.getInstance());
         factories.put("@llvm.lifetime.start", LLVMLifetimeStartFactory.getInstance());
         factories.put("@llvm.lifetime.end", LLVMLifetimeEndFactory.getInstance());
+
+        factories.put("@llvm.copysign.f64", LLVMCopySignDoubleFactory.getInstance());
+        factories.put("@llvm.copysign.f32", LLVMCopySignFloatFactory.getInstance());
     }
 
     private LLVMIntrinsicFactory() {
