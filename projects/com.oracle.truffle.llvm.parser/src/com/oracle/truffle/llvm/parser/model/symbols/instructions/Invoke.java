@@ -34,7 +34,7 @@ import com.oracle.truffle.llvm.parser.model.enums.Linkage;
 import com.oracle.truffle.llvm.parser.model.enums.Visibility;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
-interface Invoke extends TerminatingInstruction {
+public interface Invoke extends TerminatingInstruction {
 
     Symbol getArgument(int index);
 
