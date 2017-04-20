@@ -61,9 +61,9 @@ import com.oracle.truffle.llvm.runtime.types.metadata.MetadataTemplateTypeParame
 
 public final class MetadataVersion {
 
-    public static final class MetadataV38 extends Metadata {
+    public static final class MetadataV2 extends Metadata {
 
-        public MetadataV38(Types types, List<Type> symbols, SymbolGenerator generator) {
+        public MetadataV2(Types types, List<Type> symbols, SymbolGenerator generator) {
             super(types, symbols, generator);
         }
 
@@ -81,9 +81,9 @@ public final class MetadataVersion {
 
     }
 
-    public static final class MetadataV32 extends Metadata {
+    public static final class MetadataV1 extends Metadata {
 
-        public MetadataV32(Types types, List<Type> symbols, SymbolGenerator generator) {
+        public MetadataV1(Types types, List<Type> symbols, SymbolGenerator generator) {
             super(types, symbols, generator);
         }
 

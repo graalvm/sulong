@@ -42,8 +42,8 @@ import com.oracle.truffle.llvm.runtime.types.VoidType;
 
 public final class FunctionVersion {
 
-    public static class FunctionV38 extends Function {
-        public FunctionV38(IRVersionController version, Types types, List<Type> symbols, FunctionGenerator generator, int mode) {
+    public static class FunctionV2 extends Function {
+        public FunctionV2(IRVersionController version, Types types, List<Type> symbols, FunctionGenerator generator, int mode) {
             super(version, types, symbols, generator, mode);
         }
 
@@ -175,9 +175,9 @@ public final class FunctionVersion {
 
     }
 
-    public static class FunctionV32 extends Function {
+    public static class FunctionV1 extends Function {
 
-        public FunctionV32(IRVersionController version, Types types, List<Type> symbols, FunctionGenerator generator, int mode) {
+        public FunctionV1(IRVersionController version, Types types, List<Type> symbols, FunctionGenerator generator, int mode) {
             super(version, types, symbols, generator, mode);
         }
 

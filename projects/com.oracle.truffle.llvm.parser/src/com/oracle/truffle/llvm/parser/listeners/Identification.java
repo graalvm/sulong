@@ -29,22 +29,10 @@
  */
 package com.oracle.truffle.llvm.parser.listeners;
 
-import com.oracle.truffle.llvm.parser.records.Records;
-
 public final class Identification implements ParserListener {
-
-    private final IRVersionController versionController;
-
-    public Identification(IRVersionController versionController) {
-        this.versionController = versionController;
-    }
 
     @Override
     public void record(long id, long[] args) {
-        if (id == 1) {
-            String version = Records.toString(args);
-            versionController.setVersion(version);
-        }
     }
 
 }

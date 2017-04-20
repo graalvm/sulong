@@ -145,8 +145,9 @@ public final class Module implements ParserListener {
 
                 return version.createFunction(types, sym, gen, mode);
             }
+
             case IDENTIFICATION:
-                return new Identification(version);
+                return new Identification();
 
             case TYPE:
                 return types;
@@ -174,6 +175,7 @@ public final class Module implements ParserListener {
         switch (record) {
             case VERSION:
                 mode = (int) args[0];
+                version.setVersion(mode);
                 break;
 
             case TARGET_TRIPLE:

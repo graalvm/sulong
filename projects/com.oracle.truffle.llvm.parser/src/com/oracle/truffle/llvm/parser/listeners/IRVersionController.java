@@ -32,23 +32,22 @@ package com.oracle.truffle.llvm.parser.listeners;
 import java.util.List;
 
 import com.oracle.truffle.llvm.parser.listeners.constants.Constants;
-import com.oracle.truffle.llvm.parser.listeners.constants.ConstantsVersion.ConstantsV32;
-import com.oracle.truffle.llvm.parser.listeners.constants.ConstantsVersion.ConstantsV38;
+import com.oracle.truffle.llvm.parser.listeners.constants.ConstantsVersion.ConstantsV1;
+import com.oracle.truffle.llvm.parser.listeners.constants.ConstantsVersion.ConstantsV2;
 import com.oracle.truffle.llvm.parser.listeners.function.Function;
-import com.oracle.truffle.llvm.parser.listeners.function.FunctionVersion.FunctionV32;
-import com.oracle.truffle.llvm.parser.listeners.function.FunctionVersion.FunctionV38;
+import com.oracle.truffle.llvm.parser.listeners.function.FunctionVersion.FunctionV1;
+import com.oracle.truffle.llvm.parser.listeners.function.FunctionVersion.FunctionV2;
 import com.oracle.truffle.llvm.parser.listeners.metadata.Metadata;
-import com.oracle.truffle.llvm.parser.listeners.metadata.MetadataVersion.MetadataV32;
-import com.oracle.truffle.llvm.parser.listeners.metadata.MetadataVersion.MetadataV38;
+import com.oracle.truffle.llvm.parser.listeners.metadata.MetadataVersion.MetadataV1;
+import com.oracle.truffle.llvm.parser.listeners.metadata.MetadataVersion.MetadataV2;
 import com.oracle.truffle.llvm.parser.listeners.module.Module;
 import com.oracle.truffle.llvm.parser.listeners.module.ModuleVersionHelper;
-import com.oracle.truffle.llvm.parser.listeners.module.ModuleVersionHelper.ModuleV32;
-import com.oracle.truffle.llvm.parser.listeners.module.ModuleVersionHelper.ModuleV38;
+import com.oracle.truffle.llvm.parser.listeners.module.ModuleVersionHelper.ModuleV1;
+import com.oracle.truffle.llvm.parser.listeners.module.ModuleVersionHelper.ModuleV2;
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 import com.oracle.truffle.llvm.parser.model.generators.ConstantGenerator;
 import com.oracle.truffle.llvm.parser.model.generators.FunctionGenerator;
 import com.oracle.truffle.llvm.parser.model.generators.SymbolGenerator;
-import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 import com.oracle.truffle.llvm.runtime.types.Type;
 
 public final class IRVersionController {
@@ -78,57 +77,41 @@ public final class IRVersionController {
     }
 
     private enum IRVersion {
-        DEFAULT(ModuleV32::new, FunctionV32::new, ConstantsV32::new, MetadataV32::new, "3.2", "3.3"),
-        LLVM_32(ModuleV32::new, FunctionV32::new, ConstantsV32::new, MetadataV32::new, "3.2", "3.3"),
-        LLVM_38(ModuleV38::new, FunctionV38::new, ConstantsV38::new, MetadataV38::new, "3.8", "3.9");
+        DEFAULT(ModuleV1::new, FunctionV1::new, ConstantsV1::new, MetadataV1::new, -1),
+        LLVM_1(ModuleV1::new, FunctionV1::new, ConstantsV1::new, MetadataV1::new, 1),
+        LLVM_2(ModuleV2::new, FunctionV2::new, ConstantsV2::new, MetadataV2::new, 2);
 
-        private final String[] versionInformation;
+        private final int version;
         private final FunctionParser function;
         private final ConstantsParser constants;
         private final MetadataParser metadata;
         private final ModuleParser module;
 
-        IRVersion(ModuleParser module, FunctionParser function, ConstantsParser constants, MetadataParser metadata, String... strings) {
+        IRVersion(ModuleParser module, FunctionParser function, ConstantsParser constants, MetadataParser metadata, int version) {
             this.function = function;
             this.constants = constants;
             this.metadata = metadata;
-            this.versionInformation = strings;
             this.module = module;
+            this.version = version;
         }
-
-        private boolean isVersion(String versionString) {
-            for (String v : versionInformation) {
-                if (versionString.contains(v)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
     }
 
     private IRVersion version;
 
     public IRVersionController() {
-        version = getVersion(LLVMOptions.ENGINE.llvmVersion());
+        version = IRVersion.DEFAULT;
     }
 
-    public void setVersion(String versionStr) {
-        IRVersion newVersion = getVersion(versionStr);
-        if (version == IRVersion.DEFAULT || version == newVersion) {
-            version = newVersion;
-        } else {
-            throw new IllegalStateException(version.toString());
-        }
-    }
-
-    private static IRVersion getVersion(String versionStr) {
-        for (IRVersion v : IRVersion.values()) {
-            if (v.isVersion(versionStr)) {
-                return v;
+    public void setVersion(int versionNumber) {
+        if (version == IRVersion.DEFAULT) {
+            for (IRVersion candidate : IRVersion.values()) {
+                if (candidate.version == versionNumber) {
+                    version = candidate;
+                    return;
+                }
             }
         }
-        return IRVersion.DEFAULT;
+        throw new IllegalArgumentException("version: " + version);
     }
 
     public Metadata createMetadata(Types types, List<Type> symbols, SymbolGenerator generator) {
