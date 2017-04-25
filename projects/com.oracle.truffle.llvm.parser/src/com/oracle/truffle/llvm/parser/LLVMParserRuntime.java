@@ -47,8 +47,10 @@ import com.oracle.truffle.api.interop.Message;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.parser.datalayout.DataLayoutConverter;
 import com.oracle.truffle.llvm.parser.facade.NodeFactoryFacade;
+import com.oracle.truffle.llvm.parser.metadata.SourceSectionGenerator;
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
@@ -69,7 +71,9 @@ import com.oracle.truffle.llvm.parser.util.Pair;
 import com.oracle.truffle.llvm.runtime.LLVMContext;
 import com.oracle.truffle.llvm.runtime.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.runtime.LLVMLanguage;
+import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.memory.LLVMNativeFunctions;
+import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStackFrameNuller;
 import com.oracle.truffle.llvm.runtime.types.AggregateType;
@@ -97,6 +101,11 @@ public final class LLVMParserRuntime {
         final LLVMParserRuntime visitor = new LLVMParserRuntime(source, language, context, stackAllocation, parserResult.getLabels(), parserResult.getPhis(), targetDataLayout, factoryFacade,
                         functionRegistry);
         final LLVMModelVisitor module = new LLVMModelVisitor(visitor, functionRegistry);
+
+        if (!LLVMLogger.TARGET_NONE.equals(LLVMOptions.DEBUG.printMetadata())) {
+            model.getMetadata().print(LLVMLogger.print(LLVMOptions.DEBUG.printMetadata()));
+        }
+
         model.accept(module);
 
         LLVMFunctionDescriptor mainFunction = visitor.getFunction("@main");
@@ -152,6 +161,8 @@ public final class LLVMParserRuntime {
 
     private final LLVMFunctionRegistry functionRegistry;
 
+    private final SourceSectionGenerator sourceSectionGenerator;
+
     private LLVMParserRuntime(Source source, LLVMLanguage language, LLVMContext context, StackAllocation stack, LLVMLabelList labels, LLVMPhiManager phis,
                     DataLayoutConverter.DataSpecConverterImpl layout, NodeFactoryFacade factoryFacade, LLVMFunctionRegistry functionRegistry) {
         this.source = source;
@@ -164,6 +175,7 @@ public final class LLVMParserRuntime {
         this.functionRegistry = functionRegistry;
         this.language = language;
         this.symbolResolver = new LLVMSymbolResolver(labels, this);
+        this.sourceSectionGenerator = new SourceSectionGenerator();
     }
 
     LLVMExpressionNode createFunction(FunctionDefinition method, LLVMLifetimeAnalysis lifetimes) {
@@ -534,5 +546,9 @@ public final class LLVMParserRuntime {
 
     public LLVMLanguage getLanguage() {
         return language;
+    }
+
+    SourceSection getSourceSection(FunctionDefinition function) {
+        return sourceSectionGenerator.getOrDefault(function, source);
     }
 }

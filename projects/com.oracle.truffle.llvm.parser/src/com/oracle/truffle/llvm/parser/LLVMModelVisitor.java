@@ -40,7 +40,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
@@ -86,6 +85,10 @@ final class LLVMModelVisitor implements ModelVisitor {
 
     @Override
     public void visit(FunctionDefinition method) {
+        final String name = method.getName();
+        if (!LLVMLogger.TARGET_NONE.equals(LLVMOptions.DEBUG.printMetadata())) {
+            method.getMetadata().print(LLVMLogger.print(LLVMOptions.DEBUG.printMetadata()), name);
+        }
         LLVMFunctionDescriptor function = registry.lookupFunctionDescriptor(method.getName(), method.getType());
         if (LLVMOptions.ENGINE.lazyParsing()) {
             function.setLazyToTruffleConverter(new LazyToTruffleConverterImpl(method, function, visitor));
@@ -123,9 +126,7 @@ final class LLVMModelVisitor implements ModelVisitor {
             LLVMExpressionNode[] beforeFunction = parameters.toArray(new LLVMExpressionNode[parameters.size()]);
             LLVMExpressionNode[] afterFunction = new LLVMExpressionNode[0];
 
-            final String sourceText = String.format("%s:%s", visitor.getSource().getName(), method.getName());
-            final Source irSource = Source.newBuilder(sourceText).mimeType("text/plain").name(sourceText).build();
-            final SourceSection sourceSection = irSource.createSection(1);
+            final SourceSection sourceSection = visitor.getSourceSection(method);
             RootNode rootNode = visitor.getNodeFactoryFacade().createFunctionStartNode(visitor, body, beforeFunction, afterFunction, sourceSection, frame, method);
 
             final String astPrintTarget = LLVMOptions.DEBUG.printFunctionASTs();
