@@ -39,7 +39,7 @@ public abstract class ModuleVersionHelper {
 
     public abstract FunctionType getFunctionType(Module m, long typeIndex);
 
-    public static final class ModuleV32 extends ModuleVersionHelper {
+    public static final class ModuleV1 extends ModuleVersionHelper {
 
         @Override
         public Type getGlobalType(Module m, long typeIndex) {
@@ -53,7 +53,7 @@ public abstract class ModuleVersionHelper {
 
     }
 
-    public static final class ModuleV38 extends ModuleVersionHelper {
+    public static final class ModuleV2 extends ModuleVersionHelper {
 
         @Override
         public Type getGlobalType(Module m, long typeIndex) {
