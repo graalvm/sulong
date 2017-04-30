@@ -33,6 +33,8 @@ import com.oracle.truffle.llvm.runtime.LLVMAddress;
 import com.oracle.truffle.llvm.runtime.memory.LLVMHeap;
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
+import java.util.Set;
+
 public final class PointerType extends AggregateType {
 
     private Type pointeeType;
@@ -98,10 +100,10 @@ public final class PointerType extends AggregateType {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode(Set<Type> visited) {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((pointeeType == null) ? 0 : pointeeType.hashCode());
+        result = prime * result + ((pointeeType == null) ? 0 : pointeeType.hashCodeSafe(visited));
         return result;
     }
 

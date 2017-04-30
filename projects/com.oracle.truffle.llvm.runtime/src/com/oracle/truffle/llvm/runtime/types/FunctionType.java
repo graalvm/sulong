@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.runtime.types;
 
 import java.util.Arrays;
+import java.util.Set;
 
 import com.oracle.truffle.llvm.runtime.memory.LLVMHeap;
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
@@ -104,12 +105,12 @@ public final class FunctionType extends Type {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode(Set<Type> visited) {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Arrays.hashCode(argumentTypes);
+        result = prime * result + hashCode(argumentTypes, visited);
         result = prime * result + (isVarargs ? 1231 : 1237);
-        result = prime * result + ((returnType == null) ? 0 : returnType.hashCode());
+        result = prime * result + ((returnType == null) ? 0 : returnType.hashCodeSafe(visited));
         return result;
     }
 

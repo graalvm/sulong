@@ -31,6 +31,8 @@ package com.oracle.truffle.llvm.runtime.types;
 
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
+import java.util.Set;
+
 public final class MetaType extends Type {
     public static MetaType UNKNOWN = new MetaType();
     public static MetaType OPAQUE = new MetaType();
@@ -46,7 +48,7 @@ public final class MetaType extends Type {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode(Set<Type> visited) {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((identity == null) ? 0 : identity.hashCode());

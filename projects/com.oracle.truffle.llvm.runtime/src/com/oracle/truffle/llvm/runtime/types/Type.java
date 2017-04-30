@@ -33,6 +33,10 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.llvm.runtime.types.PrimitiveType.PrimitiveKind;
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
+
 public abstract class Type {
 
     public abstract int getBitSize();
@@ -47,7 +51,29 @@ public abstract class Type {
     public abstract boolean equals(Object obj);
 
     @Override
-    public abstract int hashCode();
+    public final int hashCode() {
+        return hashCode(Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    final int hashCodeSafe(Set<Type> visited) {
+        return visited.add(this) ? hashCode(visited) : 1234;
+    }
+
+    protected static int hashCode(Type[] types, Set<Type> visited) {
+        if (types == null) {
+            return 0;
+        }
+
+        int result = 1;
+
+        for (Type type : types) {
+            result = 31 * result + (type == null ? 0 : type.hashCodeSafe(visited));
+        }
+
+        return result;
+    }
+
+    protected abstract int hashCode(Set<Type> visited);
 
     public static Type getIntegerType(int size) {
         switch (size) {
@@ -145,5 +171,4 @@ public abstract class Type {
         final int alignment = type.getAlignment(targetDataLayout);
         return getPadding(offset, alignment);
     }
-
 }

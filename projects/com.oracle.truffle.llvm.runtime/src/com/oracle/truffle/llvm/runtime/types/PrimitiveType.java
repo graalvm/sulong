@@ -31,6 +31,8 @@ package com.oracle.truffle.llvm.runtime.types;
 
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
+import java.util.Set;
+
 public final class PrimitiveType extends Type {
 
     public static final PrimitiveType I1 = new PrimitiveType(PrimitiveKind.I1, null);
@@ -130,7 +132,7 @@ public final class PrimitiveType extends Type {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode(Set<Type> visited) {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((constant == null) ? 0 : constant.hashCode());
