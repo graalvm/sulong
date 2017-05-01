@@ -31,6 +31,8 @@ package com.oracle.truffle.llvm.runtime.types;
 
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
+import java.util.Set;
+
 public final class VariableBitWidthType extends Type {
 
     private final int bitWidth;
@@ -59,7 +61,7 @@ public final class VariableBitWidthType extends Type {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode(Set<Type> visited) {
         final int prime = 31;
         int result = 1;
         result = prime * result + bitWidth;

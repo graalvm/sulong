@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.runtime.types;
 
 import java.util.Arrays;
+import java.util.Set;
 
 import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
@@ -171,12 +172,12 @@ public final class StructureType extends AggregateType {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode(Set<Type> visited) {
         final int prime = 31;
         int result = 1;
         result = prime * result + (isPacked ? 1231 : 1237);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + Arrays.hashCode(types);
+        result = prime * result + hashCode(types, visited);
         return result;
     }
 

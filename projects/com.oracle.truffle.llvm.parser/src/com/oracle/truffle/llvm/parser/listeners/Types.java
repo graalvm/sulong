@@ -32,6 +32,7 @@ package com.oracle.truffle.llvm.parser.listeners;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.oracle.truffle.llvm.parser.model.generators.ModuleGenerator;
 import com.oracle.truffle.llvm.parser.records.Records;
@@ -248,7 +249,7 @@ public final class Types implements ParserListener, Iterable<Type> {
         }
 
         @Override
-        public int hashCode() {
+        public int hashCode(Set<Type> visited) {
             final int prime = 31;
             int result = 1;
             result = prime * result + idx;
@@ -325,7 +326,7 @@ public final class Types implements ParserListener, Iterable<Type> {
         }
 
         @Override
-        public int hashCode() {
+        public int hashCode(Set<Type> visited) {
             final int prime = 31;
             int result = 1;
             result = prime * result + ((name == null) ? 0 : name.hashCode());

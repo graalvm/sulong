@@ -31,6 +31,8 @@ package com.oracle.truffle.llvm.runtime.types;
 
 import com.oracle.truffle.llvm.runtime.types.visitors.TypeVisitor;
 
+import java.util.Set;
+
 public class VectorType extends AggregateType {
 
     private final PrimitiveType elementType;
@@ -89,10 +91,10 @@ public class VectorType extends AggregateType {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode(Set<Type> visited) {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((elementType == null) ? 0 : elementType.hashCode());
+        result = prime * result + ((elementType == null) ? 0 : elementType.hashCodeSafe(visited));
         result = prime * result + length;
         return result;
     }
