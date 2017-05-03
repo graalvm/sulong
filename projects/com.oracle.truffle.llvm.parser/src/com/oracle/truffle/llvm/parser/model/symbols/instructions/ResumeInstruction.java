@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
+import com.oracle.truffle.llvm.parser.model.symbols.Symbols;
 import com.oracle.truffle.llvm.parser.model.visitors.InstructionVisitor;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
@@ -64,8 +65,9 @@ public final class ResumeInstruction extends VoidInstruction implements Terminat
         }
     }
 
-    public static Instruction generate() {
-        ResumeInstruction inst = new ResumeInstruction();
+    public static ResumeInstruction fromSymbols(Symbols symbols, int value) {
+        final ResumeInstruction inst = new ResumeInstruction();
+        inst.value = symbols.getSymbol(value, inst);
         return inst;
     }
 

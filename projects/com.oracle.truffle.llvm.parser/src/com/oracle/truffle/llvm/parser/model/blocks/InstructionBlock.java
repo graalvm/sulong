@@ -148,8 +148,8 @@ public final class InstructionBlock implements ValueSymbol {
         addInstruction(LandingpadInstruction.generate(function.getSymbols(), type, isCleanup, clauseTypes, clauseTODO));
     }
 
-    public void createResume(@SuppressWarnings("unused") Type type) {
-        addInstruction(ResumeInstruction.generate());
+    public void createResume(int value) {
+        addInstruction(ResumeInstruction.fromSymbols(function.getSymbols(), value));
     }
 
     public void createCast(Type type, int opcode, int value) {
