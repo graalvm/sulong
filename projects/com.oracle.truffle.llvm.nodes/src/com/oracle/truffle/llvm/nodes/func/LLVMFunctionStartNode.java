@@ -56,19 +56,19 @@ public class LLVMFunctionStartNode extends RootNode {
     private final int explicitArgumentsCount;
     private final FrameSlot baseStackPointer;
 
+    private final SourceSection sourceSection;
     private final DebugInformation debugInformation;
 
     /*
-     * Encapsulation of these 3 objects keeps memory footprint low in case no debug info is
-     * available.
+     * LLVMFunctionStartNode is guaranteed to have a SourceSection to ensure useful stacktraces, but
+     * other debug information is optional. It is encapsulated here to keep memory footprint low in
+     * case it is not available.
      */
     private static final class DebugInformation {
-        private final SourceSection sourceSection;
         private final String originalName;
         private final Source bcSource;
 
-        DebugInformation(SourceSection sourceSection, String originalName, Source bcSource) {
-            this.sourceSection = sourceSection;
+        DebugInformation(String originalName, Source bcSource) {
             this.originalName = originalName;
             this.bcSource = bcSource;
         }
@@ -78,7 +78,8 @@ public class LLVMFunctionStartNode extends RootNode {
                     FrameDescriptor frameDescriptor,
                     String name, LLVMStackFrameNuller[] initNullers, FrameSlot baseStackPointer, int explicitArgumentsCount, String originalName, Source bcSource) {
         super(language, frameDescriptor);
-        this.debugInformation = new DebugInformation(sourceSection, originalName, bcSource);
+        this.sourceSection = sourceSection;
+        this.debugInformation = originalName == null ? null : new DebugInformation(originalName, bcSource);
         this.node = node;
         this.beforeFunction = beforeFunction;
         this.afterFunction = afterFunction;
@@ -90,7 +91,7 @@ public class LLVMFunctionStartNode extends RootNode {
 
     @Override
     public SourceSection getSourceSection() {
-        return debugInformation.sourceSection;
+        return sourceSection;
     }
 
     @CompilationFinal private LLVMStack stack;
@@ -172,10 +173,10 @@ public class LLVMFunctionStartNode extends RootNode {
     }
 
     public String getOriginalName() {
-        return debugInformation.originalName;
+        return debugInformation == null ? null : debugInformation.originalName;
     }
 
     public Source getBcSource() {
-        return debugInformation.bcSource;
+        return debugInformation == null ? sourceSection.getSource() : debugInformation.bcSource;
     }
 }
