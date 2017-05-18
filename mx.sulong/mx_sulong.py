@@ -637,7 +637,11 @@ def suBench(args=None):
     """runs a given benchmark with Sulong"""
     ensureLLVMBinariesExist()
     vmArgs, sulongArgs = truffle_extract_VM_args(args)
-    compileWithClang(['-c', '-emit-llvm', '-o', 'test.bc', sulongArgs[0]])
+    tool_args = ['-c', '-emit-llvm', '-o', 'test.bc', sulongArgs[0]]
+    from mx_tools import compileDebugInfo
+    if compileDebugInfo():
+        tool_args = ['-g'] + tool_args
+    compileWithClang(tool_args)
     return runLLVM(getBenchmarkOptions() + ['test.bc'] + vmArgs)
 
 def getStandardLLVMOptFlags():
@@ -669,10 +673,14 @@ if 'CPPFLAGS' in os.environ:
 def compileWithClangOpt(inputFile, outputFile='test.bc', version=None, args=None, out=None, err=None):
     """compiles a program to LLVM IR with Clang using LLVM optimizations that benefit Sulong"""
     _, ext = os.path.splitext(inputFile)
+    tool_args = ['-c', '-emit-llvm', '-o', outputFile, inputFile] + _env_flags
+    from mx_tools import compileDebugInfo
+    if compileDebugInfo():
+        tool_args = ['-g'] + tool_args
     if ext == '.c':
-        compileWithClang(['-c', '-emit-llvm', '-o', outputFile, inputFile] + _env_flags, version, out=out, err=err)
+        compileWithClang(tool_args, version, out=out, err=err)
     elif ext == '.cpp':
-        compileWithClangPP(['-c', '-emit-llvm', '-o', outputFile, inputFile] + _env_flags, version, out=out, err=err)
+        compileWithClangPP(tool_args, version, out=out, err=err)
     else:
         exit(ext + " is not supported!")
     opt(['-o', outputFile, outputFile] + getStandardLLVMOptFlags(), version, out=out, err=err)

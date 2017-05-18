@@ -102,7 +102,12 @@ class ClangCompiler(Tool):
 
     def run(self, inputFile, outputFile, flags):
         tool = self.getTool(inputFile)
-        return self.runTool([mx_sulong.findLLVMProgram(tool, ['3.2']), '-c', '-emit-llvm', '-o', outputFile] + flags + [inputFile], errorMsg='Cannot compile %s with %s' % (inputFile, tool))
+        cmd = [mx_sulong.findLLVMProgram(tool, ['3.2'])]
+        if compileDebugInfo():
+            cmd += ['-g']
+        cmd += ['-c', '-emit-llvm', '-o', outputFile] + flags + [inputFile]
+
+        return self.runTool(cmd, errorMsg='Cannot compile %s with %s' % (inputFile, tool))
 
     def compileReferenceFile(self, inputFile, outputFile, flags):
         tool = self.getTool(inputFile)
@@ -131,7 +136,11 @@ class ClangV38Compiler(Tool):
 
     def run(self, inputFile, outputFile, flags):
         tool = self.getTool(inputFile)
-        return self.runTool([mx_sulong.findLLVMProgram(tool, ['3.8', '3.9', '4.0']), '-c', '-emit-llvm', '-o', outputFile] + flags + [inputFile], errorMsg='Cannot compile %s with %s' % (inputFile, tool))
+        cmd = [mx_sulong.findLLVMProgram(tool, ['3.8', '3.9', '4.0'])]
+        if compileDebugInfo():
+            cmd += ['-g']
+        cmd += ['-c', '-emit-llvm', '-o', outputFile] + flags + [inputFile]
+        return self.runTool(cmd, errorMsg='Cannot compile %s with %s' % (inputFile, tool))
 
     def compileReferenceFile(self, inputFile, outputFile, flags):
         tool = self.getTool(inputFile)
@@ -172,7 +181,11 @@ class GCCCompiler(Tool):
 
     def run(self, inputFile, outputFile, flags):
         tool, toolFlags = self.getTool(inputFile, outputFile)
-        ret = self.runTool([tool, '-S', '-fplugin=' + mx_sulong.dragonEggPath(), '-fplugin-arg-dragonegg-emit-ir', '-o', '%s.tmp.ll' % outputFile] + toolFlags + flags + [inputFile], errorMsg='Cannot compile %s with %s' % (inputFile, os.path.basename(tool)))
+        cmd = [tool]
+        if compileDebugInfo():
+            cmd += ['-g']
+        cmd += ['-S', '-fplugin=' + mx_sulong.dragonEggPath(), '-fplugin-arg-dragonegg-emit-ir', '-o', '%s.tmp.ll' % outputFile] + toolFlags + flags + [inputFile]
+        ret = self.runTool(cmd, errorMsg='Cannot compile %s with %s' % (inputFile, os.path.basename(tool)))
         if ret == 0:
             ret = self.runTool([mx_sulong.findLLVMProgram('llvm-as', ['3.2']), '-o', outputFile, '%s.tmp.ll' % outputFile], errorMsg='Cannot assemble %s with llvm-as' % inputFile)
         return ret
@@ -222,6 +235,10 @@ Tool.MEM2REG_V38 = OptV38('MEM2REG', ['-mem2reg'])
 
 Tool.CPP_OPT_V38 = OptV38('CPP_OPT_v38', ['-lowerinvoke', '-prune-eh', '-simplifycfg'])
 Tool.C_OPT_V38 = OptV38('C_OPT_v38', ['-mem2reg', '-always-inline', '-jump-threading', '-simplifycfg'])
+
+def compileDebugInfo():
+    use_di = os.environ.get('SULONG_COMPILE_WITH_DEBUGINFO')
+    return use_di and use_di.lower() == 'true'
 
 def createOutputPath(path, inputFile, outputDir):
     base, _ = os.path.splitext(inputFile)
