@@ -35,6 +35,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeField;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
@@ -64,6 +65,10 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
         super(sourceSection);
     }
 
+    public LLVMRetNode(LLVMRetNode wrappedNode) {
+        super(wrappedNode.getSourceSection());
+    }
+
     @Override
     public int getSuccessorCount() {
         return 1;
@@ -81,6 +86,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     public abstract Object execute(VirtualFrame frame);
 
+    @Instrumentable(factory = LLVMI1RetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMI1RetNode extends LLVMRetNode {
 
@@ -95,6 +101,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMI8RetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMI8RetNode extends LLVMRetNode {
 
@@ -109,6 +116,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMI16RetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMI16RetNode extends LLVMRetNode {
 
@@ -123,6 +131,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMI32RetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMI32RetNode extends LLVMRetNode {
 
@@ -137,6 +146,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMI64RetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMI64RetNode extends LLVMRetNode {
 
@@ -151,6 +161,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMIVarBitRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMIVarBitRetNode extends LLVMRetNode {
 
@@ -165,6 +176,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMFloatRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMFloatRetNode extends LLVMRetNode {
 
@@ -179,6 +191,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMDoubleRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMDoubleRetNode extends LLVMRetNode {
 
@@ -193,6 +206,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVM80BitFloatRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVM80BitFloatRetNode extends LLVMRetNode {
 
@@ -207,6 +221,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMAddressRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMAddressRetNode extends LLVMRetNode {
 
@@ -221,6 +236,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMFunctionRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMFunctionRetNode extends LLVMRetNode {
 
@@ -240,6 +256,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMVectorRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     public abstract static class LLVMVectorRetNode extends LLVMRetNode {
 
@@ -284,6 +301,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMStructRetNodeWrapper.class)
     @NodeChild(value = "retResult", type = LLVMExpressionNode.class)
     @NodeField(name = "structSize", type = int.class)
     public abstract static class LLVMStructRetNode extends LLVMRetNode {
@@ -321,6 +339,7 @@ public abstract class LLVMRetNode extends LLVMControlFlowNode {
 
     }
 
+    @Instrumentable(factory = LLVMVoidReturnNodeWrapper.class)
     public abstract static class LLVMVoidReturnNode extends LLVMRetNode {
 
         public LLVMVoidReturnNode(SourceSection sourceSection) {

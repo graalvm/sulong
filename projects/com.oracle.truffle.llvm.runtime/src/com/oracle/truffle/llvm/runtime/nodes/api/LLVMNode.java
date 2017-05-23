@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.runtime.nodes.api;
 
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.llvm.runtime.LLVMContext;
 import com.oracle.truffle.llvm.runtime.LLVMLanguage;
@@ -45,5 +46,13 @@ public abstract class LLVMNode extends Node {
 
     protected static final LLVMGlobalVariableAccess createGlobalAccess() {
         return new LLVMGlobalVariableAccess();
+    }
+
+    @Override
+    protected boolean isTaggedWith(Class<?> tag) {
+        // only nodes that have a SourceSection attached are considered to be tagged by any
+        // anything, for sulong only those nodes that actually represent source language statements
+        // should have one
+        return tag == StandardTags.StatementTag.class || super.isTaggedWith(tag);
     }
 }

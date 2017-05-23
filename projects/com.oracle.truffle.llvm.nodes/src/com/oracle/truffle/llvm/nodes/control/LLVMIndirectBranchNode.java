@@ -32,13 +32,15 @@ package com.oracle.truffle.llvm.nodes.control;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMNode;
 
-public final class LLVMIndirectBranchNode extends LLVMControlFlowNode {
+@Instrumentable(factory = LLVMIndirectBranchNodeWrapper.class)
+public class LLVMIndirectBranchNode extends LLVMControlFlowNode {
 
     @Child private LLVMBranchAddressNode branchAddress;
     @Children private final LLVMExpressionNode[] phiWriteNodes;
@@ -50,6 +52,13 @@ public final class LLVMIndirectBranchNode extends LLVMControlFlowNode {
         this.successors = indices;
         this.branchAddress = branchAddress;
         this.phiWriteNodes = phiWriteNodes;
+    }
+
+    public LLVMIndirectBranchNode(LLVMIndirectBranchNode delegate) {
+        super(delegate.getSourceSection());
+        this.successors = delegate.getSuccessors();
+        this.branchAddress = delegate.branchAddress;
+        this.phiWriteNodes = delegate.phiWriteNodes;
     }
 
     @Override

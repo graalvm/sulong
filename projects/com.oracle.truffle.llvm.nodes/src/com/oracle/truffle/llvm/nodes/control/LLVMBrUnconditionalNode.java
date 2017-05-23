@@ -29,10 +29,13 @@
  */
 package com.oracle.truffle.llvm.nodes.control;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
+@Instrumentable(factory = LLVMBrUnconditionalNodeWrapper.class)
 public class LLVMBrUnconditionalNode extends LLVMControlFlowNode {
 
     @Child private LLVMExpressionNode phi;
@@ -42,6 +45,12 @@ public class LLVMBrUnconditionalNode extends LLVMControlFlowNode {
         super(sourceSection);
         this.successor = successor;
         this.phi = phi;
+    }
+
+    public LLVMBrUnconditionalNode(LLVMBrUnconditionalNode wrappedNode) {
+        super(wrappedNode.getSourceSection());
+        this.successor = wrappedNode.successor;
+        this.phi = wrappedNode.phi;
     }
 
     @Override
@@ -57,5 +66,9 @@ public class LLVMBrUnconditionalNode extends LLVMControlFlowNode {
 
     public int getSuccessor() {
         return successor;
+    }
+
+    public void execute(@SuppressWarnings("unused") VirtualFrame frame) {
+        // we need an execute method so the debugger can step on this node
     }
 }
