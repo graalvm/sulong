@@ -56,4 +56,7 @@ abstract class SulongDebugOption {
     @Option(commandLineName = "PrintLifetimeAnalysisStats", help = "Prints the results of the lifetime analysis. Can be \'true\', \'false\', \'stdout\', \'stderr\' or a filepath.", name = "printLifetimeAnalysisStatistics") //
     protected static final String PRINT_LIFE_TIME_ANALYSIS_STATS = String.valueOf(false);
 
+    @Option(commandLineName = "TraceSourceExecution", help = "Traces execution of the statements in the C source files. Can be \'true\', \'false\', \'stdout\', \'stderr\' or a filepath.", name = "traceSource") //
+    protected static final String TRACE_SOURCE_EXECUTION = String.valueOf(false);
+
 }

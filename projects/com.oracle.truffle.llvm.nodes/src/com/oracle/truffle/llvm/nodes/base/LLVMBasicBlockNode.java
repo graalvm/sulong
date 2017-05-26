@@ -36,6 +36,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ControlFlowException;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
@@ -58,6 +59,7 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
 
     public static final int RETURN_FROM_FUNCTION = -1;
     private static final boolean TRACE = !LLVMLogger.TARGET_NONE.equals(LLVMOptions.DEBUG.debug());
+    private static final boolean TRACE_SOURCE = !LLVMLogger.TARGET_NONE.equals(LLVMOptions.DEBUG.traceSource());
 
     @Children private final LLVMExpressionNode[] statements;
     @Child public LLVMControlFlowNode termInstruction;
@@ -91,6 +93,8 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
             try {
                 if (TRACE) {
                     trace(statement);
+                } else if (TRACE_SOURCE) {
+                    traceSource(statement);
                 }
                 statement.executeGeneric(frame);
             } catch (ControlFlowException e) {
@@ -106,6 +110,9 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
                 fillStackTrace(stackTrace, i);
                 throw new SulongRuntimeException(t, stackTrace);
             }
+        }
+        if (TRACE_SOURCE) {
+            traceSource(termInstruction);
         }
     }
 
@@ -142,6 +149,15 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
     @TruffleBoundary
     private static void trace(LLVMExpressionNode statement) {
         LLVMLogger.print(LLVMOptions.DEBUG.debug()).accept(("[sulong] " + statement.getSourceDescription()));
+    }
+
+    @TruffleBoundary
+    private static void traceSource(Node node) {
+        SourceSection sourceSection = node.getSourceSection();
+        if (sourceSection != null) {
+            LLVMLogger.print(LLVMOptions.DEBUG.traceSource()).accept(
+                            String.format("[sulong.trace] %s:%d:%d", sourceSection.getSource().getName(), sourceSection.getStartLine(), sourceSection.getStartColumn()));
+        }
     }
 
     @Override
