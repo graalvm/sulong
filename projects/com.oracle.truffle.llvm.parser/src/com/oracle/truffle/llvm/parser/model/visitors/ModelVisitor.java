@@ -39,39 +39,36 @@ import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.types.Type;
 
 public interface ModelVisitor {
-    /**
-     * We normally don't need to implement all visitors, but want to have a default implementation
-     * for those visitors which are not handled explicitly. This little method allows us to do so.
-     */
-    default void ifVisitNotOverwritten(Object obj) {
-        LLVMLogger.info("Ignored Visit to " + obj.getClass().getSimpleName() + ": " + obj);
+
+    default void defaultOperation(Object obj) {
+        LLVMLogger.info("[sulong.parser] Ignored Visit to: " + obj);
     }
 
     default void visit(GlobalAlias alias) {
-        ifVisitNotOverwritten(alias);
+        defaultOperation(alias);
     }
 
     default void visit(GlobalConstant constant) {
-        ifVisitNotOverwritten(constant);
+        defaultOperation(constant);
     }
 
     default void visit(GlobalVariable variable) {
-        ifVisitNotOverwritten(variable);
+        defaultOperation(variable);
     }
 
     default void visit(FunctionDeclaration function) {
-        ifVisitNotOverwritten(function);
+        defaultOperation(function);
     }
 
     default void visit(FunctionDefinition function) {
-        ifVisitNotOverwritten(function);
+        defaultOperation(function);
     }
 
     default void visit(TargetDataLayout layout) {
-        ifVisitNotOverwritten(layout);
+        defaultOperation(layout);
     }
 
     default void visit(Type type) {
-        ifVisitNotOverwritten(type);
+        defaultOperation(type);
     }
 }

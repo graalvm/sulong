@@ -95,6 +95,10 @@ public final class StackAllocation {
 
             frames.put(functionDefinition.getName(), frame);
         }
+
+        @Override
+        public void defaultOperation(Object obj) {
+        }
     }
 
     private static final class StackAllocationFunctionVisitor extends ValueInstructionVisitor implements FunctionVisitor {

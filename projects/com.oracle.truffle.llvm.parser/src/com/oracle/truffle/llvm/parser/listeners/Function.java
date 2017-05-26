@@ -93,7 +93,7 @@ public final class Function implements ParserListener {
                 return new Metadata(types, generator);
 
             default:
-                LLVMLogger.info("Entering Unknown Block inside Function: " + block);
+                LLVMLogger.info("[sulong.parser] Entering Unknown Block inside Function: " + block);
                 return ParserListener.DEFAULT;
         }
     }
