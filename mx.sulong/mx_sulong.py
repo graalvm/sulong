@@ -624,7 +624,11 @@ def getLLVMProgramPath(args=None):
 
 def compileWithClang(args=None, version=None, out=None, err=None):
     """runs Clang"""
-    return mx.run([findLLVMProgram('clang', version)] + args, out=out, err=err)
+    cmd = [findLLVMProgram('clang', version)]
+    if os.environ.get('SULONG_COMPILE_WITH_DEBUGINFO') in ['True', 'TRUE', 'true']:
+        cmd += ['-g']
+    cmd += args
+    return mx.run(cmd, out=out, err=err)
 
 def compileWithGCC(args=None):
     """runs GCC"""
@@ -642,7 +646,11 @@ def link(args=None):
 
 def compileWithClangPP(args=None, version=None, out=None, err=None):
     """runs Clang++"""
-    return mx.run([findLLVMProgram('clang++', version)] + args, out=out, err=err)
+    cmd = [findLLVMProgram('clang++', version)]
+    if os.environ.get('SULONG_COMPILE_WITH_DEBUGINFO') in ['True', 'TRUE', 'true']:
+        cmd += ['-g']
+    cmd += args
+    return mx.run(cmd, out=out, err=err)
 
 def getClasspathOptions():
     """gets the classpath of the Sulong distributions"""
