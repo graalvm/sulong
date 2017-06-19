@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.oracle.truffle.llvm.parser.metadata.MDLocation;
+import com.oracle.truffle.llvm.parser.model.attributes.AttributesCodeEntry;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.parser.model.generators.FunctionGenerator;
 import com.oracle.truffle.llvm.parser.model.symbols.Symbols;
@@ -70,11 +71,14 @@ public final class Function implements ParserListener {
 
     private final List<Integer> implicitIndices = new ArrayList<>();
 
-    Function(Types types, List<Type> symbols, FunctionGenerator generator, int mode) {
+    private final ParameterAttributes paramAttributes;
+
+    Function(Types types, List<Type> symbols, FunctionGenerator generator, int mode, ParameterAttributes paramAttributes) {
         this.types = types;
         this.symbols = symbols;
         this.generator = generator;
         this.mode = mode;
+        this.paramAttributes = paramAttributes;
     }
 
     @Override
@@ -365,7 +369,8 @@ public final class Function implements ParserListener {
     private static final int CALL_HAS_EXPLICITTYPE_SHIFT = 15;
 
     private void createFunctionCall(long[] args) {
-        int i = 1;
+        int i = 0;
+        final AttributesCodeEntry paramAttr = paramAttributes.getCodeEntry(args[i++]);
         final long ccinfo = args[i++];
 
         FunctionType functionType = null;
@@ -414,7 +419,7 @@ public final class Function implements ParserListener {
         }
 
         final Type returnType = functionType.getReturnType();
-        instructionBlock.createCall(returnType, callee, arguments);
+        instructionBlock.createCall(returnType, callee, arguments, paramAttr);
 
         if (returnType != VoidType.INSTANCE) {
             symbols.add(returnType);
