@@ -136,11 +136,11 @@ public final class InstructionBlock implements ValueSymbol {
         addInstruction(CompareExchangeInstruction.fromSymbols(function.getSymbols(), type, ptr, cmp, replace, isVolatile, successOrdering, synchronizationScope, failureOrdering, isWeak));
     }
 
-    public void createInvoke(Type type, int target, int[] arguments, int regularSuccessorBlock, int unwindSuccessorBlock) {
+    public void createInvoke(Type type, int target, int[] arguments, int regularSuccessorBlock, int unwindSuccessorBlock, AttributesCodeEntry paramAttr) {
         if (type instanceof VoidType) {
-            addInstruction(VoidInvokeInstruction.fromSymbols(function.getSymbols(), target, arguments, function.getBlock(regularSuccessorBlock), function.getBlock(unwindSuccessorBlock)));
+            addInstruction(VoidInvokeInstruction.fromSymbols(function.getSymbols(), target, arguments, function.getBlock(regularSuccessorBlock), function.getBlock(unwindSuccessorBlock), paramAttr));
         } else {
-            addInstruction(InvokeInstruction.fromSymbols(function.getSymbols(), type, target, arguments, function.getBlock(regularSuccessorBlock), function.getBlock(unwindSuccessorBlock)));
+            addInstruction(InvokeInstruction.fromSymbols(function.getSymbols(), type, target, arguments, function.getBlock(regularSuccessorBlock), function.getBlock(unwindSuccessorBlock), paramAttr));
         }
     }
 

@@ -264,8 +264,7 @@ public final class Function implements ParserListener {
 
     private void createInvoke(long[] args) {
         int i = 0;
-
-        i++; // parameter attributes
+        final AttributesCodeEntry paramAttr = paramAttributes.getCodeEntry(args[i++]);
         final long ccInfo = args[i++];
 
         final int normalSuccessorBlock = (int) (args[i++]);
@@ -303,7 +302,7 @@ public final class Function implements ParserListener {
             }
         }
         final Type returnType = functionType.getReturnType();
-        instructionBlock.createInvoke(returnType, target, arguments, normalSuccessorBlock, unwindSuccessorBlock);
+        instructionBlock.createInvoke(returnType, target, arguments, normalSuccessorBlock, unwindSuccessorBlock, paramAttr);
         if (!(returnType instanceof VoidType)) {
             symbols.add(returnType);
         }
