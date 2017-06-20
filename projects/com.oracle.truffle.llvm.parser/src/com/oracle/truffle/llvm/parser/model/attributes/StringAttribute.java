@@ -62,7 +62,7 @@ public final class StringAttribute implements Attribute {
     @Override
     public String getIrString() {
         if (value.isPresent()) {
-            return String.format("\"%s\"=\"%s\"", attr, value);
+            return String.format("\"%s\"=\"%s\"", attr, value.get());
         } else {
             return String.format("\"%s\"", attr);
         }
