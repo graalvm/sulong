@@ -29,10 +29,11 @@
  */
 package com.oracle.truffle.llvm.parser.model.symbols.instructions;
 
+import com.oracle.truffle.llvm.parser.model.attributes.AtributeGroupGetter;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
-public interface Invoke extends TerminatingInstruction {
+public interface Invoke extends TerminatingInstruction, AtributeGroupGetter {
 
     Symbol getArgument(int index);
 

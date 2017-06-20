@@ -29,6 +29,7 @@
  */
 package com.oracle.truffle.llvm.parser.model.functions;
 
+import com.oracle.truffle.llvm.parser.model.attributes.AtributeGroupGetter;
 import com.oracle.truffle.llvm.parser.model.attributes.AttributesCodeEntry;
 import com.oracle.truffle.llvm.parser.model.attributes.AttributesGroup;
 import com.oracle.truffle.llvm.parser.model.enums.Linkage;
@@ -38,7 +39,7 @@ import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-public final class FunctionDeclaration implements Constant, ValueSymbol {
+public final class FunctionDeclaration implements Constant, ValueSymbol, AtributeGroupGetter {
 
     private final FunctionType type;
     private String name;
@@ -85,14 +86,17 @@ public final class FunctionDeclaration implements Constant, ValueSymbol {
         return type;
     }
 
+    @Override
     public AttributesGroup getFunctionAttributesGroup() {
         return paramAttr.getFunctionAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getReturnAttributesGroup() {
         return paramAttr.getReturnAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getParameterAttributesGroup(int idx) {
         return paramAttr.getParameterAttributesGroup(idx);
     }

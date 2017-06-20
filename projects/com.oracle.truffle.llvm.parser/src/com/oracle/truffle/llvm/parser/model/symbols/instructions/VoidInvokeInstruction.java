@@ -81,14 +81,17 @@ public final class VoidInvokeInstruction extends VoidInstruction implements Invo
         return target;
     }
 
+    @Override
     public AttributesGroup getFunctionAttributesGroup() {
         return paramAttr.getFunctionAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getReturnAttributesGroup() {
         return paramAttr.getReturnAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getParameterAttributesGroup(int idx) {
         return paramAttr.getParameterAttributesGroup(idx);
     }

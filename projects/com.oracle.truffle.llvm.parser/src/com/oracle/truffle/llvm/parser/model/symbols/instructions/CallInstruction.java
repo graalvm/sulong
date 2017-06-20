@@ -73,14 +73,17 @@ public final class CallInstruction extends ValueInstruction implements Call {
         return target;
     }
 
+    @Override
     public AttributesGroup getFunctionAttributesGroup() {
         return paramAttr.getFunctionAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getReturnAttributesGroup() {
         return paramAttr.getReturnAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getParameterAttributesGroup(int idx) {
         return paramAttr.getParameterAttributesGroup(idx);
     }

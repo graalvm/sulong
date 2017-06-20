@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.llvm.parser.metadata.MetadataList;
+import com.oracle.truffle.llvm.parser.model.attributes.AtributeGroupGetter;
 import com.oracle.truffle.llvm.parser.model.attributes.AttributesCodeEntry;
 import com.oracle.truffle.llvm.parser.model.attributes.AttributesGroup;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
@@ -74,7 +75,7 @@ import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
-public final class FunctionDefinition implements Constant, FunctionGenerator, ValueSymbol {
+public final class FunctionDefinition implements Constant, FunctionGenerator, ValueSymbol, AtributeGroupGetter {
 
     private final MetadataList metadata;
     private final Symbols symbols = new Symbols();
@@ -144,14 +145,22 @@ public final class FunctionDefinition implements Constant, FunctionGenerator, Va
         return type;
     }
 
+    @Override
     public AttributesGroup getFunctionAttributesGroup() {
         CompilerAsserts.neverPartOfCompilation();
         return paramAttr.getFunctionAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getReturnAttributesGroup() {
         CompilerAsserts.neverPartOfCompilation();
         return paramAttr.getReturnAttributesGroup();
+    }
+
+    @Override
+    public AttributesGroup getParameterAttributesGroup(int idx) {
+        CompilerAsserts.neverPartOfCompilation();
+        return paramAttr.getParameterAttributesGroup(idx);
     }
 
     @Override
