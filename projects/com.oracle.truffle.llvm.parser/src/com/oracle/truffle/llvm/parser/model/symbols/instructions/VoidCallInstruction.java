@@ -76,14 +76,17 @@ public final class VoidCallInstruction extends VoidInstruction implements Call {
         return target;
     }
 
+    @Override
     public AttributesGroup getFunctionAttributesGroup() {
         return paramAttr.getFunctionAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getReturnAttributesGroup() {
         return paramAttr.getReturnAttributesGroup();
     }
 
+    @Override
     public AttributesGroup getParameterAttributesGroup(int idx) {
         return paramAttr.getParameterAttributesGroup(idx);
     }
