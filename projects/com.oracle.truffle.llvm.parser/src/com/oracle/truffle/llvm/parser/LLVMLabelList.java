@@ -34,14 +34,9 @@ import java.util.Map;
 
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
-import com.oracle.truffle.llvm.parser.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
-import com.oracle.truffle.llvm.parser.model.globals.GlobalAlias;
-import com.oracle.truffle.llvm.parser.model.globals.GlobalConstant;
-import com.oracle.truffle.llvm.parser.model.globals.GlobalVariable;
 import com.oracle.truffle.llvm.parser.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.parser.model.visitors.ModelVisitor;
-import com.oracle.truffle.llvm.runtime.types.Type;
 
 public final class LLVMLabelList {
 
@@ -75,22 +70,6 @@ public final class LLVMLabelList {
         }
 
         @Override
-        public void visit(GlobalAlias alias) {
-        }
-
-        @Override
-        public void visit(GlobalConstant constant) {
-        }
-
-        @Override
-        public void visit(GlobalVariable variable) {
-        }
-
-        @Override
-        public void visit(FunctionDeclaration method) {
-        }
-
-        @Override
         public void visit(FunctionDefinition method) {
             String name = method.getName();
 
@@ -102,7 +81,7 @@ public final class LLVMLabelList {
         }
 
         @Override
-        public void visit(Type type) {
+        public void defaultOperation(Object obj) {
         }
     }
 

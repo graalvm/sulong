@@ -34,6 +34,8 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
@@ -57,6 +59,7 @@ import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.VoidType;
 
+@Instrumentable(factory = LLVMInvokeNodeWrapper.class)
 @NeedsStack
 public abstract class LLVMInvokeNode extends LLVMControlFlowNode {
     @Child protected LLVMExpressionNode normalPhiNode;
@@ -85,6 +88,16 @@ public abstract class LLVMInvokeNode extends LLVMControlFlowNode {
         this.resultLocation = resultLocation;
 
         initializeReturnValueProfileNode();
+    }
+
+    public LLVMInvokeNode(LLVMInvokeNode delegate) {
+        super(delegate.getSourceSection());
+        this.normalSuccessor = delegate.normalSuccessor;
+        this.unwindSuccessor = delegate.unwindSuccessor;
+        this.type = delegate.type;
+        this.normalPhiNode = delegate.normalPhiNode;
+        this.unwindPhiNode = delegate.unwindPhiNode;
+        this.resultLocation = delegate.resultLocation;
     }
 
     private void initializeReturnValueProfileNode() {
@@ -273,6 +286,10 @@ public abstract class LLVMInvokeNode extends LLVMControlFlowNode {
             return argValues;
         }
 
+        @Override
+        protected boolean isTaggedWith(Class<?> tag) {
+            return tag == StandardTags.StatementTag.class || tag == StandardTags.CallTag.class || super.isTaggedWith(tag);
+        }
     }
 
 }

@@ -176,6 +176,7 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
                 continue outer;
             } else if (controlFlowNode instanceof LLVMBrUnconditionalNode) {
                 LLVMBrUnconditionalNode unconditionalNode = (LLVMBrUnconditionalNode) controlFlowNode;
+                unconditionalNode.execute(frame);
                 if (CompilerDirectives.inInterpreter()) {
                     if (unconditionalNode.getSuccessor() <= basicBlockIndex) {
                         backEdgeCounter++;

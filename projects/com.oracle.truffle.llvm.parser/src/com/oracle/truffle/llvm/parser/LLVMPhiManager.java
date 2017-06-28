@@ -37,17 +37,13 @@ import java.util.Map;
 
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
-import com.oracle.truffle.llvm.parser.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
-import com.oracle.truffle.llvm.parser.model.globals.GlobalAlias;
-import com.oracle.truffle.llvm.parser.model.globals.GlobalConstant;
-import com.oracle.truffle.llvm.parser.model.globals.GlobalVariable;
+import com.oracle.truffle.llvm.parser.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.PhiInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.TerminatingInstruction;
 import com.oracle.truffle.llvm.parser.model.visitors.FunctionVisitor;
-import com.oracle.truffle.llvm.parser.model.visitors.InstructionVisitorAdapter;
+import com.oracle.truffle.llvm.parser.model.visitors.InstructionVisitor;
 import com.oracle.truffle.llvm.parser.model.visitors.ModelVisitor;
-import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
 
@@ -76,22 +72,6 @@ public final class LLVMPhiManager implements ModelVisitor {
     }
 
     @Override
-    public void visit(GlobalAlias alias) {
-    }
-
-    @Override
-    public void visit(GlobalConstant constant) {
-    }
-
-    @Override
-    public void visit(GlobalVariable variable) {
-    }
-
-    @Override
-    public void visit(FunctionDeclaration method) {
-    }
-
-    @Override
     public void visit(FunctionDefinition method) {
         LLVMPhiManagerFunctionVisitor visitor = new LLVMPhiManagerFunctionVisitor();
 
@@ -101,10 +81,10 @@ public final class LLVMPhiManager implements ModelVisitor {
     }
 
     @Override
-    public void visit(Type type) {
+    public void defaultOperation(Object obj) {
     }
 
-    private static class LLVMPhiManagerFunctionVisitor implements FunctionVisitor, InstructionVisitorAdapter {
+    private static class LLVMPhiManagerFunctionVisitor implements FunctionVisitor, InstructionVisitor {
 
         private final Map<InstructionBlock, List<Phi>> edges = new HashMap<>();
 
@@ -130,6 +110,10 @@ public final class LLVMPhiManager implements ModelVisitor {
                 List<Phi> references = edges.computeIfAbsent(blk, k -> new ArrayList<>());
                 references.add(new Phi(currentBlock, phi, phi.getValue(i)));
             }
+        }
+
+        @Override
+        public void defaultOperation(Instruction instruction) {
         }
     }
 

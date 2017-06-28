@@ -43,6 +43,7 @@ import com.oracle.truffle.llvm.parser.model.symbols.instructions.GetElementPoint
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.IndirectBranchInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.InsertElementInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.InsertValueInstruction;
+import com.oracle.truffle.llvm.parser.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.InvokeInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.LandingpadInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.LoadInstruction;
@@ -57,62 +58,123 @@ import com.oracle.truffle.llvm.parser.model.symbols.instructions.SwitchOldInstru
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.UnreachableInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.VoidCallInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.VoidInvokeInstruction;
+import com.oracle.truffle.llvm.runtime.LLVMLogger;
 
 public interface InstructionVisitor {
 
-    void visit(AllocateInstruction allocate);
+    default void defaultOperation(Instruction instruction) {
+        LLVMLogger.info("[sulong.parser] Ignored visit to: " + instruction);
+    }
 
-    void visit(BinaryOperationInstruction operation);
+    default void visit(AllocateInstruction allocate) {
+        defaultOperation(allocate);
+    }
 
-    void visit(BranchInstruction branch);
+    default void visit(BinaryOperationInstruction operation) {
+        defaultOperation(operation);
+    }
 
-    void visit(CallInstruction call);
+    default void visit(BranchInstruction branch) {
+        defaultOperation(branch);
+    }
 
-    void visit(InvokeInstruction call);
+    default void visit(CallInstruction call) {
+        defaultOperation(call);
+    }
 
-    void visit(CastInstruction cast);
+    default void visit(InvokeInstruction call) {
+        defaultOperation(call);
+    }
 
-    void visit(CompareInstruction operation);
+    default void visit(CastInstruction cast) {
+        defaultOperation(cast);
+    }
 
-    void visit(ConditionalBranchInstruction branch);
+    default void visit(CompareInstruction operation) {
+        defaultOperation(operation);
+    }
 
-    void visit(ExtractElementInstruction extract);
+    default void visit(ConditionalBranchInstruction branch) {
+        defaultOperation(branch);
+    }
 
-    void visit(ExtractValueInstruction extract);
+    default void visit(ExtractElementInstruction extract) {
+        defaultOperation(extract);
+    }
 
-    void visit(GetElementPointerInstruction gep);
+    default void visit(ExtractValueInstruction extract) {
+        defaultOperation(extract);
+    }
 
-    void visit(IndirectBranchInstruction branch);
+    default void visit(GetElementPointerInstruction gep) {
+        defaultOperation(gep);
+    }
 
-    void visit(InsertElementInstruction insert);
+    default void visit(IndirectBranchInstruction branch) {
+        defaultOperation(branch);
+    }
 
-    void visit(InsertValueInstruction insert);
+    default void visit(InsertElementInstruction insert) {
+        defaultOperation(insert);
+    }
 
-    void visit(LoadInstruction load);
+    default void visit(InsertValueInstruction insert) {
+        defaultOperation(insert);
+    }
 
-    void visit(PhiInstruction phi);
+    default void visit(LoadInstruction load) {
+        defaultOperation(load);
+    }
 
-    void visit(ReturnInstruction ret);
+    default void visit(PhiInstruction phi) {
+        defaultOperation(phi);
+    }
 
-    void visit(SelectInstruction select);
+    default void visit(ReturnInstruction ret) {
+        defaultOperation(ret);
+    }
 
-    void visit(ShuffleVectorInstruction shuffle);
+    default void visit(SelectInstruction select) {
+        defaultOperation(select);
+    }
 
-    void visit(StoreInstruction store);
+    default void visit(ShuffleVectorInstruction shuffle) {
+        defaultOperation(shuffle);
+    }
 
-    void visit(SwitchInstruction select);
+    default void visit(StoreInstruction store) {
+        defaultOperation(store);
+    }
 
-    void visit(SwitchOldInstruction select);
+    default void visit(SwitchInstruction select) {
+        defaultOperation(select);
+    }
 
-    void visit(UnreachableInstruction unreachable);
+    default void visit(SwitchOldInstruction select) {
+        defaultOperation(select);
+    }
 
-    void visit(VoidCallInstruction call);
+    default void visit(UnreachableInstruction unreachable) {
+        defaultOperation(unreachable);
+    }
 
-    void visit(VoidInvokeInstruction call);
+    default void visit(VoidCallInstruction call) {
+        defaultOperation(call);
+    }
 
-    void visit(LandingpadInstruction landingpad);
+    default void visit(VoidInvokeInstruction call) {
+        defaultOperation(call);
+    }
 
-    void visit(ResumeInstruction resume);
+    default void visit(LandingpadInstruction landingpad) {
+        defaultOperation(landingpad);
+    }
 
-    void visit(CompareExchangeInstruction cmpxchg);
+    default void visit(ResumeInstruction resume) {
+        defaultOperation(resume);
+    }
+
+    default void visit(CompareExchangeInstruction cmpxchg) {
+        defaultOperation(cmpxchg);
+    }
 }

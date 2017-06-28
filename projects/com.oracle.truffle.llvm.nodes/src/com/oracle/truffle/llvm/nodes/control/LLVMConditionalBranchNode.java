@@ -31,10 +31,12 @@ package com.oracle.truffle.llvm.nodes.control;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
+@Instrumentable(factory = LLVMConditionalBranchNodeWrapper.class)
 public class LLVMConditionalBranchNode extends LLVMControlFlowNode {
 
     @Child private LLVMExpressionNode condition;
@@ -54,6 +56,15 @@ public class LLVMConditionalBranchNode extends LLVMControlFlowNode {
         this.truePhi = truePhi;
         this.falsePhi = falsePhi;
         this.condition = condition;
+    }
+
+    public LLVMConditionalBranchNode(LLVMConditionalBranchNode wrappedNode) {
+        super(wrappedNode.getSourceSection());
+        this.condition = wrappedNode.condition;
+        this.truePhi = wrappedNode.truePhi;
+        this.falsePhi = wrappedNode.falsePhi;
+        this.trueSuccessor = wrappedNode.trueSuccessor;
+        this.falseSuccessor = wrappedNode.falseSuccessor;
     }
 
     @Override

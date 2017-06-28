@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.oracle.truffle.llvm.parser.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.model.globals.GlobalAlias;
 import com.oracle.truffle.llvm.parser.model.globals.GlobalConstant;
@@ -43,7 +42,6 @@ import com.oracle.truffle.llvm.parser.model.globals.GlobalVariable;
 import com.oracle.truffle.llvm.parser.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
 import com.oracle.truffle.llvm.runtime.options.LLVMOptions;
-import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
 final class LLVMModelVisitor implements ModelVisitor {
@@ -85,10 +83,6 @@ final class LLVMModelVisitor implements ModelVisitor {
     }
 
     @Override
-    public void visit(FunctionDeclaration method) {
-    }
-
-    @Override
     public void visit(FunctionDefinition method) {
         String methodName = method.getName();
         if (!LLVMLogger.TARGET_NONE.equals(LLVMOptions.DEBUG.printMetadata())) {
@@ -98,6 +92,6 @@ final class LLVMModelVisitor implements ModelVisitor {
     }
 
     @Override
-    public void visit(Type type) {
+    public void defaultOperation(Object obj) {
     }
 }

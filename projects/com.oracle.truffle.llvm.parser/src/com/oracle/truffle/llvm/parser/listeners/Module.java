@@ -193,7 +193,7 @@ public final class Module implements ParserListener {
                 return new Metadata(types, generator);
 
             default:
-                LLVMLogger.info("Entering Unknown Block inside Module: " + block);
+                LLVMLogger.info("[sulong.parser] Entering Unknown Block inside Module: " + block);
                 return ParserListener.DEFAULT;
         }
     }
@@ -237,7 +237,7 @@ public final class Module implements ParserListener {
                 break;
 
             default:
-                LLVMLogger.info("Unknown Top-Level Record: " + Records.describe(id, args));
+                LLVMLogger.info("[sulong.parser] Unknown Top-Level Record: id=" + id);
                 break;
         }
     }

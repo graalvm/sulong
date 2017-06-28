@@ -31,10 +31,12 @@ package com.oracle.truffle.llvm.nodes.control;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
+@Instrumentable(factory = LLVMSwitchNodeWrapper.class)
 public abstract class LLVMSwitchNode extends LLVMControlFlowNode {
 
     @Children private final LLVMExpressionNode[] phiNodes;
@@ -49,6 +51,14 @@ public abstract class LLVMSwitchNode extends LLVMControlFlowNode {
         this.phiNodes = phiNodes;
         this.cond = cond;
         this.cases = cases;
+    }
+
+    public LLVMSwitchNode(LLVMSwitchNode delegate) {
+        super(delegate.getSourceSection());
+        this.successors = delegate.successors;
+        this.phiNodes = delegate.phiNodes;
+        this.cond = delegate.cond;
+        this.cases = delegate.cases;
     }
 
     @Override
