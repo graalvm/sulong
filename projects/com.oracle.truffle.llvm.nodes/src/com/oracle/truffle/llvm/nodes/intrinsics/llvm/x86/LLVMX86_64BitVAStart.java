@@ -53,6 +53,8 @@ import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
 import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.VectorType;
+import com.oracle.truffle.llvm.runtime.vector.LLVMFloatVector;
 
 @NeedsStack
 public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
@@ -87,6 +89,13 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
     private static VarArgArea getVarArgArea(Type type) {
         if (Type.isIntegerType(type) || type instanceof PointerType || type instanceof FunctionType) {
             return VarArgArea.GP_AREA;
+        } else if (type instanceof VectorType) {
+            final VectorType vecType = (VectorType) type;
+            if (vecType.getElementType() == PrimitiveType.FLOAT && vecType.getNumberOfElements() <= 2) {
+                return VarArgArea.FP_AREA; // we can push two floats in one floating point register
+            } else {
+                return VarArgArea.GP_AREA;
+            }
         } else if (type == PrimitiveType.FLOAT || type == PrimitiveType.DOUBLE) {
             return VarArgArea.FP_AREA;
         } else if (type == PrimitiveType.X86_FP80) {
@@ -113,7 +122,7 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
         // #############################
         // Allocate worst amount of memory - saves a few ifs
         LLVMAddress structAddress = targetToAddress.executeWithTarget(target.executeGeneric(frame));
-        long regSaveArea = LLVMStack.allocateStackMemory(frame, getStackPointerSlot(), X86_64BitVarArgs.GP_LIMIT + X86_64BitVarArgs.FP_LIMIT, 8);
+        long regSaveArea = LLVMStack.allocateStackMemory(frame, getStackPointerSlot(), X86_64BitVarArgs.FP_LIMIT, 8);
         LLVMMemory.putAddress(structAddress.getVal() + X86_64BitVarArgs.REG_SAVE_AREA, regSaveArea);
 
         int varArgsStartIndex = numberOfExplicitArguments;
@@ -127,18 +136,20 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
         long overflowArgArea = LLVMStack.allocateStackMemory(frame, getStackPointerSlot(), numberOfVarArgs * 16, 8);
         LLVMMemory.putAddress(structAddress.getVal() + X86_64BitVarArgs.OVERFLOW_ARG_AREA, overflowArgArea);
 
-        LLVMMemory.putI32(structAddress.getVal() + X86_64BitVarArgs.GP_OFFSET, 0);
-        LLVMMemory.putI32(structAddress.getVal() + X86_64BitVarArgs.FP_OFFSET, X86_64BitVarArgs.GP_LIMIT);
+        int gpOffset = calculateUsedGpArea(realArguments, numberOfExplicitArguments);
+        int fpOffset = X86_64BitVarArgs.GP_LIMIT + calculateUsedFpArea(realArguments, numberOfExplicitArguments);
+
+        LLVMMemory.putI32(structAddress.getVal() + X86_64BitVarArgs.GP_OFFSET, gpOffset);
+        LLVMMemory.putI32(structAddress.getVal() + X86_64BitVarArgs.FP_OFFSET, fpOffset);
 
         if (nrVarArgs > 0) {
-            int gpOffset = 0;
-            int fpOffset = X86_64BitVarArgs.GP_LIMIT;
             int overflowOffset = 0;
             Type[] types = getTypes(realArguments, varArgsStartIndex);
 
             for (int i = 0; i < nrVarArgs; i++) {
                 Object object = realArguments[varArgsStartIndex + i];
                 VarArgArea area = getVarArgArea(types[i]);
+
                 if (area == VarArgArea.GP_AREA) {
                     if (gpOffset < X86_64BitVarArgs.GP_LIMIT) {
                         storeArgument(types[i], regSaveArea + gpOffset, object);
@@ -169,6 +180,35 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
         }
 
         return null;
+    }
+
+    private static int calculateUsedGpArea(Object[] realArguments, int numberOfExplicitArguments) {
+        assert numberOfExplicitArguments <= realArguments.length;
+
+        int usedGpArea = 0;
+        for (int i = 0; i < numberOfExplicitArguments && usedGpArea < X86_64BitVarArgs.GP_LIMIT; i++) {
+            final Type type = getArgumentType(realArguments[i]);
+            if (getVarArgArea(type) == VarArgArea.GP_AREA) {
+                usedGpArea += X86_64BitVarArgs.GP_STEP;
+            }
+        }
+
+        return usedGpArea;
+    }
+
+    private static int calculateUsedFpArea(Object[] realArguments, int numberOfExplicitArguments) {
+        assert numberOfExplicitArguments <= realArguments.length;
+
+        int usedFpArea = 0;
+        final int fpAreaLimit = X86_64BitVarArgs.FP_LIMIT - X86_64BitVarArgs.GP_LIMIT;
+        for (int i = 0; i < numberOfExplicitArguments && usedFpArea < fpAreaLimit; i++) {
+            final Type type = getArgumentType(realArguments[i]);
+            if (getVarArgArea(type) == VarArgArea.FP_AREA) {
+                usedFpArea += X86_64BitVarArgs.FP_STEP;
+            }
+        }
+
+        return usedFpArea;
     }
 
     private static Object[] getRealArguments(VirtualFrame frame) {
@@ -205,47 +245,7 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
         }
     }
 
-    static int getSize(Type[] types) {
-        return X86_64BitVarArgs.FP_LIMIT + getOverFlowSize(types);
-    }
-
-    private static int getOverFlowSize(Type[] types) {
-        int overFlowSize = 0;
-        int remainingFpArea = X86_64BitVarArgs.FP_LIMIT - X86_64BitVarArgs.GP_LIMIT;
-        int remainingGpArea = X86_64BitVarArgs.GP_LIMIT;
-        for (Type type : types) {
-            VarArgArea area = getVarArgArea(type);
-            switch (area) {
-                case FP_AREA:
-                    if (remainingFpArea == 0) {
-                        overFlowSize += X86_64BitVarArgs.STACK_STEP;
-                    } else {
-                        remainingFpArea -= X86_64BitVarArgs.FP_STEP;
-                    }
-                    assert remainingFpArea >= 0;
-                    break;
-                case GP_AREA:
-                    if (remainingGpArea == 0) {
-                        overFlowSize += X86_64BitVarArgs.STACK_STEP;
-                    } else {
-                        remainingGpArea -= X86_64BitVarArgs.GP_STEP;
-                    }
-                    assert remainingGpArea >= 0;
-                    break;
-                case OVERFLOW_AREA:
-                    if (type != PrimitiveType.X86_FP80) {
-                        throw new AssertionError();
-                    }
-                    overFlowSize += LONG_DOUBLE_SIZE;
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-        }
-        return overFlowSize;
-    }
-
-    static Type[] getTypes(Object[] arguments, int varArgsStartIndex) {
+    private static Type[] getTypes(Object[] arguments, int varArgsStartIndex) {
         Object firstArgument = arguments[varArgsStartIndex];
         Type[] types = new Type[arguments.length - varArgsStartIndex];
         getArgumentType(firstArgument);
@@ -275,6 +275,8 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
             type = new PointerType(null);
         } else if (arg instanceof LLVM80BitFloat) {
             type = PrimitiveType.X86_FP80;
+        } else if (arg instanceof LLVMFloatVector) {
+            type = new VectorType(PrimitiveType.FLOAT, ((LLVMFloatVector) arg).getLength());
         } else {
             throw new AssertionError(arg);
         }
@@ -285,18 +287,20 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
 
     private void storeArgument(Type type, long currentPtr, Object object) {
         if (type instanceof PrimitiveType) {
-            doPrimitiveWrite(type, currentPtr, object);
+            doPrimitiveWrite((PrimitiveType) type, currentPtr, object);
         } else if (type instanceof PointerType && object instanceof LLVMAddress) {
             LLVMMemory.putAddress(currentPtr, (LLVMAddress) object);
         } else if (type instanceof PointerType && object instanceof LLVMGlobalVariable) {
             LLVMMemory.putAddress(currentPtr, globalAccess.getNativeLocation(((LLVMGlobalVariable) object)));
+        } else if (type instanceof VectorType && object instanceof LLVMFloatVector) {
+            doVectorWrite(currentPtr, object);
         } else {
             throw new AssertionError(type);
         }
     }
 
-    private static void doPrimitiveWrite(Type type, long currentPtr, Object object) throws AssertionError {
-        switch (((PrimitiveType) type).getPrimitiveKind()) {
+    private static void doPrimitiveWrite(PrimitiveType type, long currentPtr, Object object) throws AssertionError {
+        switch (type.getPrimitiveKind()) {
             case I1:
                 LLVMMemory.putI1(currentPtr, (boolean) object);
                 break;
@@ -323,6 +327,17 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
                 break;
             default:
                 throw new AssertionError(type);
+        }
+    }
+
+    private static void doVectorWrite(long startPtr, Object object) throws AssertionError {
+        if (object instanceof LLVMFloatVector) {
+            final LLVMFloatVector floatVec = (LLVMFloatVector) object;
+            for (int i = 0; i < floatVec.getLength(); i++) {
+                doPrimitiveWrite(PrimitiveType.FLOAT, startPtr + i * Float.BYTES, floatVec.getValue(i));
+            }
+        } else {
+            throw new AssertionError(object);
         }
     }
 
