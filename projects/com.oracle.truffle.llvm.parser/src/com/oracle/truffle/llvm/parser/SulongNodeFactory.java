@@ -178,4 +178,6 @@ public interface SulongNodeFactory {
 
     LLVMExpressionNode createPhi(LLVMExpressionNode[] from, FrameSlot[] to, Type[] types);
 
+    LLVMExpressionNode createCopyAddressByValue(LLVMExpressionNode addr, int size, int alignment);
+
 }

@@ -40,6 +40,8 @@ import com.oracle.truffle.llvm.parser.LLVMPhiManager.Phi;
 import com.oracle.truffle.llvm.parser.instructions.LLVMArithmeticInstructionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMConversionType;
 import com.oracle.truffle.llvm.parser.instructions.LLVMLogicalInstructionKind;
+import com.oracle.truffle.llvm.parser.model.attributes.AttributesGroup;
+import com.oracle.truffle.llvm.parser.model.attributes.KnownAttribute;
 import com.oracle.truffle.llvm.parser.model.enums.AsmDialect;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.model.symbols.constants.InlineAsmConstant;
@@ -221,6 +223,14 @@ final class LLVMBitcodeInstructionVisitor implements InstructionVisitor {
         for (int i = 0; argIndex < argumentCount; i++) {
             argNodes[argIndex] = symbols.resolve(call.getArgument(i));
             argTypes[argIndex] = call.getArgument(i).getType();
+
+            final AttributesGroup paramAttr = call.getParameterAttributesGroup(i);
+            if (paramAttr != null && paramAttr.getAttributes().contains(KnownAttribute.BYVAL)) {
+                final int size = runtime.getByteSize(((PointerType) argTypes[argIndex]).getPointeeType());
+                final int alignment = runtime.getByteAlignment(((PointerType) argTypes[argIndex]).getPointeeType());
+                argNodes[argIndex] = nodeFactory.createCopyAddressByValue(argNodes[argIndex], size, alignment);
+            }
+
             argIndex++;
         }
 
@@ -299,6 +309,14 @@ final class LLVMBitcodeInstructionVisitor implements InstructionVisitor {
         for (int i = 0; i < call.getArgumentCount(); i++) {
             args[argIndex] = symbols.resolve(call.getArgument(i));
             argsType[argIndex] = call.getArgument(i).getType();
+
+            final AttributesGroup paramAttr = call.getParameterAttributesGroup(i);
+            if (paramAttr != null && paramAttr.getAttributes().contains(KnownAttribute.BYVAL)) {
+                final int size = runtime.getByteSize(((PointerType) argsType[argIndex]).getPointeeType());
+                final int alignment = runtime.getByteAlignment(((PointerType) argsType[argIndex]).getPointeeType());
+                args[argIndex] = nodeFactory.createCopyAddressByValue(args[argIndex], size, alignment);
+            }
+
             argIndex++;
         }
 
@@ -337,6 +355,13 @@ final class LLVMBitcodeInstructionVisitor implements InstructionVisitor {
         for (int i = 0; argIndex < argumentCount; i++, argIndex++) {
             argNodes[argIndex] = symbols.resolve(call.getArgument(i));
             argTypes[argIndex] = call.getArgument(i).getType();
+
+            final AttributesGroup paramAttr = call.getParameterAttributesGroup(i);
+            if (paramAttr != null && paramAttr.getAttributes().contains(KnownAttribute.BYVAL)) {
+                final int size = runtime.getByteSize(((PointerType) argTypes[argIndex]).getPointeeType());
+                final int alignment = runtime.getByteAlignment(((PointerType) argTypes[argIndex]).getPointeeType());
+                argNodes[argIndex] = nodeFactory.createCopyAddressByValue(argNodes[argIndex], size, alignment);
+            }
         }
 
         final Symbol target = call.getCallTarget();
@@ -398,6 +423,14 @@ final class LLVMBitcodeInstructionVisitor implements InstructionVisitor {
         for (int i = 0; i < call.getArgumentCount(); i++) {
             args[argIndex] = symbols.resolve(call.getArgument(i));
             argsType[argIndex] = call.getArgument(i).getType();
+
+            final AttributesGroup paramAttr = call.getParameterAttributesGroup(i);
+            if (paramAttr != null && paramAttr.getAttributes().contains(KnownAttribute.BYVAL)) {
+                final int size = runtime.getByteSize(((PointerType) argsType[argIndex]).getPointeeType());
+                final int alignment = runtime.getByteAlignment(((PointerType) argsType[argIndex]).getPointeeType());
+                args[argIndex] = nodeFactory.createCopyAddressByValue(args[argIndex], size, alignment);
+            }
+
             argIndex++;
         }
 

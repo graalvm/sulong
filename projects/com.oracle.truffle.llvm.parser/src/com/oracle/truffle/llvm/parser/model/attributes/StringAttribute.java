@@ -60,9 +60,27 @@ public final class StringAttribute implements Attribute {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((attr == null) ? 0 : attr.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof StringAttribute)) {
+            return false;
+        }
+        StringAttribute other = (StringAttribute) obj;
+        return attr.equals(other.attr) && value.equals(other.value);
+    }
+
+    @Override
     public String getIrString() {
         if (value.isPresent()) {
-            return String.format("\"%s\"=\"%s\"", attr, value);
+            return String.format("\"%s\"=\"%s\"", attr, value.get());
         } else {
             return String.format("\"%s\"", attr);
         }

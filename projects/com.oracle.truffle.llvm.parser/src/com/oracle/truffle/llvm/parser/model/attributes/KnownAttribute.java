@@ -35,6 +35,8 @@ import com.oracle.truffle.llvm.parser.records.ParameterAttributeGroupRecord;
 
 public final class KnownAttribute implements Attribute {
 
+    public static final KnownAttribute BYVAL = new KnownAttribute(ParameterAttributeGroupRecord.BYVAL);
+
     private final ParameterAttributeGroupRecord attr;
     private final Optional<Long> value;
 
@@ -59,6 +61,24 @@ public final class KnownAttribute implements Attribute {
     @Override
     public String toString() {
         return "KnownAttribute [attr=" + attr + ", value=" + value + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((attr == null) ? 0 : attr.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof KnownAttribute)) {
+            return false;
+        }
+        KnownAttribute other = (KnownAttribute) obj;
+        return attr.equals(other.attr) && value.equals(other.value);
     }
 
     @Override
