@@ -35,6 +35,8 @@ import com.oracle.truffle.llvm.parser.records.ParameterAttributeGroupRecord;
 
 public final class KnownAttribute implements Attribute {
 
+    public static final KnownAttribute BYVAL = new KnownAttribute(ParameterAttributeGroupRecord.BYVAL);
+
     private final ParameterAttributeGroupRecord attr;
     private final Optional<Long> value;
 
