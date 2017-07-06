@@ -62,6 +62,24 @@ public final class KnownAttribute implements Attribute {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((attr == null) ? 0 : attr.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof KnownAttribute)) {
+            return false;
+        }
+        KnownAttribute other = (KnownAttribute) obj;
+        return attr.equals(other.attr) && value.equals(other.value);
+    }
+
+    @Override
     public String getIrString() {
         if (value.isPresent()) {
             if (attr == ParameterAttributeGroupRecord.ALIGN) {
