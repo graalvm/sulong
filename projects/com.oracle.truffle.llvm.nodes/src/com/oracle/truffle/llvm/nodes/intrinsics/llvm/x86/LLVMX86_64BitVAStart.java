@@ -158,23 +158,17 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
                         storeArgument(regSaveArea + gpOffset, object);
                         gpOffset += X86_64BitVarArgs.GP_STEP;
                     } else {
-                        storeArgument(overflowArgArea + overflowOffset, object);
-                        overflowOffset += X86_64BitVarArgs.STACK_STEP;
+                        overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
                     }
                 } else if (area == VarArgArea.FP_AREA) {
                     if (fpOffset < X86_64BitVarArgs.FP_LIMIT) {
                         storeArgument(regSaveArea + fpOffset, object);
                         fpOffset += X86_64BitVarArgs.FP_STEP;
                     } else {
-                        storeArgument(overflowArgArea + overflowOffset, object);
-                        overflowOffset += X86_64BitVarArgs.STACK_STEP;
+                        overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
                     }
                 } else if (area == VarArgArea.OVERFLOW_AREA) {
-                    if (!(object instanceof LLVM80BitFloat)) {
-                        throw new AssertionError();
-                    }
-                    storeArgument(overflowArgArea + overflowOffset, object);
-                    overflowOffset += LONG_DOUBLE_SIZE;
+                    overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
                 } else {
                     CompilerDirectives.transferToInterpreter();
                     throw new IllegalStateException("TODO");
@@ -248,48 +242,59 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
 
     @Child private LLVMGlobalVariableAccess globalAccess = createGlobalAccess();
 
-    private void storeArgument(long currentPtr, Object object) {
+    private int storeArgument(long currentPtr, Object object) {
         if (object instanceof Number || object instanceof LLVM80BitFloat) {
-            doPrimitiveWrite(currentPtr, object);
+            return doPrimitiveWrite(currentPtr, object);
         } else if (object instanceof LLVMAddress) {
             LLVMMemory.putAddress(currentPtr, (LLVMAddress) object);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (object instanceof LLVMGlobalVariable) {
             LLVMMemory.putAddress(currentPtr, globalAccess.getNativeLocation(((LLVMGlobalVariable) object)));
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (object instanceof LLVMFloatVector) {
-            doVectorWrite(currentPtr, object);
+            return doVectorWrite(currentPtr, object);
         } else {
             throw new AssertionError(object);
         }
     }
 
-    private static void doPrimitiveWrite(long currentPtr, Object arg) throws AssertionError {
+    private static int doPrimitiveWrite(long currentPtr, Object arg) throws AssertionError {
         if (arg instanceof Boolean) {
             LLVMMemory.putI1(currentPtr, (boolean) arg);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (arg instanceof Byte) {
             LLVMMemory.putI8(currentPtr, (byte) arg);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (arg instanceof Short) {
             LLVMMemory.putI16(currentPtr, (short) arg);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (arg instanceof Integer) {
             LLVMMemory.putI32(currentPtr, (int) arg);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (arg instanceof Long) {
             LLVMMemory.putI64(currentPtr, (long) arg);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (arg instanceof Float) {
             LLVMMemory.putFloat(currentPtr, (float) arg);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (arg instanceof Double) {
             LLVMMemory.putDouble(currentPtr, (double) arg);
+            return X86_64BitVarArgs.STACK_STEP;
         } else if (arg instanceof LLVM80BitFloat) {
             LLVMMemory.put80BitFloat(currentPtr, (LLVM80BitFloat) arg);
+            return LONG_DOUBLE_SIZE;
         } else {
             throw new AssertionError(arg);
         }
     }
 
-    private static void doVectorWrite(long startPtr, Object object) throws AssertionError {
+    private static int doVectorWrite(long startPtr, Object object) throws AssertionError {
         if (object instanceof LLVMFloatVector) {
             final LLVMFloatVector floatVec = (LLVMFloatVector) object;
             for (int i = 0; i < floatVec.getLength(); i++) {
                 doPrimitiveWrite(startPtr + i * Float.BYTES, floatVec.getValue(i));
             }
+            return floatVec.getLength() * Float.BYTES; // TODO: stack step?
         } else {
             throw new AssertionError(object);
         }
