@@ -121,57 +121,63 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
+        final Object[] realArguments = getRealArguments(frame);
+        unboxArguments(realArguments, numberOfExplicitArguments);
+        final int nrVarArgs = realArguments.length - numberOfExplicitArguments;
 
-        // Init reg_save_area:
-        // #############################
-        // Allocate worst amount of memory - saves a few ifs
+        // Allocate register_save_area
         LLVMAddress structAddress = targetToAddress.executeWithTarget(target.executeGeneric(frame));
-        long regSaveArea = LLVMStack.allocateStackMemory(frame, getStackPointerSlot(), X86_64BitVarArgs.FP_LIMIT, 8);
+        final long regSaveArea = LLVMStack.allocateStackMemory(frame, getStackPointerSlot(), X86_64BitVarArgs.FP_LIMIT, 8);
         LLVMMemory.putAddress(structAddress.getVal() + X86_64BitVarArgs.REG_SAVE_AREA, regSaveArea);
 
-        int varArgsStartIndex = numberOfExplicitArguments;
-        Object[] realArguments = getRealArguments(frame);
-        unboxArguments(realArguments, varArgsStartIndex);
-        int argumentsLength = realArguments.length;
-        int nrVarArgs = argumentsLength - varArgsStartIndex;
-        int numberOfVarArgs = argumentsLength - varArgsStartIndex;
-
-        // Allocate worst amount of memory - saves a few ifs
-        long overflowArgArea = LLVMStack.allocateStackMemory(frame, getStackPointerSlot(), numberOfVarArgs * 16, 8);
+        // Allocate overflow_arg_area
+        final int overflowAreaSize = calculateOverflowArea(realArguments, numberOfExplicitArguments);
+        final long overflowArgArea = LLVMStack.allocateStackMemory(frame, getStackPointerSlot(), overflowAreaSize, 8);
         LLVMMemory.putAddress(structAddress.getVal() + X86_64BitVarArgs.OVERFLOW_ARG_AREA, overflowArgArea);
 
+        // calculate initial offsets for the register_save_area
         int gpOffset = calculateUsedGpArea(realArguments, numberOfExplicitArguments);
         int fpOffset = X86_64BitVarArgs.GP_LIMIT + calculateUsedFpArea(realArguments, numberOfExplicitArguments);
-
         LLVMMemory.putI32(structAddress.getVal() + X86_64BitVarArgs.GP_OFFSET, gpOffset);
         LLVMMemory.putI32(structAddress.getVal() + X86_64BitVarArgs.FP_OFFSET, fpOffset);
 
+        // reconstruct register_save_area and overflow_arg_area according to AMD64 ABI
         if (nrVarArgs > 0) {
             int overflowOffset = 0;
 
             for (int i = 0; i < nrVarArgs; i++) {
-                final Object object = realArguments[varArgsStartIndex + i];
+                final Object object = realArguments[numberOfExplicitArguments + i];
                 final VarArgArea area = getVarArgArea(object);
 
-                if (area == VarArgArea.GP_AREA) {
-                    if (gpOffset < X86_64BitVarArgs.GP_LIMIT) {
-                        storeArgument(regSaveArea + gpOffset, object);
-                        gpOffset += X86_64BitVarArgs.GP_STEP;
-                    } else {
+                switch (area) {
+                    case GP_AREA:
+                        if (gpOffset < X86_64BitVarArgs.GP_LIMIT) {
+                            storeArgument(regSaveArea + gpOffset, object);
+                            gpOffset += X86_64BitVarArgs.GP_STEP;
+                        } else {
+                            assert overflowAreaSize >= overflowOffset;
+                            overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
+                        }
+                        break;
+
+                    case FP_AREA:
+                        if (fpOffset < X86_64BitVarArgs.FP_LIMIT) {
+                            storeArgument(regSaveArea + fpOffset, object);
+                            fpOffset += X86_64BitVarArgs.FP_STEP;
+                        } else {
+                            assert overflowAreaSize >= overflowOffset;
+                            overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
+                        }
+                        break;
+
+                    case OVERFLOW_AREA:
+                        assert overflowAreaSize >= overflowOffset;
                         overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
-                    }
-                } else if (area == VarArgArea.FP_AREA) {
-                    if (fpOffset < X86_64BitVarArgs.FP_LIMIT) {
-                        storeArgument(regSaveArea + fpOffset, object);
-                        fpOffset += X86_64BitVarArgs.FP_STEP;
-                    } else {
-                        overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
-                    }
-                } else if (area == VarArgArea.OVERFLOW_AREA) {
-                    overflowOffset += storeArgument(overflowArgArea + overflowOffset, object);
-                } else {
-                    CompilerDirectives.transferToInterpreter();
-                    throw new IllegalStateException("TODO");
+                        break;
+
+                    default:
+                        CompilerDirectives.transferToInterpreter();
+                        throw new IllegalStateException("not supported: " + area);
                 }
             }
         }
@@ -204,6 +210,28 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
         }
 
         return usedFpArea;
+    }
+
+    private static int calculateOverflowArea(Object[] realArguments, int numberOfExplicitArguments) {
+        assert numberOfExplicitArguments <= realArguments.length;
+
+        int overflowArea = 0;
+        int gpOffset = calculateUsedGpArea(realArguments, numberOfExplicitArguments);
+        int fpOffset = X86_64BitVarArgs.GP_LIMIT + calculateUsedFpArea(realArguments, numberOfExplicitArguments);
+        for (int i = numberOfExplicitArguments; i < realArguments.length; i++) {
+            VarArgArea area = getVarArgArea(realArguments[i]);
+            if (area == VarArgArea.GP_AREA && gpOffset < X86_64BitVarArgs.GP_LIMIT) {
+                gpOffset += X86_64BitVarArgs.GP_STEP;
+            } else if (area == VarArgArea.FP_AREA && fpOffset < X86_64BitVarArgs.FP_LIMIT) {
+                fpOffset += X86_64BitVarArgs.FP_STEP;
+            } else if (area != VarArgArea.OVERFLOW_AREA) {
+                overflowArea += X86_64BitVarArgs.STACK_STEP;
+            } else {
+                // TODO: we need to know the required stacksize
+                overflowArea += 128;
+            }
+        }
+        return overflowArea;
     }
 
     private static Object[] getRealArguments(VirtualFrame frame) {
@@ -294,7 +322,7 @@ public final class LLVMX86_64BitVAStart extends LLVMExpressionNode {
             for (int i = 0; i < floatVec.getLength(); i++) {
                 doPrimitiveWrite(startPtr + i * Float.BYTES, floatVec.getValue(i));
             }
-            return floatVec.getLength() * Float.BYTES; // TODO: stack step?
+            return floatVec.getLength() * Float.BYTES;
         } else {
             throw new AssertionError(object);
         }
