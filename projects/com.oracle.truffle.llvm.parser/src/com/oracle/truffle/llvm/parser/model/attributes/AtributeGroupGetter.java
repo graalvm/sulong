@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates.
+ * Copyright (c) 2017, Oracle and/or its affiliates.
  *
  * All rights reserved.
  *
@@ -27,16 +27,12 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.model.symbols.instructions;
+package com.oracle.truffle.llvm.parser.model.attributes;
 
-import com.oracle.truffle.llvm.parser.model.attributes.AtributeGroupGetter;
-import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
+public interface AtributeGroupGetter {
+    AttributesGroup getFunctionAttributesGroup();
 
-public interface Call extends AtributeGroupGetter {
+    AttributesGroup getReturnAttributesGroup();
 
-    Symbol getArgument(int index);
-
-    int getArgumentCount();
-
-    Symbol getCallTarget();
+    AttributesGroup getParameterAttributesGroup(int idx);
 }
