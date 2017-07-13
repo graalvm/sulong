@@ -55,12 +55,12 @@ Extract it inside the `sulong-dev` directory:
 
 Set `JAVA_HOME` to point to the extracted labsjdk from above:
 
-    echo JAVA_HOME=`pwd`/labsjdk1.8.0_121-jvmci-0.29 > sulong/mx.sulong/env
+    echo JAVA_HOME=`pwd`/labsjdk1.8.0_121-jvmci-0.29 >> sulong/mx.sulong/env
 
 Sulong partially consists of C/C++ code that is compiled using `make`. To speed
 up the build process you can edit the `MAKEFLAGS` environment variable:
 
-    echo MAKEFLAGS=-j9 > sulong/mx.sulong/env
+    echo MAKEFLAGS=-j9 >> sulong/mx.sulong/env
 
 Finally, build the project:
 
