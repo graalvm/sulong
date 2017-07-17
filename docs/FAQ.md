@@ -19,17 +19,13 @@ To start working with the code you can try to tackle one of the
 [open issues](https://github.com/graalvm/sulong/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Abeginner+).
 Do not hesitate to ask questions!
 
-### How can I get a list of options supported by Sulong?
-
-Invoke `mx su-options` in the Sulong directory.
-
 ## Mx
 
 ### How does mx execute a specific command?
 
 To get a command line command you can use the `-v` mx option. For
-example, `mx -v su-tests` prints the command line when executing the
-Sulong test cases.
+example, `mx -v test` prints the command line when executing the
+test cases.
 
 ### What can I do when Java files got corrupted?
 
@@ -37,33 +33,11 @@ You can clean your workspace with `mx clean`. If you only want to clean
 Java or native projects you can use `mx clean` with the options
 `--no-native` or `--no-java`.
 
-### Why does mx download DragonEgg?
-
-[DragonEgg](http://dragonegg.llvm.org/) is a GCC plugin with which we
-can use GCC to compile a source language to LLVM IR. Sulong uses
-DragonEgg in its test cases to compile Fortran files to LLVM IR.
-Sulong also uses DragonEgg for the C/C++ test cases besides Clang to get
-additional "free" test cases for a given C/C++ file.
-
-## Why does Sulong rely on GCC 4.6?
-
-Sulong uses the GCC plugin [DragonEgg 3.2](http://dragonegg.llvm.org/) which
-works best with GCC versions 4.5, 4.6, and 4.7.
-Per default, our mx commands try to use GCC version 4.6. To use another
-version, you can edit `sulong/mx.sulong/env` and, e.g., set the
-following environment variables:
-
-```
-SULONG_GCC=gcc47
-SULONG_GPP=g++47
-```
-
 ### How can I debug a failing test case?
 
-To attach a debugger to Sulong tests, run `mx -d unittest SulongSuite` or
-`mx -d su-suite sulong`.
+To attach a debugger to Sulong tests, run `mx -d unittest SulongSuite`.
 To get a verbose output of all tests that run as part of a suite, run
-`mx -v su-suite sulong`. This also prints names for all individual tests.
+`mx -v unittest SulongSuite`. This also prints names for all individual tests.
 You can use the test names to run a single test of a suite.
 For example, `test[c/max-unsigned-short-to-float-cast.c]` is part of the
 SulongSuite. You can run this single test using
@@ -75,8 +49,9 @@ SulongSuite. You can run this single test using
 
 In order to work with Eclipse, use `mx eclipseinit` to generate the
 Eclipse project files. Import not only the Sulong project, but also the
-Truffle project. You have the choice to either use remote debugging and
-launch Sulong in mx, or launch Sulong within Eclipse.
+Truffle project from `sulong-dev/graal/truffle`. You have the choice to
+either use remote debugging and launch Sulong in mx, or launch Sulong
+within Eclipse.
 
 If you use Eclipse to launch Sulong, you have to ensure that all needed
 packages are on the classpath and all necessary options set. You can
@@ -88,7 +63,7 @@ output information on how it executed the command.
 To debug the execution of a bitcode file in Eclipse, first start an mx
 command with the `-d` flag, e.g.:
 
-    $ mx -d su-run test.ll
+    $ mx -d lli test.ll
     Listening for transport dt_socket at address: 8000
 
 In Eclipse, set a breakpoint, navigate to
@@ -126,5 +101,8 @@ If installing the library does not solve the problem, then probably
 because the shared library is expected to be at a certain location,
 such as in `/usr/lib` in the example above.
 In such a case, first identify the location of the library (e.g.,
-`locate libxml2.so`) and then create a link to the library in the
-expected location (e.g., `ln -s /usr/lib/x86_64-linux-gnu/libxml2.so /usr/lib/libxml2.so`).
+`locate libxml2.so`) and then explicitly specify location and name
+of the library using the `-Dpolyglot.llvm.libraryPath` and
+`-Dpolyglot.llvm.libraries` options. Alternatively you can create a
+link to the library in the expected location
+(e.g., `ln -s /usr/lib/x86_64-linux-gnu/libxml2.so /usr/lib/libxml2.so`).
