@@ -24,8 +24,8 @@ Do not hesitate to ask questions!
 ### How does mx execute a specific command?
 
 To get a command line command you can use the `-v` mx option. For
-example, `mx -v su-tests` prints the command line when executing the
-Sulong test cases.
+example, `mx -v test` prints the command line when executing the
+test cases.
 
 ### What can I do when Java files got corrupted?
 
@@ -35,9 +35,9 @@ Java or native projects you can use `mx clean` with the options
 
 ### How can I debug a failing test case?
 
-To attach a debugger to Sulong tests, run `mx -d su-suite sulong`.
+To attach a debugger to Sulong tests, run `mx -d unittest SulongSuite`.
 To get a verbose output of all tests that run as part of a suite, run
-`mx -v su-suite sulong`. This also prints names for all individual tests.
+`mx -v unittest SulongSuite`. This also prints names for all individual tests.
 You can use the test names to run a single test of a suite.
 For example, `test[c/max-unsigned-short-to-float-cast.c]` is part of the
 SulongSuite. You can run this single test using
@@ -63,7 +63,7 @@ output information on how it executed the command.
 To debug the execution of a bitcode file in Eclipse, first start an mx
 command with the `-d` flag, e.g.:
 
-    $ mx -d su-run test.ll
+    $ mx -d lli test.ll
     Listening for transport dt_socket at address: 8000
 
 In Eclipse, set a breakpoint, navigate to

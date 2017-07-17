@@ -73,7 +73,7 @@ Now, Sulong is ready to start. You can for example compile a C file named
 `test.c` (see further below) with clang and then use Sulong to execute it:
 
     clang -c -emit-llvm -o test.bc test.c
-    mx su-run test.bc
+    mx lli test.bc
 
 For best experience we suggest to use clang 3.8, though versions 3.2, 3.3 and
 3.8 to 4.0 should also work. Additionally, if you compile with the `-g` option
@@ -85,7 +85,7 @@ files. The `-Dpolyglot.llvm.libraryPath` option can be used to amend the search
 path for the specifed libraries with a relative path. Both options can be given
 multiple arguments separated by `:`.
 
-    mx su-run -Dpolyglot.llvm.libraryPath=lib -Dpolyglot.llvm.libraries=liba.so test.bc
+    mx lli -Dpolyglot.llvm.libraryPath=lib -Dpolyglot.llvm.libraries=liba.so test.bc
 
 If you want to use the project from within Eclipse, use the following
 command to generate the Eclipse project files (there is also mx ideinit
