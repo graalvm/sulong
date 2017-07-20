@@ -73,7 +73,6 @@ public abstract class LLVMNativeDispatchNode extends LLVMNode {
     }
 
     protected TruffleObject dispatchIdentity(TruffleObject identity, long pointer) {
-        assert LLVMFunction.isExternNativeFunctionPointer(pointer);
         try {
             return (TruffleObject) ForeignAccess.sendExecute(identityExecuteNode, identity,
                             pointer);

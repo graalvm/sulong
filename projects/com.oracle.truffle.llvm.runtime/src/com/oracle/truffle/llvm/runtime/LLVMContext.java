@@ -45,7 +45,12 @@ import java.util.stream.Collectors;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleLanguage.Env;
+import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.interop.ForeignAccess;
+import com.oracle.truffle.api.interop.Message;
 import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
 import com.oracle.truffle.llvm.runtime.memory.LLVMNativeFunctions;
@@ -53,6 +58,8 @@ import com.oracle.truffle.llvm.runtime.memory.LLVMThreadingStack;
 import com.oracle.truffle.llvm.runtime.options.SulongEngineOption;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.Type;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class LLVMContext {
 
@@ -108,20 +115,35 @@ public final class LLVMContext {
         }
     }
 
-    private static final class LLVMFunctionIndexRegistry {
+    private final class LLVMFunctionIndexRegistry {
         private int currentFunctionIndex = 0;
-        private final List<LLVMFunctionDescriptor> functionDescriptors = new ArrayList<>();
+        private final HashMap<Long, LLVMFunctionDescriptor> functionDescriptors = new HashMap<>();
+
+        boolean isSulong(long ptr) {
+            return functionDescriptors.containsKey(ptr);
+        }
 
         LLVMFunctionDescriptor getDescriptor(LLVMFunctionHandle handle) {
-            return functionDescriptors.get(handle.getSulongFunctionIndex());
+            return functionDescriptors.get(handle.getFunctionPointer());
         }
 
         LLVMFunctionDescriptor create(FunctionFactory factory) {
             LLVMFunctionDescriptor function = factory.create(currentFunctionIndex++);
-            functionDescriptors.add(function);
 
-            assert LLVMFunction.getSulongFunctionIndex(function.getFunctionPointer()) == currentFunctionIndex - 1;
-            assert functionDescriptors.get(currentFunctionIndex - 1) == function;
+            if (currentFunctionIndex > 1) {
+                try {
+                    String signature = String.format("(env, %s):object", getNativeSignature(function.getType(), 0));
+                    TruffleObject createNativeWrapper = nativeLookup.getNativeFunction("@createNativeWrapper", signature);
+
+                    TruffleObject wrapper = (TruffleObject) ForeignAccess.sendExecute(Message.createExecute(1).createNode(), createNativeWrapper, function);
+                    function.setNativeWrapper(wrapper);
+                } catch (Throwable ex) {
+                    LLVMAddress dummyPointer = LLVMAddress.fromLong(LLVMFunction.tagSulongFunctionPointer(currentFunctionIndex));
+                    function.setNativeWrapper(new LLVMTruffleAddress(dummyPointer, function.getType(), LLVMContext.this));
+                }
+            }
+
+            functionDescriptors.put(function.getFunctionPointer(), function);
             return function;
         }
 
@@ -165,9 +187,9 @@ public final class LLVMContext {
         this.nativeCallStatistics = SulongEngineOption.isTrue(env.getOptions().get(SulongEngineOption.NATIVE_CALL_STATS)) ? new HashMap<>() : null;
         this.threadingStack = new LLVMThreadingStack(env.getOptions().get(SulongEngineOption.STACK_SIZE_KB));
         this.nativeFunctions = new LLVMNativeFunctionsImpl(nativeLookup);
-        this.sigDfl = LLVMFunctionHandle.createHandle(0);
-        this.sigIgn = LLVMFunctionHandle.createHandle(1);
-        this.sigErr = LLVMFunctionHandle.createHandle((-1) & LLVMFunction.LOWER_MASK);
+        this.sigDfl = LLVMFunctionHandle.createNativeHandle(0);
+        this.sigIgn = LLVMFunctionHandle.createNativeHandle(1);
+        this.sigErr = LLVMFunctionHandle.createNativeHandle((-1) & LLVMFunction.LOWER_MASK);
         this.toNative = new IdentityHashMap<>();
         this.toManaged = new HashMap<>();
         this.handlesLock = new Object();
@@ -206,6 +228,19 @@ public final class LLVMContext {
     public synchronized LLVMFunctionDescriptor getFunctionDescriptor(LLVMFunctionHandle handle) {
         assert handle.isSulong();
         return functionIndexRegistry.getDescriptor(handle);
+    }
+
+    @TruffleBoundary
+    public boolean isSulongHandle(long pointer) {
+        return functionIndexRegistry.isSulong(pointer);
+    }
+
+    public LLVMFunctionHandle createHandle(long pointer) {
+        if (isSulongHandle(pointer)) {
+            return LLVMFunctionHandle.createSulongHandle(pointer);
+        } else {
+            return LLVMFunctionHandle.createNativeHandle(pointer);
+        }
     }
 
     @TruffleBoundary

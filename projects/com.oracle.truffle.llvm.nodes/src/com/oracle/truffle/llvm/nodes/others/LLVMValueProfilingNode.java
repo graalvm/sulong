@@ -134,7 +134,7 @@ public abstract class LLVMValueProfilingNode extends LLVMExpressionNode {
 
         @Specialization
         public LLVMFunction executeFunction(LLVMFunctionHandle value, @Cached("createIdentityProfile()") LongValueProfile profile) {
-            return LLVMFunctionHandle.createHandle(profile.profile(value.getFunctionPointer()));
+            return getContext().createHandle(profile.profile(value.getFunctionPointer()));
         }
 
         @Specialization

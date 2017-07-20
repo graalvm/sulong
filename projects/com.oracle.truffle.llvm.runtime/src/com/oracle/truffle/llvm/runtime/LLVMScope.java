@@ -53,7 +53,7 @@ public final class LLVMScope {
         LLVMScope scope = new LLVMScope(null);
         LLVMFunctionDescriptor zeroFunction = scope.lookupOrCreateFunction(context, "<zero function>", true,
                         idx -> LLVMFunctionDescriptor.createDescriptor(context, "<zero function>", new FunctionType(MetaType.UNKNOWN, new Type[0], false), idx));
-        assert LLVMFunction.getSulongFunctionIndex(zeroFunction.getFunctionPointer()) == 0;
+        assert zeroFunction.getFunctionPointer() == 0;
         return scope;
     }
 
@@ -118,7 +118,7 @@ public final class LLVMScope {
             return context.getFunctionDescriptor(functions.get(name));
         } else {
             LLVMFunctionDescriptor functionDescriptor = context.createFunctionDescriptor(generator);
-            functions.put(name, LLVMFunctionHandle.createHandle(functionDescriptor.getFunctionPointer()));
+            functions.put(name, LLVMFunctionHandle.createSulongHandle(functionDescriptor.getFunctionPointer()));
             return functionDescriptor;
         }
     }

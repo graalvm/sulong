@@ -40,19 +40,25 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.interop.ForeignAccess;
+import com.oracle.truffle.api.interop.Message;
 import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.llvm.runtime.interop.LLVMFunctionMessageResolutionForeign;
 import com.oracle.truffle.llvm.runtime.memory.LLVMStack.NeedsStack;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class LLVMFunctionDescriptor implements LLVMFunction, TruffleObject, Comparable<LLVMFunctionDescriptor> {
 
     private final String functionName;
     private final FunctionType type;
-    private final long functionId;
     private final LLVMContext context;
+
+    @CompilationFinal private long functionPointer;
+    @CompilationFinal private TruffleObject nativeWrapper;
 
     @CompilationFinal private Function function;
     @CompilationFinal private Assumption functionAssumption;
@@ -207,20 +213,18 @@ public final class LLVMFunctionDescriptor implements LLVMFunction, TruffleObject
         return function;
     }
 
-    private LLVMFunctionDescriptor(LLVMContext context, String name, FunctionType type, long functionId) {
+    private LLVMFunctionDescriptor(LLVMContext context, String name, FunctionType type) {
         CompilerAsserts.neverPartOfCompilation();
-        assert LLVMFunction.isSulongFunctionPointer(functionId);
         this.context = context;
         this.functionName = name;
         this.type = type;
-        this.functionId = functionId;
         this.functionAssumption = Truffle.getRuntime().createAssumption();
         this.function = new UnresolvedFunction();
     }
 
     public static LLVMFunctionDescriptor createDescriptor(LLVMContext context, String name, FunctionType type, long functionId) {
         assert (functionId & LLVMFunction.UPPER_MASK) == 0;
-        LLVMFunctionDescriptor func = new LLVMFunctionDescriptor(context, name, type, LLVMFunction.tagSulongFunctionPointer(functionId));
+        LLVMFunctionDescriptor func = new LLVMFunctionDescriptor(context, name, type);
         return func;
     }
 
@@ -326,31 +330,41 @@ public final class LLVMFunctionDescriptor implements LLVMFunction, TruffleObject
      */
     @Override
     public long getFunctionPointer() {
-        return functionId;
+        return functionPointer;
+    }
+
+    public void setNativeWrapper(TruffleObject wrapper) {
+        assert nativeWrapper == null;
+        nativeWrapper = wrapper;
+        try {
+            functionPointer = ForeignAccess.sendAsPointer(Message.AS_POINTER.createNode(), wrapper);
+        } catch (UnsupportedMessageException ex) {
+            throw new AssertionError("should not happen", ex);
+        }
     }
 
     @Override
     public boolean isNullFunction() {
-        return LLVMFunction.getSulongFunctionIndex(functionId) == 0;
+        return functionPointer == 0;
     }
 
     @Override
     public String toString() {
         if (functionName != null) {
-            return String.format("function@%d '%s'", functionId, functionName);
+            return String.format("function@%d '%s'", functionPointer, functionName);
         } else {
-            return String.format("function@%d (anonymous)", functionId);
+            return String.format("function@%d (anonymous)", functionPointer);
         }
     }
 
     @Override
     public int compareTo(LLVMFunctionDescriptor o) {
-        return Long.compare(functionId, o.getFunctionPointer());
+        return Long.compare(functionPointer, o.getFunctionPointer());
     }
 
     @Override
     public int hashCode() {
-        return (int) functionId;
+        return (int) functionPointer;
     }
 
     @Override

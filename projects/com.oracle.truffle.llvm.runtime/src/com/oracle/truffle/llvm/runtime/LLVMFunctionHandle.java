@@ -35,17 +35,23 @@ import com.oracle.truffle.api.CompilerDirectives.ValueType;
 public final class LLVMFunctionHandle implements LLVMFunction {
 
     private final long functionIndex;
+    private final boolean isSulong;
 
-    private LLVMFunctionHandle(long functionIndex) {
+    private LLVMFunctionHandle(long functionIndex, boolean isSulong) {
         this.functionIndex = functionIndex;
+        this.isSulong = isSulong;
     }
 
-    public static LLVMFunctionHandle createHandle(long value) {
-        return new LLVMFunctionHandle(value);
+    public static LLVMFunctionHandle createSulongHandle(long value) {
+        return new LLVMFunctionHandle(value, true);
+    }
+
+    public static LLVMFunctionHandle createNativeHandle(long value) {
+        return new LLVMFunctionHandle(value, false);
     }
 
     public static LLVMFunctionHandle nullPointer() {
-        return new LLVMFunctionHandle(LLVMFunction.tagSulongFunctionPointer(0));
+        return new LLVMFunctionHandle(0, true);
     }
 
     @Override
@@ -54,23 +60,15 @@ public final class LLVMFunctionHandle implements LLVMFunction {
     }
 
     public boolean isSulong() {
-        return LLVMFunction.isSulongFunctionPointer(functionIndex);
+        return isSulong;
     }
 
     public boolean isExternNative() {
-        return LLVMFunction.isExternNativeFunctionPointer(functionIndex);
-    }
-
-    public int getSulongFunctionIndex() {
-        return LLVMFunction.getSulongFunctionIndex(functionIndex);
+        return !isSulong;
     }
 
     @Override
     public boolean isNullFunction() {
-        if (LLVMFunction.isSulongFunctionPointer(functionIndex)) {
-            return LLVMFunction.getSulongFunctionIndex(functionIndex) == 0;
-        } else {
-            return functionIndex == 0;
-        }
+        return functionIndex == 0;
     }
 }

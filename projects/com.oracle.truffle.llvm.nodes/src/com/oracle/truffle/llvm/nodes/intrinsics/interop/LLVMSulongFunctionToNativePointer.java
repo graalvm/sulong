@@ -59,7 +59,7 @@ public abstract class LLVMSulongFunctionToNativePointer extends LLVMIntrinsic {
 
     @TruffleBoundary
     protected LLVMFunctionDescriptor lookupFunction(LLVMAddress function) {
-        return getContext().getFunctionDescriptor(LLVMFunctionHandle.createHandle(function.getVal()));
+        return getContext().getFunctionDescriptor(LLVMFunctionHandle.createSulongHandle(function.getVal()));
     }
 
     @TruffleBoundary

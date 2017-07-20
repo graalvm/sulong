@@ -95,7 +95,7 @@ public final class LLVMFrameNullerUtil {
     }
 
     public static void nullFunction(VirtualFrame frame, FrameSlot frameSlot) {
-        frame.setObject(frameSlot, LLVMFunctionHandle.createHandle(0));
+        frame.setObject(frameSlot, LLVMFunctionHandle.createNativeHandle(0));
     }
 
     public static void nullFrameSlot(VirtualFrame frame, FrameSlot frameSlot) {
