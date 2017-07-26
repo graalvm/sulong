@@ -124,12 +124,16 @@ import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMUAddWithOverflowF
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMUAddWithOverflowFactory.LLVMUAddWithOverflowAndCarryI16NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMUAddWithOverflowFactory.LLVMUAddWithOverflowAndCarryI32NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMUAddWithOverflowFactory.LLVMUAddWithOverflowAndCarryI64NodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountLeadingZeroesNodeFactory.CountLeadingZeroesI16NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountLeadingZeroesNodeFactory.CountLeadingZeroesI32NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountLeadingZeroesNodeFactory.CountLeadingZeroesI64NodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountLeadingZeroesNodeFactory.CountLeadingZeroesI8NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountSetBitsNodeFactory.CountSetBitsI32NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountSetBitsNodeFactory.CountSetBitsI64NodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountTrailingZeroesNodeFactory.CountTrailingZeroesI16NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountTrailingZeroesNodeFactory.CountTrailingZeroesI32NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountTrailingZeroesNodeFactory.CountTrailingZeroesI64NodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.llvm.bit.CountTrailingZeroesNodeFactory.CountTrailingZeroesI8NodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.x86.LLVMX86_64BitVACopyNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.x86.LLVMX86_64BitVAEnd;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.x86.LLVMX86_64BitVAStart;
@@ -596,6 +600,10 @@ public class BasicNodeFactory implements NodeFactory {
                 return LLVMNoOpNodeGen.create(sourceSection);
             case "@llvm.prefetch":
                 return LLVMPrefetchNodeGen.create(args[1], args[2], args[3], args[4], sourceSection);
+            case "@llvm.ctlz.i8":
+                return CountLeadingZeroesI8NodeGen.create(args[1], args[2], sourceSection);
+            case "@llvm.ctlz.i16":
+                return CountLeadingZeroesI16NodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.ctlz.i32":
                 return CountLeadingZeroesI32NodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.ctlz.i64":
@@ -608,6 +616,10 @@ public class BasicNodeFactory implements NodeFactory {
                 return CountSetBitsI32NodeGen.create(args[1], sourceSection);
             case "@llvm.ctpop.i64":
                 return CountSetBitsI64NodeGen.create(args[1], sourceSection);
+            case "@llvm.cttz.i8":
+                return CountTrailingZeroesI8NodeGen.create(args[1], args[2], sourceSection);
+            case "@llvm.cttz.i16":
+                return CountTrailingZeroesI16NodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.cttz.i32":
                 return CountTrailingZeroesI32NodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.cttz.i64":
