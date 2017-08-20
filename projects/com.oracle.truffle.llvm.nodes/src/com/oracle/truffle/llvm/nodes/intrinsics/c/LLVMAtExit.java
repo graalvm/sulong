@@ -38,18 +38,30 @@ import com.oracle.truffle.llvm.runtime.LLVMFunctionDescriptor;
 import com.oracle.truffle.llvm.runtime.LLVMFunctionHandle;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
+/**
+ * The atexit() function in the C library takes a function pointer that will be invoked as the process exits.
+ * It is similar to {@link Runtime#addShutdownHook(Thread)} except that atexit handlers run synchronously and
+ * in sequence.
+ *
+ * Because C programs may end at a different time to the JVM, we manage atexit handlers ourselves.
+ *
+ * atexit returns zero on success. As we always succeed we always return zero.
+ */
 @NodeChild(type = LLVMExpressionNode.class, value = "func")
 public abstract class LLVMAtExit extends LLVMIntrinsic {
-
     @Specialization
     @TruffleBoundary
-    public long doInt(LLVMFunctionHandle func) {
-
+    public int doInt(LLVMFunctionHandle func) {
         LLVMContext context = getContext();
         LLVMFunctionDescriptor desc = context.getFunctionDescriptor(func);
         context.registerAtExitFunction(desc);
-
-        return func.getFunctionPointer();
+        return 0;
     }
 
+    @Specialization
+    @TruffleBoundary
+    public int doInt(LLVMFunctionDescriptor desc) {
+        getContext().registerAtExitFunction(desc);
+        return 0;
+    }
 }
