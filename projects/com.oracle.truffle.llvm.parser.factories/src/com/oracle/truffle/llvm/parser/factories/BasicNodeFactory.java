@@ -29,7 +29,6 @@
  */
 package com.oracle.truffle.llvm.parser.factories;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.oracle.truffle.api.RootCallTarget;
@@ -53,6 +52,7 @@ import com.oracle.truffle.llvm.nodes.control.LLVMSwitchNode.LLVMI16SwitchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMSwitchNode.LLVMI1SwitchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMSwitchNode.LLVMI32SwitchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMSwitchNode.LLVMI64SwitchNode;
+import com.oracle.truffle.llvm.nodes.control.LLVMSwitchNode.LLVMIVarBitSwitchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMSwitchNode.LLVMI8SwitchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMWritePhisNode;
 import com.oracle.truffle.llvm.nodes.func.LLVMArgNodeGen;
@@ -347,25 +347,26 @@ public class BasicNodeFactory implements NodeFactory {
 
     @Override
     public LLVMControlFlowNode createSwitch(LLVMParserRuntime runtime, LLVMExpressionNode cond, int[] successors, LLVMExpressionNode[] cases,
-                    PrimitiveType llvmType, LLVMExpressionNode[] phiWriteNodes, SourceSection source) {
-        switch (llvmType.getPrimitiveKind()) {
-            case I1:
-                LLVMExpressionNode[] i1Cases = Arrays.copyOf(cases, cases.length, LLVMExpressionNode[].class);
-                return new LLVMI1SwitchNode(cond, i1Cases, successors, phiWriteNodes, source);
-            case I8:
-                LLVMExpressionNode[] i8Cases = Arrays.copyOf(cases, cases.length, LLVMExpressionNode[].class);
-                return new LLVMI8SwitchNode(cond, i8Cases, successors, phiWriteNodes, source);
-            case I16:
-                LLVMExpressionNode[] i16Cases = Arrays.copyOf(cases, cases.length, LLVMExpressionNode[].class);
-                return new LLVMI16SwitchNode(cond, i16Cases, successors, phiWriteNodes, source);
-            case I32:
-                LLVMExpressionNode[] i32Cases = Arrays.copyOf(cases, cases.length, LLVMExpressionNode[].class);
-                return new LLVMI32SwitchNode(cond, i32Cases, successors, phiWriteNodes, source);
-            case I64:
-                LLVMExpressionNode[] i64Cases = Arrays.copyOf(cases, cases.length, LLVMExpressionNode[].class);
-                return new LLVMI64SwitchNode(cond, i64Cases, successors, phiWriteNodes, source);
-            default:
-                throw new AssertionError(llvmType);
+                                            Type conditionType, LLVMExpressionNode[] phiWriteNodes, SourceSection source) {
+        LLVMExpressionNode[] caseNodes = cases.clone();
+        if (conditionType instanceof PrimitiveType) {
+            PrimitiveType.PrimitiveKind kind = ((PrimitiveType) conditionType).getPrimitiveKind();
+            switch (kind) {
+                case I1:
+                    return new LLVMI1SwitchNode(cond, caseNodes, successors, phiWriteNodes, source);
+                case I8:
+                    return new LLVMI8SwitchNode(cond, caseNodes, successors, phiWriteNodes, source);
+                case I16:
+                    return new LLVMI16SwitchNode(cond, caseNodes, successors, phiWriteNodes, source);
+                case I32:
+                    return new LLVMI32SwitchNode(cond, caseNodes, successors, phiWriteNodes, source);
+                case I64:
+                    return new LLVMI64SwitchNode(cond, caseNodes, successors, phiWriteNodes, source);
+                default:
+                    throw new AssertionError(conditionType);
+            }
+        } else {
+            return new LLVMIVarBitSwitchNode(cond, caseNodes, successors, phiWriteNodes, source);
         }
     }
 
