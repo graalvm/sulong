@@ -198,6 +198,7 @@ import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64WriteTupelNode;
 import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64WriteTupelNodeGen;
 import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64WriteValueNode;
 import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64WriteValueNodeGen;
+import com.oracle.truffle.llvm.nodes.asm.syscall.LLVMAMD64SyscallNodeGen;
 import com.oracle.truffle.llvm.nodes.cast.LLVMToI16NodeFactory.LLVMToI16NoZeroExtNodeGen;
 import com.oracle.truffle.llvm.nodes.cast.LLVMToI32NodeGen.LLVMToI32NoZeroExtNodeGen;
 import com.oracle.truffle.llvm.nodes.cast.LLVMToI64NodeGen.LLVMToI64NoZeroExtNodeGen;
@@ -452,6 +453,18 @@ class AsmFactory {
             case "ud2":
                 statements.add(new LLVMAMD64Ud2Node());
                 break;
+            case "syscall": {
+                LLVMExpressionNode rax = getOperandLoad(PrimitiveType.I64, new AsmRegisterOperand("rax"));
+                LLVMExpressionNode rdi = getOperandLoad(PrimitiveType.I64, new AsmRegisterOperand("rdi"));
+                LLVMExpressionNode rsi = getOperandLoad(PrimitiveType.I64, new AsmRegisterOperand("rsi"));
+                LLVMExpressionNode rdx = getOperandLoad(PrimitiveType.I64, new AsmRegisterOperand("rdx"));
+                LLVMExpressionNode r10 = getOperandLoad(PrimitiveType.I64, new AsmRegisterOperand("r10"));
+                LLVMExpressionNode r8 = getOperandLoad(PrimitiveType.I64, new AsmRegisterOperand("r8"));
+                LLVMExpressionNode r9 = getOperandLoad(PrimitiveType.I64, new AsmRegisterOperand("r9"));
+                LLVMExpressionNode syscall = LLVMAMD64SyscallNodeGen.create(rax, rdi, rsi, rdx, r10, r8, r9);
+                statements.add(getOperandStore(PrimitiveType.I64, new AsmRegisterOperand("rax"), syscall));
+                break;
+            }
             default:
                 statements.add(new LLVMUnsupportedInlineAssemblerNode(sourceSection, "Unsupported operation: " + operation));
                 return;
@@ -1663,7 +1676,7 @@ class AsmFactory {
                 case I32:
                     return LLVMToI32NoZeroExtNodeGen.create(register);
                 case I64:
-                    return LLVMToI64NoZeroExtNodeGen.create(register);
+                    return register;
                 default:
                     throw new AsmParseException("unsupported operand type: " + type);
             }

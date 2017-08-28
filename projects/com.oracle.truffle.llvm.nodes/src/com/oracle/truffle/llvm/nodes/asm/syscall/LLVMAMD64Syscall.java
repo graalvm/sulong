@@ -27,16 +27,39 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <complex.h>
+package com.oracle.truffle.llvm.nodes.asm.syscall;
 
-__attribute__((weak)) complex double conj(complex double z) {
-  double a = creal(z);
-  double b = cimag(z);
-  return a + -b * I;
-}
-
-__attribute__((weak)) complex float conjf(complex float z) {
-  float a = crealf(z);
-  float b = cimagf(z);
-  return a + -b * I;
+public class LLVMAMD64Syscall {
+    public static final int SYS_read = 0;
+    public static final int SYS_write = 1;
+    public static final int SYS_open = 2;
+    public static final int SYS_close = 3;
+    public static final int SYS_lseek = 8;
+    public static final int SYS_ioctl = 16;
+    public static final int SYS_readv = 19;
+    public static final int SYS_writev = 20;
+    public static final int SYS_socket = 41;
+    public static final int SYS_connect = 42;
+    public static final int SYS_accept = 43;
+    public static final int SYS_sendto = 44;
+    public static final int SYS_recvfrom = 45;
+    public static final int SYS_sendmsg = 46;
+    public static final int SYS_recvmsg = 47;
+    public static final int SYS_shutdown = 48;
+    public static final int SYS_bind = 49;
+    public static final int SYS_listen = 50;
+    public static final int SYS_getsockname = 51;
+    public static final int SYS_getpeername = 52;
+    public static final int SYS_socketpair = 53;
+    public static final int SYS_setsockopt = 54;
+    public static final int SYS_getsockopt = 55;
+    public static final int SYS_exit = 60;
+    public static final int SYS_uname = 63;
+    public static final int SYS_fcntl = 72;
+    public static final int SYS_ftruncate = 77;
+    public static final int SYS_getcwd = 79;
+    public static final int SYS_getuid = 102;
+    public static final int SYS_getgid = 104;
+    public static final int SYS_clock_gettime = 228;
+    public static final int SYS_exit_group = 231;
 }

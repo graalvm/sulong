@@ -178,6 +178,7 @@ ZeroOp<> =						(. String op; .)
   | "mfence"
   | "lfence"
   | "sfence"
+  | "syscall"
   )							(. op = t.val; .)
   							(. factory.createOperation(op); .)
   .
