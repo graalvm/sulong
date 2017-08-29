@@ -47,12 +47,15 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
         throw new LLVMExitException(code);
     }
 
-    @SuppressWarnings("unused")
     @Specialization
     protected long executeI64(long rax, LLVMAddress rdi, long rsi, long rdx, long r10, long r8, long r9) {
         switch ((int) profile.profile(rax)) {
             case LLVMAMD64Syscall.SYS_open:
                 return LLVMAMD64File.open(LLVMAMD64String.cstr(rdi), (int) rsi, (int) rdx);
+            case LLVMAMD64Syscall.SYS_mmap:
+                return LLVMAMD64Memory.mmap(rdi, rsi, (int) rdx, (int) r10, (int) r8, r9);
+            case LLVMAMD64Syscall.SYS_brk:
+                return LLVMAMD64Memory.brk(rdi);
             case LLVMAMD64Syscall.SYS_uname:
                 return LLVMAMD64Info.uname(rdi);
             case LLVMAMD64Syscall.SYS_getcwd: {
@@ -124,11 +127,15 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
                 return LLVMAMD64Security.getgid();
             // Type compatibility wrappers
             case LLVMAMD64Syscall.SYS_open:
+            case LLVMAMD64Syscall.SYS_mmap:
+            case LLVMAMD64Syscall.SYS_brk:
             case LLVMAMD64Syscall.SYS_uname:
             case LLVMAMD64Syscall.SYS_getcwd:
                 return executeI64(rax, LLVMAddress.fromLong(rdi), rsi, rdx, r10, r8, r9);
             case LLVMAMD64Syscall.SYS_read:
             case LLVMAMD64Syscall.SYS_write:
+            case LLVMAMD64Syscall.SYS_readv:
+            case LLVMAMD64Syscall.SYS_writev:
                 return executeI64(rax, rdi, LLVMAddress.fromLong(rsi), rdx, r10, r8, r9);
             default:
                 // return -LLVMAMD64Error.ENOSYS;
