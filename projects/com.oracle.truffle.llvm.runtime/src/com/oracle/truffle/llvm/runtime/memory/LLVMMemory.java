@@ -43,6 +43,7 @@ import com.oracle.truffle.llvm.runtime.floating.LLVM80BitFloat;
 import com.oracle.truffle.llvm.runtime.vector.LLVMAddressVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMDoubleVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMFloatVector;
+import com.oracle.truffle.llvm.runtime.vector.LLVMFunctionVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI16Vector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI1Vector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI32Vector;
@@ -406,6 +407,10 @@ public abstract class LLVMMemory {
 
     public static void putVector(LLVMAddress addr, LLVMAddressVector vector) {
         LLVMAddressVector.writeVectorToMemory(addr, vector);
+    }
+
+    public static void putVector(LLVMAddress addr, LLVMFunctionVector vector) {
+        LLVMFunctionVector.writeVectorToMemory(addr, vector);
     }
 
     @ValueType
