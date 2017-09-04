@@ -299,4 +299,39 @@ public class LLVMAMD64File {
         }
         return 0;
     }
+
+    @TruffleBoundary
+    public static int stat(LLVMAddress pathname, LLVMAddress statbuf) {
+
+        LLVMAddress ptr = statbuf;
+        long dev = 0;
+        long ino = 0;
+        long mode = 0;
+        long nlink = 0;
+        long uid = 0;
+        long gid = 0;
+        long rdev = 0;
+        long size = 0;
+        long blksize = 0;
+        long blocks = 0;
+        // timespec at_atim
+        // timespec at_mtim
+        // timespec at_ctim
+
+        LLVMMemory.putI64(ptr, dev);
+        LLVMMemory.putI64(ptr.increment(8), ino);
+        LLVMMemory.putI64(ptr.increment(16), mode);
+        LLVMMemory.putI64(ptr.increment(24), nlink);
+        LLVMMemory.putI64(ptr.increment(32), uid);
+        LLVMMemory.putI64(ptr.increment(40), gid);
+        LLVMMemory.putI64(ptr.increment(48), rdev);
+        LLVMMemory.putI64(ptr.increment(56), size);
+        LLVMMemory.putI64(ptr.increment(64), blksize);
+        LLVMMemory.putI64(ptr.increment(72), blocks);
+        return -LLVMAMD64Error.ENOSYS;
+    }
+
+    public static int dup2(int oldfd, int newfd) {
+        return -LLVMAMD64Error.ENOSYS;
+    }
 }

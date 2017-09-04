@@ -90,6 +90,8 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
             case LLVMAMD64Syscall.SYS_write:
                 // return LLVMAMD64File.write((int) rdi, LLVMAMD64String.memcpy(rsi, (int) rdx));
                 return LLVMAMD64File.write((int) rdi, rsi, (int) rdx);
+            case LLVMAMD64Syscall.SYS_fstat:
+                return -LLVMAMD64Error.ENOSYS;
             case LLVMAMD64Syscall.SYS_readv:
                 return LLVMAMD64File.readv((int) rdi, rsi, rdx);
             case LLVMAMD64Syscall.SYS_writev:
@@ -98,6 +100,33 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
                 return LLVMAMd64Time.clockGetTime((int) rdi, rsi);
             default:
                 // return -LLVMAMD64Error.ENOSYS;
+                CompilerDirectives.transferToInterpreter();
+                throw new RuntimeException("unknown syscall " + rax);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @Specialization
+    protected long executeI64(long rax, LLVMAddress rdi, LLVMAddress rsi, long rdx, long r10, long r8, long r9) {
+        switch ((int) profile.profile(rax)) {
+            case LLVMAMD64Syscall.SYS_stat:
+                return LLVMAMD64File.stat(rdi, rsi);
+            case LLVMAMD64Syscall.SYS_lstat:
+                return -LLVMAMD64Error.ENOSYS;
+            default:
+                CompilerDirectives.transferToInterpreter();
+                throw new RuntimeException("unknown syscall " + rax);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @Specialization
+    protected long executeI64(long rax, long rdi, LLVMAddress rsi, LLVMAddress rdx, long r10, long r8, long r9) {
+        switch ((int) profile.profile(rax)) {
+            case LLVMAMD64Syscall.SYS_rt_sigaction:
+            case LLVMAMD64Syscall.SYS_rt_sigprocmask:
+                return -LLVMAMD64Error.ENOSYS;
+            default:
                 CompilerDirectives.transferToInterpreter();
                 throw new RuntimeException("unknown syscall " + rax);
         }
@@ -112,6 +141,8 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
                 return LLVMAMD64File.lseek((int) rdi, rsi, (int) rdx);
             case LLVMAMD64Syscall.SYS_ioctl:
                 return LLVMAMD64File.ioctl((int) rdi, (int) rsi, rdx);
+            case LLVMAMD64Syscall.SYS_dup2:
+                return LLVMAMD64File.dup2((int) rdi, (int) rsi);
             case LLVMAMD64Syscall.SYS_exit_group:
                 // TODO: implement difference to SYS_exit
             case LLVMAMD64Syscall.SYS_exit:
@@ -125,6 +156,11 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
                 return LLVMAMD64Security.getuid();
             case LLVMAMD64Syscall.SYS_getgid:
                 return LLVMAMD64Security.getgid();
+            case LLVMAMD64Syscall.SYS_setuid:
+            case LLVMAMD64Syscall.SYS_setgid:
+                return -LLVMAMD64Error.ENOSYS;
+            case LLVMAMD64Syscall.SYS_futex:
+                return -LLVMAMD64Error.ENOSYS;
             // Type compatibility wrappers
             case LLVMAMD64Syscall.SYS_open:
             case LLVMAMD64Syscall.SYS_mmap:
@@ -134,9 +170,16 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
                 return executeI64(rax, LLVMAddress.fromLong(rdi), rsi, rdx, r10, r8, r9);
             case LLVMAMD64Syscall.SYS_read:
             case LLVMAMD64Syscall.SYS_write:
+            case LLVMAMD64Syscall.SYS_fstat:
             case LLVMAMD64Syscall.SYS_readv:
             case LLVMAMD64Syscall.SYS_writev:
                 return executeI64(rax, rdi, LLVMAddress.fromLong(rsi), rdx, r10, r8, r9);
+            case LLVMAMD64Syscall.SYS_stat:
+            case LLVMAMD64Syscall.SYS_lstat:
+                return executeI64(rax, LLVMAddress.fromLong(rdi), LLVMAddress.fromLong(rsi), rdx, r10, r8, r9);
+            case LLVMAMD64Syscall.SYS_rt_sigaction:
+            case LLVMAMD64Syscall.SYS_rt_sigprocmask:
+                return executeI64(rax, rdi, LLVMAddress.fromLong(rsi), LLVMAddress.fromLong(rdx), r10, r8, r9);
             default:
                 // return -LLVMAMD64Error.ENOSYS;
                 CompilerDirectives.transferToInterpreter();

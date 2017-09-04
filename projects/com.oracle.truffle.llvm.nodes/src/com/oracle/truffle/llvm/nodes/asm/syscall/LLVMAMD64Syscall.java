@@ -34,13 +34,19 @@ public class LLVMAMD64Syscall {
     public static final int SYS_write = 1;
     public static final int SYS_open = 2;
     public static final int SYS_close = 3;
+    public static final int SYS_stat = 4;
+    public static final int SYS_fstat = 5;
+    public static final int SYS_lstat = 6;
     public static final int SYS_lseek = 8;
     public static final int SYS_mmap = 9;
     public static final int SYS_munmap = 11;
     public static final int SYS_brk = 12;
+    public static final int SYS_rt_sigaction = 13;
+    public static final int SYS_rt_sigprocmask = 14;
     public static final int SYS_ioctl = 16;
     public static final int SYS_readv = 19;
     public static final int SYS_writev = 20;
+    public static final int SYS_dup2 = 33;
     public static final int SYS_socket = 41;
     public static final int SYS_connect = 42;
     public static final int SYS_accept = 43;
@@ -63,6 +69,9 @@ public class LLVMAMD64Syscall {
     public static final int SYS_getcwd = 79;
     public static final int SYS_getuid = 102;
     public static final int SYS_getgid = 104;
+    public static final int SYS_setuid = 105;
+    public static final int SYS_setgid = 106;
+    public static final int SYS_futex = 202;
     public static final int SYS_clock_gettime = 228;
     public static final int SYS_exit_group = 231;
 }
