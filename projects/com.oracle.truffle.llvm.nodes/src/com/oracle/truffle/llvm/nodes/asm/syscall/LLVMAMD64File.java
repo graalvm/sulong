@@ -301,7 +301,7 @@ public class LLVMAMD64File {
     }
 
     @TruffleBoundary
-    public static int stat(LLVMAddress pathname, LLVMAddress statbuf) {
+    public static int stat(@SuppressWarnings("unused") LLVMAddress pathname, LLVMAddress statbuf) {
 
         LLVMAddress ptr = statbuf;
         long dev = 0;
@@ -331,7 +331,7 @@ public class LLVMAMD64File {
         return -LLVMAMD64Error.ENOSYS;
     }
 
-    public static int dup2(int oldfd, int newfd) {
+    public static int dup2(@SuppressWarnings("unused") int oldfd, @SuppressWarnings("unused") int newfd) {
         return -LLVMAMD64Error.ENOSYS;
     }
 }

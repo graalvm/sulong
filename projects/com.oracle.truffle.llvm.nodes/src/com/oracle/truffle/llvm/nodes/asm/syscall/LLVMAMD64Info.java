@@ -103,4 +103,34 @@ public class LLVMAMD64Info {
         LLVMAMD64String.strcpy(getDomainName(), ptr);
         return 0;
     }
+
+    @TruffleBoundary
+    private static LLVMAMD64ProcessStat getstat() {
+        String stat = readFile("/proc/self/stat", null);
+        if (stat == null) {
+            return null;
+        } else {
+            return new LLVMAMD64ProcessStat(stat);
+        }
+    }
+
+    @TruffleBoundary
+    public static long getpid() {
+        LLVMAMD64ProcessStat stat = getstat();
+        if (stat != null) {
+            return stat.getPid();
+        }
+        String info = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+        return Long.parseLong(info.split("@")[0]);
+    }
+
+    @TruffleBoundary
+    public static long getppid() {
+        LLVMAMD64ProcessStat stat = getstat();
+        if (stat != null) {
+            return stat.getPpid();
+        } else {
+            return 1; // fallback: init
+        }
+    }
 }

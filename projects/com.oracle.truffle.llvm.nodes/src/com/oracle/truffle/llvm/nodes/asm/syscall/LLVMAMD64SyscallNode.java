@@ -143,6 +143,8 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
                 return LLVMAMD64File.ioctl((int) rdi, (int) rsi, rdx);
             case LLVMAMD64Syscall.SYS_dup2:
                 return LLVMAMD64File.dup2((int) rdi, (int) rsi);
+            case LLVMAMD64Syscall.SYS_getpid:
+                return LLVMAMD64Info.getpid();
             case LLVMAMD64Syscall.SYS_exit_group:
                 // TODO: implement difference to SYS_exit
             case LLVMAMD64Syscall.SYS_exit:
@@ -159,6 +161,8 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
             case LLVMAMD64Syscall.SYS_setuid:
             case LLVMAMD64Syscall.SYS_setgid:
                 return -LLVMAMD64Error.ENOSYS;
+            case LLVMAMD64Syscall.SYS_getppid:
+                return LLVMAMD64Info.getppid();
             case LLVMAMD64Syscall.SYS_futex:
                 return -LLVMAMD64Error.ENOSYS;
             // Type compatibility wrappers
@@ -173,6 +177,7 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
             case LLVMAMD64Syscall.SYS_fstat:
             case LLVMAMD64Syscall.SYS_readv:
             case LLVMAMD64Syscall.SYS_writev:
+            case LLVMAMD64Syscall.SYS_clock_gettime:
                 return executeI64(rax, rdi, LLVMAddress.fromLong(rsi), rdx, r10, r8, r9);
             case LLVMAMD64Syscall.SYS_stat:
             case LLVMAMD64Syscall.SYS_lstat:

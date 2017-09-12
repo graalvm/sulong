@@ -47,6 +47,7 @@ public class LLVMAMD64Syscall {
     public static final int SYS_readv = 19;
     public static final int SYS_writev = 20;
     public static final int SYS_dup2 = 33;
+    public static final int SYS_getpid = 39;
     public static final int SYS_socket = 41;
     public static final int SYS_connect = 42;
     public static final int SYS_accept = 43;
@@ -71,6 +72,7 @@ public class LLVMAMD64Syscall {
     public static final int SYS_getgid = 104;
     public static final int SYS_setuid = 105;
     public static final int SYS_setgid = 106;
+    public static final int SYS_getppid = 110;
     public static final int SYS_futex = 202;
     public static final int SYS_clock_gettime = 228;
     public static final int SYS_exit_group = 231;

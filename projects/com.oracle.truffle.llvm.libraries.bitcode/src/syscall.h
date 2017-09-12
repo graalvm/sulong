@@ -27,9 +27,6 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __SYSCALL_H__
-#define __SYSCALL_H__
-
 #include <sys/syscall.h>
 
 #define __SYSCALL_1(result, id, a1) __asm__ volatile("syscall" : "=a"(result) : "a"(id), "D"(a1) : "memory", "rcx", "r11");
@@ -82,5 +79,3 @@
     __SYSCALL_6(result, id, a1, a2, a3, a4, a5, a6);                                                                                                 \
     __SYSCALL_RET(result);                                                                                                                           \
   }
-
-#endif
