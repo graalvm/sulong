@@ -34,6 +34,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.nodes.wrappers.LLVMSwitchNodeWrapper;
+import com.oracle.truffle.llvm.runtime.LLVMIVarBit;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
@@ -149,5 +150,17 @@ public abstract class LLVMSwitchNode extends LLVMControlFlowNode {
             return cond.executeI64(frame);
         }
 
+    }
+
+    public static final class LLVMIVarBitSwitchNode extends LLVMSwitchNodeImpl {
+        public LLVMIVarBitSwitchNode(LLVMExpressionNode cond, LLVMExpressionNode[] cases, int[] successors, LLVMExpressionNode[] phiNodes, SourceSection source) {
+            super(successors, phiNodes, cond, cases, source);
+        }
+
+        @Override
+        public Object executeCondition(VirtualFrame frame) {
+            // XXX: Should I be catching and doing something with UnexpectedResultException here?
+            return (LLVMIVarBit) cond.executeGeneric(frame);
+        }
     }
 }
