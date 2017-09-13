@@ -47,7 +47,6 @@ int __lxstat64(int version, const char *path, struct stat64 *buf);
 
 int __fxstatat64(int version, int fd, const char *path, struct stat64 *buf, int flag);
 
-
 __attribute__((weak)) int stat(const char *path, struct stat *buf) { return __xstat(1, path, buf); }
 
 __attribute__((weak)) int fstat(int fd, struct stat *buf) { return __fxstat(1, fd, buf); }
