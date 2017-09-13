@@ -50,7 +50,7 @@ public abstract class LLVMAMD64AndNode extends LLVMExpressionNode {
         }
 
         @Specialization
-        protected byte executeI16(VirtualFrame frame, byte left, byte right) {
+        protected byte executeI8(VirtualFrame frame, byte left, byte right) {
             byte result = (byte) (left & right);
             flags.execute(frame, result);
             return result;
