@@ -60,6 +60,12 @@ public class LLVMAMd64Time {
                 ns = (t % 1000) * 1000000;
                 break;
             }
+            case CLOCK_MONOTONIC: {
+                long t = System.nanoTime();
+                s = t / 1000000000L;
+                ns = (t % 1000000000L);
+                break;
+            }
             default:
                 return -LLVMAMD64Error.EINVAL;
         }
