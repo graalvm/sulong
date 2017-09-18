@@ -45,6 +45,7 @@ import com.oracle.truffle.llvm.parser.elf.ElfFile;
 import com.oracle.truffle.llvm.parser.elf.ElfSectionHeaderTable.Entry;
 import com.oracle.truffle.llvm.parser.listeners.Module;
 import com.oracle.truffle.llvm.parser.listeners.ParserListener;
+import com.oracle.truffle.llvm.parser.machO.MachOFile;
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 
 public final class LLVMScanner {
@@ -122,6 +123,29 @@ public final class LLVMScanner {
             b.position((int) offset);
             b.limit((int) (offset + size));
             bitcode = b.slice();
+        } else if (MachOFile.isMachOMagicNumber(magicWord)) {
+            MachOFile machOFile = MachOFile.create(b);
+
+            List<String> libraries = machOFile.getDyLibs();
+            model.addLibraries(libraries);
+
+            bitcode = machOFile.extractBitcode();
+
+            long wrapperMagic = Integer.toUnsignedLong(bitcode.getInt(bitcode.position()));
+            if (wrapperMagic == WRAPPER_MAGIC_WORD) {
+                // the first read did not change position
+                bitcode.position(bitcode.position() + 4);
+                // Version
+                bitcode.getInt();
+                // Offset32
+                long offset = bitcode.getInt();
+                // Size32
+                long size = bitcode.getInt();
+                bitcode.position((int) offset);
+                bitcode.limit((int) (offset + size));
+                bitcode = bitcode.slice();
+            }
+
         } else {
             throw new RuntimeException("Not a valid input file!");
         }
@@ -136,7 +160,7 @@ public final class LLVMScanner {
         ByteBuffer duplicate = bytes.duplicate();
         BitStream bs = BitStream.create(duplicate);
         long magicWord = bs.read(0, Integer.SIZE);
-        return magicWord == BC_MAGIC_WORD || magicWord == WRAPPER_MAGIC_WORD || magicWord == ELF_MAGIC_WORD;
+        return magicWord == BC_MAGIC_WORD || magicWord == WRAPPER_MAGIC_WORD || magicWord == ELF_MAGIC_WORD || MachOFile.isMachOMagicNumber(magicWord);
     }
 
     private static void parseBitcodeBlock(LLVMScanner scanner) {
