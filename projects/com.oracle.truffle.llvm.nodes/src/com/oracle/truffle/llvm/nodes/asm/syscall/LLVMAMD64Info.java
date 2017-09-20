@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64String;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
@@ -55,6 +56,7 @@ public class LLVMAMD64Info {
     }
 
     private static String readFile(String name, String fallback) {
+        CompilerAsserts.neverPartOfCompilation();
         try {
             Path path = Paths.get(name);
             if (Files.exists(path)) {
@@ -90,17 +92,17 @@ public class LLVMAMD64Info {
 
     public static long uname(LLVMAddress name) {
         LLVMAddress ptr = name;
-        LLVMAMD64String.strcpy(sysname, ptr);
+        LLVMAMD64String.strcpy(ptr, sysname);
         ptr = ptr.increment(65);
-        LLVMAMD64String.strcpy(getHostname(), ptr);
+        LLVMAMD64String.strcpy(ptr, getHostname());
         ptr = ptr.increment(65);
-        LLVMAMD64String.strcpy(release, ptr);
+        LLVMAMD64String.strcpy(ptr, release);
         ptr = ptr.increment(65);
-        LLVMAMD64String.strcpy(getVersion(), ptr);
+        LLVMAMD64String.strcpy(ptr, getVersion());
         ptr = ptr.increment(65);
-        LLVMAMD64String.strcpy(machine, ptr);
+        LLVMAMD64String.strcpy(ptr, machine);
         ptr = ptr.increment(65);
-        LLVMAMD64String.strcpy(getDomainName(), ptr);
+        LLVMAMD64String.strcpy(ptr, getDomainName());
         return 0;
     }
 

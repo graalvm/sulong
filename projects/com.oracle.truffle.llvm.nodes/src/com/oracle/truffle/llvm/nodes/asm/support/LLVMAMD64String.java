@@ -29,35 +29,16 @@
  */
 package com.oracle.truffle.llvm.nodes.asm.support;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
-import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
-public abstract class LLVMAMD64String extends LLVMExpressionNode {
-    private static Constructor<? extends ByteBuffer> directByteBufferCtor;
+import sun.misc.SharedSecrets;
 
-    static {
-        try {
-            @SuppressWarnings("unchecked")
-            Class<? extends ByteBuffer> clazz = (Class<? extends ByteBuffer>) Class.forName("java.nio.DirectByteBuffer");
-            directByteBufferCtor = clazz.getDeclaredConstructor(long.class, int.class);
-            directByteBufferCtor.setAccessible(true);
-        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+public class LLVMAMD64String {
     public static ByteBuffer getBuffer(LLVMAddress address, int size) {
-        // create DirectByteBuffer which points to address for fast file IO
-        try {
-            return directByteBufferCtor.newInstance(address.getVal(), size);
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+        return SharedSecrets.getJavaNioAccess().newDirectByteBuffer(address.getVal(), size, null);
     }
 
     public static byte[] memcpy(LLVMAddress address, int size) {
@@ -82,13 +63,13 @@ public abstract class LLVMAMD64String extends LLVMExpressionNode {
         }
     }
 
-    public static void strcpy(String src, LLVMAddress dst) {
+    public static void strcpy(LLVMAddress dst, String src) {
         memcpy(src.getBytes(), dst, src.length());
         LLVMAddress zero = dst.increment(src.length());
         LLVMMemory.putI8(zero, (byte) 0);
     }
 
-    public static void strncpy(String src, LLVMAddress dst, long size) {
+    public static void strncpy(LLVMAddress dst, String src, long size) {
         memcpy(src.getBytes(), dst, size);
         if (src.length() < size) {
             LLVMAddress zero = dst.increment(src.length());
