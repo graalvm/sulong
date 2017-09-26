@@ -27,28 +27,65 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <elf.h>
+#include <sys/auxv.h>
 
 int main(int argc, char **argv, char **envp);
+
+static Elf64_auxv_t *__auxv;
 
 __attribute__((weak)) int _start(long *p, int type) {
   int argc = p[0];
   char **argv = (void *)(p + 1);
   char **envp = argv + argc + 1;
 
+  // copy argv/envp into separate buffer to detect overflows
+  char **argv_buf = (char **)malloc(sizeof(void *) * (argc + 1));
+  if (!argv_buf) {
+    fprintf(stdout, "not enough memory\n");
+    abort();
+  }
+  memcpy(argv_buf, argv, sizeof(void *) * (argc + 1));
+
+  int envc = 0;
+  char **ptr;
+  for (ptr = envp; *ptr; ptr++) {
+    envc++;
+  }
+  char **envp_buf = (char **)malloc(sizeof(void *) * (envc + 1));
+  if (!envp_buf) {
+    fprintf(stdout, "not enough memory\n");
+    abort();
+  }
+  memcpy(envp_buf, envp, sizeof(void *) * (envc + 1));
+
+  __auxv = (Elf64_auxv_t *)(envp + envc + 1);
+
   switch (type) {
   /* C/C++/... */
   default:
   case 0:
-    exit(main(argc, argv, envp));
+    exit(main(argc, argv_buf, envp_buf));
     break;
   /* Rust */
   case 1: {
     long (*i64main)(long argc, char **argv) = (long (*)(long, char **))main;
-    exit(i64main(argc, argv));
+    exit(i64main(argc, argv_buf));
     break;
   }
   }
   abort();
+}
+
+__attribute__((weak)) unsigned long getauxval(unsigned long type) {
+  Elf64_auxv_t *auxv;
+  for (auxv = __auxv; auxv->a_type != AT_NULL; auxv++) {
+    if (auxv->a_type == type) {
+      return auxv->a_un.a_val;
+    }
+  }
+  return 0;
 }
