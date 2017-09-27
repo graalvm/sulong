@@ -37,6 +37,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.util.Map;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64String;
@@ -301,34 +305,52 @@ public class LLVMAMD64File {
     }
 
     @TruffleBoundary
-    public static int stat(@SuppressWarnings("unused") LLVMAddress pathname, LLVMAddress statbuf) {
+    public static int stat(LLVMAddress pathname, LLVMAddress statbuf) {
+        Map<String, Object> info;
+        try {
+            info = Files.readAttributes(Paths.get(LLVMAMD64String.cstr(pathname)), "unix:*");
+        } catch (IOException e) {
+            return -LLVMAMD64Error.EIO;
+        }
 
         LLVMAddress ptr = statbuf;
-        long dev = 0;
-        long ino = 0;
-        long mode = 0;
-        long nlink = 0;
-        long uid = 0;
-        long gid = 0;
-        long rdev = 0;
-        long size = 0;
-        long blksize = 0;
-        long blocks = 0;
-        // timespec at_atim
-        // timespec at_mtim
-        // timespec at_ctim
+        long dev = (long) info.get("dev");
+        long ino = (long) info.get("ino");
+        int mode = (int) info.get("mode");
+        long nlink = (int) info.get("nlink");
+        int uid = (int) info.get("uid");
+        int gid = (int) info.get("gid");
+        long rdev = (long) info.get("rdev");
+        long size = (long) info.get("size");
+        long blksize = 4096;
+        long blocks = (long) Math.ceil(size / 512.0);
+        long atime = ((FileTime) info.get("lastAccessTime")).toMillis();
+        long atimeSec = atime / 1000;
+        long atimeNsec = (atime % 1000) * 1000000;
+        long mtime = ((FileTime) info.get("lastModifiedTime")).toMillis();
+        long mtimeSec = mtime / 1000;
+        long mtimeNsec = (mtime % 1000) * 1000000;
+        long ctime = ((FileTime) info.get("ctime")).toMillis();
+        long ctimeSec = ctime / 1000;
+        long ctimeNsec = (ctime % 1000) * 1000000;
 
         LLVMMemory.putI64(ptr, dev);
         LLVMMemory.putI64(ptr.increment(8), ino);
-        LLVMMemory.putI64(ptr.increment(16), mode);
-        LLVMMemory.putI64(ptr.increment(24), nlink);
-        LLVMMemory.putI64(ptr.increment(32), uid);
-        LLVMMemory.putI64(ptr.increment(40), gid);
-        LLVMMemory.putI64(ptr.increment(48), rdev);
-        LLVMMemory.putI64(ptr.increment(56), size);
-        LLVMMemory.putI64(ptr.increment(64), blksize);
-        LLVMMemory.putI64(ptr.increment(72), blocks);
-        return -LLVMAMD64Error.ENOSYS;
+        LLVMMemory.putI64(ptr.increment(16), nlink);
+        LLVMMemory.putI32(ptr.increment(24), mode);
+        LLVMMemory.putI32(ptr.increment(28), uid);
+        LLVMMemory.putI32(ptr.increment(32), gid);
+        LLVMMemory.putI64(ptr.increment(40), rdev);
+        LLVMMemory.putI64(ptr.increment(48), size);
+        LLVMMemory.putI64(ptr.increment(56), blksize);
+        LLVMMemory.putI64(ptr.increment(64), blocks);
+        LLVMMemory.putI64(ptr.increment(72), atimeSec);
+        LLVMMemory.putI64(ptr.increment(80), atimeNsec);
+        LLVMMemory.putI64(ptr.increment(88), mtimeSec);
+        LLVMMemory.putI64(ptr.increment(96), mtimeNsec);
+        LLVMMemory.putI64(ptr.increment(104), ctimeSec);
+        LLVMMemory.putI64(ptr.increment(112), ctimeNsec);
+        return 0;
     }
 
     public static int dup2(@SuppressWarnings("unused") int oldfd, @SuppressWarnings("unused") int newfd) {
