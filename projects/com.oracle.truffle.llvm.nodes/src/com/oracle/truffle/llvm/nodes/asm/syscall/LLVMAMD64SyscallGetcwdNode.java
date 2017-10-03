@@ -45,6 +45,7 @@ public abstract class LLVMAMD64SyscallGetcwdNode extends LLVMAMD64SyscallOperati
         }
     }
 
+    @Specialization
     protected long execute(long buf, long size) {
         return execute(LLVMAddress.fromLong(buf), size);
     }

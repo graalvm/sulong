@@ -29,6 +29,8 @@
  */
 package com.oracle.truffle.llvm.nodes.asm.syscall;
 
+import com.oracle.truffle.api.CompilerAsserts;
+
 public class LLVMAMD64ProcessStat {
     private final String stat;
 
@@ -42,6 +44,7 @@ public class LLVMAMD64ProcessStat {
     private final long tpgid;
 
     public LLVMAMD64ProcessStat(String stat) {
+        CompilerAsserts.neverPartOfCompilation();
         this.stat = stat;
         String[] fields = stat.split(" ");
         pid = Long.parseLong(fields[0]);

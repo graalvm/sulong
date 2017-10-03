@@ -31,13 +31,17 @@ package com.oracle.truffle.llvm.nodes.asm.support;
 
 import java.nio.ByteBuffer;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
 
 import sun.misc.SharedSecrets;
 
+// All methods except getBuffer can be used without @TruffleBoundary
 public class LLVMAMD64String {
     public static ByteBuffer getBuffer(LLVMAddress address, int size) {
+        CompilerAsserts.neverPartOfCompilation();
         return SharedSecrets.getJavaNioAccess().newDirectByteBuffer(address.getVal(), size, null);
     }
 
@@ -63,14 +67,24 @@ public class LLVMAMD64String {
         }
     }
 
+    @TruffleBoundary
+    private static byte[] getBytes(String str) {
+        return str.getBytes();
+    }
+
+    @TruffleBoundary
+    private static String toString(byte[] bytes) {
+        return new String(bytes);
+    }
+
     public static void strcpy(LLVMAddress dst, String src) {
-        memcpy(src.getBytes(), dst, src.length());
+        memcpy(getBytes(src), dst, src.length());
         LLVMAddress zero = dst.increment(src.length());
         LLVMMemory.putI8(zero, (byte) 0);
     }
 
     public static void strncpy(LLVMAddress dst, String src, long size) {
-        memcpy(src.getBytes(), dst, size);
+        memcpy(getBytes(src), dst, size);
         if (src.length() < size) {
             LLVMAddress zero = dst.increment(src.length());
             LLVMMemory.putI8(zero, (byte) 0);
@@ -88,6 +102,6 @@ public class LLVMAMD64String {
     public static String cstr(LLVMAddress address) {
         long len = strlen(address);
         byte[] bytes = memcpy(address, (int) len);
-        return new String(bytes);
+        return toString(bytes);
     }
 }

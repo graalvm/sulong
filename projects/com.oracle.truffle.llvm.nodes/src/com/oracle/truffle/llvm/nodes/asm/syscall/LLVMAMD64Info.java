@@ -41,6 +41,10 @@ import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64String;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public class LLVMAMD64Info {
+    // See http://man7.org/linux/man-pages/man2/uname.2.html and
+    // https://github.com/torvalds/linux/blob/master/include/uapi/linux/utsname.h
+    private static final int UTS_FIELD_LENGTH = 65;
+
     public static final String sysname;
     public static final String release;
     public static final String machine;
@@ -93,15 +97,15 @@ public class LLVMAMD64Info {
     public static long uname(LLVMAddress name) {
         LLVMAddress ptr = name;
         LLVMAMD64String.strcpy(ptr, sysname);
-        ptr = ptr.increment(65);
+        ptr = ptr.increment(UTS_FIELD_LENGTH);
         LLVMAMD64String.strcpy(ptr, getHostname());
-        ptr = ptr.increment(65);
+        ptr = ptr.increment(UTS_FIELD_LENGTH);
         LLVMAMD64String.strcpy(ptr, release);
-        ptr = ptr.increment(65);
+        ptr = ptr.increment(UTS_FIELD_LENGTH);
         LLVMAMD64String.strcpy(ptr, getVersion());
-        ptr = ptr.increment(65);
+        ptr = ptr.increment(UTS_FIELD_LENGTH);
         LLVMAMD64String.strcpy(ptr, machine);
-        ptr = ptr.increment(65);
+        ptr = ptr.increment(UTS_FIELD_LENGTH);
         LLVMAMD64String.strcpy(ptr, getDomainName());
         return 0;
     }

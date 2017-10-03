@@ -33,7 +33,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
 
-public class LLVMAMd64Time {
+public class LLVMAMD64Time {
     // @formatter:off;
     public static final int CLOCK_REALTIME                = 0;
     public static final int CLOCK_MONOTONIC               = 1;
@@ -50,18 +50,27 @@ public class LLVMAMd64Time {
     // @formatter:on
 
     @TruffleBoundary
+    private static long currentTimeMillis() {
+        return System.currentTimeMillis();
+    }
+
+    @TruffleBoundary
+    private static long nanoTime() {
+        return System.nanoTime();
+    }
+
     public static int clockGetTime(int clkId, LLVMAddress timespec) {
         long s;
         long ns;
         switch (clkId) {
             case CLOCK_REALTIME: {
-                long t = System.currentTimeMillis();
+                long t = currentTimeMillis();
                 s = t / 1000;
                 ns = (t % 1000) * 1000000;
                 break;
             }
             case CLOCK_MONOTONIC: {
-                long t = System.nanoTime();
+                long t = nanoTime();
                 s = t / 1000000000L;
                 ns = (t % 1000000000L);
                 break;

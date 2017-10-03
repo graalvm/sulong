@@ -30,12 +30,21 @@
 package com.oracle.truffle.llvm.nodes.asm.syscall;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
+import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
 
 public abstract class LLVMAMD64SyscallMmapNode extends LLVMAMD64SyscallOperationNode {
+    private final ConditionProfile mapAnonymousProfile = ConditionProfile.createCountingProfile();
+
+    @SuppressWarnings("unused")
     @Specialization
     protected long execute(LLVMAddress addr, long len, int prot, int flags, int fildes, long off) {
-        return LLVMAMD64Memory.mmap(addr, len, prot, flags, fildes, off);
+        if (mapAnonymousProfile.profile((flags & LLVMAMD64Memory.MAP_ANONYMOUS) != 0)) {
+            LLVMAddress ptr = LLVMMemory.allocateMemory(len);
+            return ptr.getVal();
+        }
+        return -LLVMAMD64Error.EINVAL;
     }
 
     @Specialization
