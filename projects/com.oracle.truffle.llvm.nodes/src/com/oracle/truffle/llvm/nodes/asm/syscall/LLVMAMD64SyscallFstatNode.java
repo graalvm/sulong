@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallFstatNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallFstatNode() {
+        super("fstat");
+    }
+
     @SuppressWarnings("unused")
     @Specialization
     protected long executeI64(long fd, LLVMAddress buf) {

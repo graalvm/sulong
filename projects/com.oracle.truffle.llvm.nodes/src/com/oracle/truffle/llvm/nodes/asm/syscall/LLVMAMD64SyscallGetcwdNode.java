@@ -34,6 +34,10 @@ import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64String;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallGetcwdNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallGetcwdNode() {
+        super("getcwd");
+    }
+
     @Specialization
     protected long execute(LLVMAddress buf, long size) {
         String cwd = LLVMAMD64Path.getcwd();

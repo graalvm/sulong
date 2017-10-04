@@ -29,12 +29,18 @@
  */
 package com.oracle.truffle.llvm.nodes.asm.syscall;
 
+import java.io.PrintStream;
+
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMExitException;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
+import com.oracle.truffle.llvm.runtime.options.SulongEngineOption;
 
 @NodeChildren({@NodeChild("rax"), @NodeChild("rdi"), @NodeChild("rsi"), @NodeChild("rdx"), @NodeChild("r10"), @NodeChild("r8"), @NodeChild("r9")})
 public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
@@ -113,6 +119,9 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
     @Specialization(guards = "rax == cachedRax", limit = "NUM_SYSCALLS")
     protected long cachedSyscall(@SuppressWarnings("unused") long rax, Object rdi, Object rsi, Object rdx, Object r10, Object r8, Object r9,
                     @Cached("createNode(rax)") LLVMAMD64SyscallOperationNode node, @SuppressWarnings("unused") @Cached("rax") long cachedRax) {
+        if (traceEnabled()) {
+            trace(node);
+        }
         return node.execute(rdi, rsi, rdx, r10, r8, r9);
     }
 
@@ -121,5 +130,31 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
     protected long executeI64(long rax, Object rdi, Object rsi, Object rdx, Object r10, Object r8, Object r9) {
         // TODO: implement big switch with type casts + logic + ...?
         throw new AssertionError("this should not happen (inline cache not big enough)");
+    }
+
+    @CompilationFinal private boolean traceEnabledFlag;
+    @CompilationFinal private PrintStream traceStream;
+
+    private boolean traceEnabled() {
+        if (traceStream == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            traceStream = SulongEngineOption.getStream(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
+            traceEnabledFlag = SulongEngineOption.isTrue(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
+        }
+        return traceEnabledFlag;
+    }
+
+    private PrintStream traceStream() {
+        if (traceStream == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            traceStream = SulongEngineOption.getStream(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
+            traceEnabledFlag = SulongEngineOption.isTrue(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
+        }
+        return traceStream;
+    }
+
+    @TruffleBoundary
+    private void trace(LLVMAMD64SyscallOperationNode statement) {
+        traceStream().println(("[sulong] syscall: " + statement.getName()));
     }
 }

@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallUnameNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallUnameNode() {
+        super("uname");
+    }
+
     @Specialization
     protected long execute(LLVMAddress name) {
         return LLVMAMD64Info.uname(name);

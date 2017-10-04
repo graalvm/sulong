@@ -229,6 +229,7 @@ import com.oracle.truffle.llvm.nodes.vars.LLVMWriteNodeFactory.LLVMWriteAddressN
 import com.oracle.truffle.llvm.nodes.vars.LLVMWriteNodeFactory.LLVMWriteI1NodeGen;
 import com.oracle.truffle.llvm.nodes.vars.LLVMWriteNodeFactory.LLVMWriteI64NodeGen;
 import com.oracle.truffle.llvm.nodes.vars.StructLiteralNodeGen;
+import com.oracle.truffle.llvm.runtime.LLVMLanguage;
 import com.oracle.truffle.llvm.runtime.memory.LLVMStack;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
@@ -259,9 +260,12 @@ class AsmFactory {
 
     private String currentPrefix;
 
+    private final LLVMLanguage language;
     private final SourceSection sourceSection;
 
-    AsmFactory(Type[] argTypes, String asmFlags, Type retType, Type[] retTypes, int[] retOffsets, SourceSection sourceSection) {
+    AsmFactory(LLVMLanguage language, SourceSection sourceSection, Type[] argTypes, String asmFlags, Type retType, Type[] retTypes, int[] retOffsets) {
+        this.language = language;
+        this.sourceSection = sourceSection;
         this.argTypes = argTypes;
         this.asmFlags = asmFlags;
         this.frameDescriptor = new FrameDescriptor();
@@ -271,7 +275,6 @@ class AsmFactory {
         this.retType = retType;
         this.retTypes = retTypes;
         this.retOffsets = retOffsets;
-        this.sourceSection = sourceSection;
         parseArguments();
     }
 
@@ -373,7 +376,7 @@ class AsmFactory {
 
     LLVMInlineAssemblyRootNode finishInline() {
         getArguments();
-        return new LLVMInlineAssemblyRootNode(null, null, frameDescriptor, statements.toArray(new LLVMExpressionNode[statements.size()]), arguments, result);
+        return new LLVMInlineAssemblyRootNode(language, sourceSection, frameDescriptor, statements.toArray(new LLVMExpressionNode[statements.size()]), arguments, result);
     }
 
     void setPrefix(String prefix) {

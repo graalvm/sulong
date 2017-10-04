@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallFutexNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallFutexNode() {
+        super("futex");
+    }
+
     @SuppressWarnings("unused")
     @Specialization
     protected long executeI64(LLVMAddress uaddr, long futexOp, long val, LLVMAddress timeout, LLVMAddress uaddr2, long val3) {

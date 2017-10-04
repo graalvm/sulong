@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallRtSigactionNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallRtSigactionNode() {
+        super("rt_sigaction");
+    }
+
     @SuppressWarnings("unused")
     @Specialization
     protected long executeI64(long signum, LLVMAddress act, LLVMAddress oldact) {

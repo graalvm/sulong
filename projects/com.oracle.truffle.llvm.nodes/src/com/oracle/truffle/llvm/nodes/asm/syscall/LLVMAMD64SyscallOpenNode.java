@@ -34,6 +34,10 @@ import com.oracle.truffle.llvm.nodes.asm.support.LLVMAMD64String;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallOpenNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallOpenNode() {
+        super("open");
+    }
+
     @Specialization
     protected long execute(LLVMAddress filename, long flags, long mode) {
         return LLVMAMD64File.open(LLVMAMD64String.cstr(filename), (int) flags, (int) mode);

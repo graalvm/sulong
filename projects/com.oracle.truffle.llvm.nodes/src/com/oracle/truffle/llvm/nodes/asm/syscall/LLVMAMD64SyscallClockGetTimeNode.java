@@ -33,9 +33,13 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallClockGetTimeNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallClockGetTimeNode() {
+        super("clock_gettime");
+    }
+
     @Specialization
     protected long executeI64(long clkId, LLVMAddress tp) {
-        return LLVMAMd64Time.clockGetTime((int) clkId, tp);
+        return LLVMAMD64Time.clockGetTime((int) clkId, tp);
     }
 
     @Specialization

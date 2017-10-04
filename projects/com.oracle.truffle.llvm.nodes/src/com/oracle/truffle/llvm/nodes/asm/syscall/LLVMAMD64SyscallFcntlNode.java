@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallFcntlNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallFcntlNode() {
+        super("fcntl");
+    }
+
     @Specialization
     public long executeI64(long fd, long cmd, long arg) {
         return LLVMAMD64File.fcntl((int) fd, (int) cmd, arg);

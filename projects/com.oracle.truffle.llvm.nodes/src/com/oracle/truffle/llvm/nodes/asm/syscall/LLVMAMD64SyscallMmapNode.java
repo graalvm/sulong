@@ -35,6 +35,10 @@ import com.oracle.truffle.llvm.runtime.LLVMAddress;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
 
 public abstract class LLVMAMD64SyscallMmapNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallMmapNode() {
+        super("mmap");
+    }
+
     private final ConditionProfile mapAnonymousProfile = ConditionProfile.createCountingProfile();
 
     @SuppressWarnings("unused")

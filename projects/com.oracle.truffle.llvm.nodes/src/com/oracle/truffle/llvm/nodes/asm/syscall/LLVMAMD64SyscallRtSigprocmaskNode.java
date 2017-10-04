@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallRtSigprocmaskNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallRtSigprocmaskNode() {
+        super("rt_sigprocmask");
+    }
+
     @SuppressWarnings("unused")
     @Specialization
     protected long executeI64(long how, LLVMAddress set, LLVMAddress oldset, long sigsetsize) {

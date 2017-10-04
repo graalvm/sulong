@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallBrkNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallBrkNode() {
+        super("brk");
+    }
+
     @Specialization
     protected long execute(LLVMAddress brk) {
         return LLVMAMD64Memory.brk(brk);

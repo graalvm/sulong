@@ -32,5 +32,15 @@ package com.oracle.truffle.llvm.nodes.asm.syscall;
 import com.oracle.truffle.api.nodes.Node;
 
 public abstract class LLVMAMD64SyscallOperationNode extends Node {
+    private String name;
+
+    public LLVMAMD64SyscallOperationNode(String name) {
+        this.name = name;
+    }
+
     public abstract long execute(Object rdi, Object rsi, Object rdx, Object r10, Object r8, Object r9);
+
+    public final String getName() {
+        return name;
+    }
 }

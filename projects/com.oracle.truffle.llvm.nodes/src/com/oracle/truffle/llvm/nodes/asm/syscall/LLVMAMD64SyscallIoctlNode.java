@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallIoctlNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallIoctlNode() {
+        super("ioctl");
+    }
+
     @Specialization
     protected long executeI64(long fd, long request, LLVMAddress argp) {
         return LLVMAMD64File.ioctl((int) fd, (int) request, argp.getVal()); // TODO: implement

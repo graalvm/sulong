@@ -35,6 +35,7 @@ public class LLVMAMD64UnknownSyscallNode extends LLVMAMD64SyscallOperationNode {
     private final int nr;
 
     public LLVMAMD64UnknownSyscallNode(int nr) {
+        super("unknown(" + nr + ")");
         this.nr = nr;
     }
 

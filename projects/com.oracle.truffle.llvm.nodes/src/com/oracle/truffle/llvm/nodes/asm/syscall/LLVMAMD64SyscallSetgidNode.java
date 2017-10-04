@@ -30,6 +30,10 @@
 package com.oracle.truffle.llvm.nodes.asm.syscall;
 
 public class LLVMAMD64SyscallSetgidNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallSetgidNode() {
+        super("setgid");
+    }
+
     @Override
     public long execute(Object rdi, Object rsi, Object rdx, Object r10, Object r8, Object r9) {
         long gid = (long) rdi;

@@ -32,6 +32,10 @@ package com.oracle.truffle.llvm.nodes.asm.syscall;
 import com.oracle.truffle.llvm.runtime.LLVMExitException;
 
 public class LLVMAMD64SyscallExitNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallExitNode() {
+        super("exit");
+    }
+
     @Override
     public long execute(Object rdi, Object rsi, Object rdx, Object r10, Object r8, Object r9) {
         int code = (int) ((long) rdi);

@@ -30,6 +30,10 @@
 package com.oracle.truffle.llvm.nodes.asm.syscall;
 
 public class LLVMAMD64SyscallSetuidNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallSetuidNode() {
+        super("setuid");
+    }
+
     @Override
     public long execute(Object rdi, Object rsi, Object rdx, Object r10, Object r8, Object r9) {
         long uid = (long) rdi;

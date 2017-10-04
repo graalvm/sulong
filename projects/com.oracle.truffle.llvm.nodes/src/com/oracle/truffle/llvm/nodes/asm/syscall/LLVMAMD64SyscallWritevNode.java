@@ -33,6 +33,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
 public abstract class LLVMAMD64SyscallWritevNode extends LLVMAMD64SyscallOperationNode {
+    public LLVMAMD64SyscallWritevNode() {
+        super("writev");
+    }
+
     @Specialization
     protected long execute(long fd, LLVMAddress ptr, long size) {
         return LLVMAMD64File.writev((int) fd, ptr, (int) size);
