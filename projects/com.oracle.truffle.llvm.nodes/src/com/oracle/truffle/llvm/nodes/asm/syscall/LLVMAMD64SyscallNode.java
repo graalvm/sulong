@@ -135,21 +135,21 @@ public abstract class LLVMAMD64SyscallNode extends LLVMExpressionNode {
     @CompilationFinal private boolean traceEnabledFlag;
     @CompilationFinal private PrintStream traceStream;
 
-    private boolean traceEnabled() {
+    private void cacheTrace() {
         if (traceStream == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             traceStream = SulongEngineOption.getStream(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
             traceEnabledFlag = SulongEngineOption.isTrue(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
         }
+    }
+
+    private boolean traceEnabled() {
+        cacheTrace();
         return traceEnabledFlag;
     }
 
     private PrintStream traceStream() {
-        if (traceStream == null) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            traceStream = SulongEngineOption.getStream(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
-            traceEnabledFlag = SulongEngineOption.isTrue(getContext().getEnv().getOptions().get(SulongEngineOption.DEBUG));
-        }
+        cacheTrace();
         return traceStream;
     }
 
