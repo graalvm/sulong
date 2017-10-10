@@ -9,7 +9,9 @@ int main(void) {
   printf("path: %s\n", path);
   fd = open(path, O_RDONLY, 0);
   if (fd < 0) {
+#if 0
     printf("Cannot open file: %d\n", errno);
+#endif
     return 0;
   }
   close(fd);

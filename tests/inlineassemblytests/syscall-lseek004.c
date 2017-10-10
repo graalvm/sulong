@@ -25,7 +25,9 @@ int main(void) {
   offset = lseek(fd, -80, SEEK_CUR);
   printf("offset: %ld\n", offset);
   if (offset == (off_t)-1) {
+#if 0
     printf("errno: %d\n", errno);
+#endif
     close(fd);
     return 0;
   }

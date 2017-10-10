@@ -19,7 +19,9 @@ int main(void) {
   size = readv(fd, iov, -1);
   printf("size: %d\n", size);
   if (size < 0) {
+#if 0
     printf("Error: %d\n", errno);
+#endif
     return 0;
   }
   close(fd);

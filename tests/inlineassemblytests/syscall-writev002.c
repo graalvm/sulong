@@ -15,7 +15,9 @@ int main(void) {
 
   printf("written: %d\n", result);
   if (result < 0) {
+#if 0
     printf("errno: %d\n", errno);
+#endif
     return 0;
   }
 
