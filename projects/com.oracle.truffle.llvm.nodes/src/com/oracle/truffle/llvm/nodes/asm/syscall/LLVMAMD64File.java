@@ -294,6 +294,7 @@ public class LLVMAMD64File {
         return -LLVMAMD64Error.ENOSYS;
     }
 
+    @TruffleBoundary
     public static int ftruncate(int fd, long length) {
         FileChannel chan = getOutputChannel(fd);
         try {
