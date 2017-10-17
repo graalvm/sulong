@@ -178,6 +178,7 @@ import com.oracle.truffle.llvm.nodes.literals.LLVMSimpleLiteralNode.LLVMTruffleO
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorAddressLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorDoubleLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorFloatLiteralNodeGen;
+import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorFunctionLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorI16LiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorI1LiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorI32LiteralNodeGen;
@@ -597,6 +598,8 @@ public class BasicNodeFactory implements NodeFactory {
             }
         } else if (llvmType instanceof PointerType) {
             return LLVMVectorAddressLiteralNodeGen.create(vals);
+        } else if (llvmType instanceof FunctionType) {
+            return LLVMVectorFunctionLiteralNodeGen.create(vals);
         } else {
             throw new AssertionError(llvmType + " not yet supported");
         }
@@ -1099,7 +1102,7 @@ public class BasicNodeFactory implements NodeFactory {
             retOffsets = alloca.getOffsets();
         }
 
-        Parser asmParser = new Parser(asmExpression, asmFlags, argTypes, retType, retTypes, retOffsets, sourceSection);
+        Parser asmParser = new Parser(runtime.getLanguage(), sourceSection, asmExpression, asmFlags, argTypes, retType, retTypes, retOffsets);
         LLVMInlineAssemblyRootNode assemblyRoot = asmParser.Parse();
         LLVMFunctionDescriptor asm = LLVMFunctionDescriptor.createDescriptor(runtime.getContext(), "<asm>", new FunctionType(MetaType.UNKNOWN, new Type[0], false), -1);
         asm.declareInSulong(Truffle.getRuntime().createCallTarget(assemblyRoot), false);
@@ -1309,8 +1312,10 @@ public class BasicNodeFactory implements NodeFactory {
             case "@llvm.lifetime.end":
                 return LLVMLifetimeEndNodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.invariant.start":
+            case "@llvm.invariant.start.p0i8":
                 return LLVMInvariantStartNodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.invariant.end":
+            case "@llvm.invariant.end.p0i8":
                 return LLVMInvariantEndNodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.stacksave":
                 return LLVMStackSaveNodeGen.create(sourceSection);

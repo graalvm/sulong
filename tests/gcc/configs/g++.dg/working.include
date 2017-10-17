@@ -725,6 +725,5 @@ gcc-5.2.0/gcc/testsuite/g++.dg/warn/pr35602.C
 gcc-5.2.0/gcc/testsuite/g++.dg/warn/pr36069.C
 gcc-5.2.0/gcc/testsuite/g++.dg/warn/pr36921.C
 gcc-5.2.0/gcc/testsuite/g++.dg/warn/pr36954.C
-gcc-5.2.0/gcc/testsuite/g++.dg/warn/pragma-system_header3.C
 gcc-5.2.0/gcc/testsuite/g++.dg/warn/write-strings.C
 gcc-5.2.0/gcc/testsuite/g++.dg/warn/write-strings-default.C

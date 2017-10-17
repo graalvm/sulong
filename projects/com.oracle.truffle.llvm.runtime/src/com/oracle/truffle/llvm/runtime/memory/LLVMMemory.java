@@ -43,6 +43,7 @@ import com.oracle.truffle.llvm.runtime.floating.LLVM80BitFloat;
 import com.oracle.truffle.llvm.runtime.vector.LLVMAddressVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMDoubleVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMFloatVector;
+import com.oracle.truffle.llvm.runtime.vector.LLVMFunctionVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI16Vector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI1Vector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI32Vector;
@@ -408,6 +409,10 @@ public abstract class LLVMMemory {
         LLVMAddressVector.writeVectorToMemory(addr, vector);
     }
 
+    public static void putVector(LLVMAddress addr, LLVMFunctionVector vector) {
+        LLVMFunctionVector.writeVectorToMemory(addr, vector);
+    }
+
     @ValueType
     public static final class CMPXCHGI32 {
         private final int value;
@@ -606,7 +611,7 @@ public abstract class LLVMMemory {
         do {
             old = getI64(address);
             nevv = f.applyAsLong(old, value);
-        } while (UNSAFE.compareAndSwapLong(null, addr, old, nevv));
+        } while (!UNSAFE.compareAndSwapLong(null, addr, old, nevv));
         return nevv;
     }
 
@@ -629,8 +634,8 @@ public abstract class LLVMMemory {
         do {
             old = getI32(address);
             nevv = f.applyAsInt(old, value);
-        } while (UNSAFE.compareAndSwapInt(null, addr, old, nevv));
-        return nevv;
+        } while (!UNSAFE.compareAndSwapInt(null, addr, old, nevv));
+        return old;
     }
 
     public static short getAndOpI16(LLVMAddress address, short value, BinaryOperator<Short> f) {
@@ -639,8 +644,8 @@ public abstract class LLVMMemory {
         do {
             old = getI16(address);
             nevv = f.apply(old, value);
-        } while (compareAndSwapI16(address, old, nevv).swap);
-        return nevv;
+        } while (!compareAndSwapI16(address, old, nevv).swap);
+        return old;
     }
 
     public static byte getAndOpI8(LLVMAddress address, byte value, BinaryOperator<Byte> f) {
@@ -649,8 +654,8 @@ public abstract class LLVMMemory {
         do {
             old = getI8(address);
             nevv = f.apply(old, value);
-        } while (compareAndSwapI8(address, old, nevv).swap);
-        return nevv;
+        } while (!compareAndSwapI8(address, old, nevv).swap);
+        return old;
     }
 
     public static boolean getAndOpI1(LLVMAddress address, boolean value, BinaryOperator<Boolean> f) {
@@ -659,8 +664,8 @@ public abstract class LLVMMemory {
         do {
             old = getI8(address);
             nevv = f.apply(old != 0, value);
-        } while (compareAndSwapI8(address, old, (byte) (nevv ? 1 : 0)).swap);
-        return nevv;
+        } while (!compareAndSwapI8(address, old, (byte) (nevv ? 1 : 0)).swap);
+        return old != 0;
     }
 
     public static void fullFence() {

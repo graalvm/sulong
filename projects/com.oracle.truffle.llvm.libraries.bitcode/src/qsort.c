@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void sulong_swap(void *vp1, void *vp2, const size_t size) {
+static void sulong_swap(void *vp1, void *vp2, const size_t size) {
   char *buffer = (char *)malloc(size);
   memcpy(buffer, vp1, size);
   memcpy(vp1, vp2, size);
@@ -39,7 +39,7 @@ void sulong_swap(void *vp1, void *vp2, const size_t size) {
   free(buffer);
 }
 
-void sulong_qsort(char *v, long left, long right, int (*comp)(const void *, const void *), size_t size) {
+static void sulong_qsort(char *v, long left, long right, int (*comp)(const void *, const void *), size_t size) {
   int i, last;
   if (left >= right) {
     return;
@@ -57,4 +57,6 @@ void sulong_qsort(char *v, long left, long right, int (*comp)(const void *, cons
   sulong_qsort(v, last + 1, right, comp, size);
 }
 
-void qsort(void *v, size_t number, size_t size, int (*comp)(const void *, const void *)) { sulong_qsort(v, 0, number - 1, comp, size); }
+__attribute__((weak)) void qsort(void *v, size_t number, size_t size, int (*comp)(const void *, const void *)) {
+  sulong_qsort(v, 0, number - 1, comp, size);
+}

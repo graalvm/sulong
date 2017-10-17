@@ -39,6 +39,7 @@ import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.vector.LLVMAddressVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMDoubleVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMFloatVector;
+import com.oracle.truffle.llvm.runtime.vector.LLVMFunctionVector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI16Vector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI1Vector;
 import com.oracle.truffle.llvm.runtime.vector.LLVMI32Vector;
@@ -143,6 +144,18 @@ public abstract class LLVMStoreVectorNode extends LLVMStoreNode {
 
     @Specialization
     protected Object writeVector(LLVMGlobalVariable address, LLVMAddressVector value, @Cached("createGlobalAccess()") LLVMGlobalVariableAccess globalAccess) {
+        LLVMMemory.putVector(globalAccess.getNativeLocation(address), value);
+        return null;
+    }
+
+    @Specialization
+    protected Object writeVector(LLVMAddress address, LLVMFunctionVector value) {
+        LLVMMemory.putVector(address, value);
+        return null;
+    }
+
+    @Specialization
+    protected Object writeVector(LLVMGlobalVariable address, LLVMFunctionVector value, @Cached("createGlobalAccess()") LLVMGlobalVariableAccess globalAccess) {
         LLVMMemory.putVector(globalAccess.getNativeLocation(address), value);
         return null;
     }
