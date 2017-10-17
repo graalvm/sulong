@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void func() { printf("atexit hook\n"); }
+void func() { printf("destruct\n"); }
 
 __attribute__((constructor)) void ctor() {
   printf("construct\n");
