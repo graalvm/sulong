@@ -149,6 +149,17 @@ suite = {
       "workingSets" : "Truffle, LLVM",
       "license" : "BSD-new",
     },
+    
+    "com.oracle.truffle.llvm.parser.macho.injector" : {
+      "subDir" : "projects",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.truffle.llvm.parser"],
+      "checkstyle" : "com.oracle.truffle.llvm",
+      "javaCompliance" : "1.8",
+      "annotationProcessors" : [],
+      "workingSets" : "Truffle, LLVM",
+      "license" : "BSD-new",
+    },
 
     "com.oracle.truffle.llvm" : {
       "subDir" : "projects",
@@ -269,6 +280,23 @@ suite = {
       "prefix": "",
     },
 
+   "com.oracle.truffle.llvm.tests.wllvm" : {
+      "subDir" : "tests",
+      "native" : True,
+      "vpath" : True,
+      "results" : [
+        "wllvm/ref.out",
+      ],
+      "buildEnv" : {
+        "OS" : "<os>",
+        "INJECTOR" : "<path:BITCODE_INJECTOR>"
+      },
+      "buildDependencies" : [
+        "BITCODE_INJECTOR",
+      ],
+      "license" : "BSD-new",
+    },
+
     "com.oracle.truffle.llvm.tests.interop" : {
       "subDir" : "tests",
       "class" : "SulongTestSuite",
@@ -317,6 +345,21 @@ suite = {
         "truffle:TRUFFLE_API",
         "truffle:TRUFFLE_NFI",
         "SULONG_LIBS",
+      ],
+      "license" : "BSD-new",
+    },
+    
+    "BITCODE_INJECTOR" : {
+      "path" : "build/bitcode-injector.jar",
+      "subDir" : "graal",
+      "sourcesPath" : "build/bitcode-injector.src.zip",
+      "mainClass" : "com.oracle.truffle.llvm.parser.macho.injector.Injector",
+      "dependencies" : [
+        "com.oracle.truffle.llvm.parser",
+        "com.oracle.truffle.llvm.parser.macho.injector",
+      ],
+      "distDependencies" : [
+        "truffle:TRUFFLE_NFI",
       ],
       "license" : "BSD-new",
     },
@@ -378,6 +421,7 @@ suite = {
         "com.oracle.truffle.llvm.tests.sulong",
         "com.oracle.truffle.llvm.tests.sulongcpp",
         "com.oracle.truffle.llvm.tests.libc",
+        "com.oracle.truffle.llvm.tests.wllvm",
       ],
       "license" : "BSD-new",
     },

@@ -378,6 +378,11 @@ def runLLVM(args=None, out=None):
     vmArgs, sulongArgs = truffle_extract_VM_args(args)
     return mx.run_java(getCommonOptions(False) + vmArgs + getClasspathOptions() + ["com.oracle.truffle.llvm.Sulong"] + sulongArgs, out=out)
 
+def injectBitcode(args=None, out=None):
+    """Injects the bitcode of a Mach-O WLLVM build into the executable"""
+    vmArgs, injectorArgs = truffle_extract_VM_args(args)
+    return mx.run_java(getCommonOptions(False) + vmArgs + mx.get_runtime_jvm_args('BITCODE_INJECTOR') + ["com.oracle.truffle.llvm.parser.macho.injector.Injector"] + injectorArgs, out=out)
+
 def getCommonOptions(withAssertion, lib_args=None):
     options = ['-Dgraal.TruffleCompilationExceptionsArePrinted=true',
         '-Dgraal.ExitVMOnException=true']
@@ -584,4 +589,5 @@ mx_benchmark.add_bm_suite(mx_sulong_benchmarks.SulongBenchmarkSuite())
 mx.update_commands(_suite, {
     'pulldragonegg' : [pullInstallDragonEgg, ''],
     'lli' : [runLLVM, ''],
+    'inject-bitcode' : [injectBitcode, ''],
 })
