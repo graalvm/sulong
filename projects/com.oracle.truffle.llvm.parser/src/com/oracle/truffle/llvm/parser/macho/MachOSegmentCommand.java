@@ -1,4 +1,5 @@
-/* Copyright (c) 2017, Oracle and/or its affiliates.
+/*
+ * Copyright (c) 2017, Oracle and/or its affiliates.
  *
  * All rights reserved.
  *
@@ -26,11 +27,11 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.machO;
+package com.oracle.truffle.llvm.parser.macho;
 
 import java.nio.ByteBuffer;
 
-public class MachOSegmentCommand extends MachOLoadCommand {
+public final class MachOSegmentCommand extends MachOLoadCommand {
     public static final int SEGNAME_SIZE = 16;
     public static final int SECTNAME_SIZE = 16;
 
@@ -45,9 +46,10 @@ public class MachOSegmentCommand extends MachOLoadCommand {
     private final int flags;
 
     private final MachOSection[] sections;
+    private final int cmdOffset;
 
     private MachOSegmentCommand(int cmd, int cmdSize, String segName, long vmAddr, long vmSize, long fileOff, long fileSize, int maxProt, int initProt, int nSects, int flags,
-                    MachOSection[] sections) {
+                    MachOSection[] sections, int cmdOffset) {
         super(cmd, cmdSize);
         this.segName = segName;
         this.vmAddr = vmAddr;
@@ -60,6 +62,11 @@ public class MachOSegmentCommand extends MachOLoadCommand {
         this.flags = flags;
 
         this.sections = sections;
+        this.cmdOffset = cmdOffset;
+    }
+
+    public int getOffset() {
+        return cmdOffset;
     }
 
     public MachOSection getSection(String sectName) {
@@ -116,6 +123,8 @@ public class MachOSegmentCommand extends MachOLoadCommand {
     }
 
     private static MachOSegmentCommand readSegmentCmd64(ByteBuffer buffer) {
+        int cmdOffset = buffer.position();
+
         int cmd = buffer.getInt();
         int cmdSize = buffer.getInt();
         String segName = getString(buffer, MachOSegmentCommand.SEGNAME_SIZE);
@@ -133,10 +142,12 @@ public class MachOSegmentCommand extends MachOLoadCommand {
             sections[i] = MachOSection.readSection64(buffer);
         }
 
-        return new MachOSegmentCommand(cmd, cmdSize, segName, vmAddr, vmSize, fileOff, fileSize, maxProt, initProt, nSects, flags, sections);
+        return new MachOSegmentCommand(cmd, cmdSize, segName, vmAddr, vmSize, fileOff, fileSize, maxProt, initProt, nSects, flags, sections, cmdOffset);
     }
 
     private static MachOSegmentCommand readSegmentCmd32(ByteBuffer buffer) {
+        int cmdOffset = buffer.position();
+
         int cmd = buffer.getInt();
         int cmdSize = buffer.getInt();
         String segName = getString(buffer, MachOSegmentCommand.SEGNAME_SIZE);
@@ -154,7 +165,7 @@ public class MachOSegmentCommand extends MachOLoadCommand {
             sections[i] = MachOSection.readSection32(buffer);
         }
 
-        return new MachOSegmentCommand(cmd, cmdSize, segName, vmAddr, vmSize, fileOff, fileSize, maxProt, initProt, nSects, flags, sections);
+        return new MachOSegmentCommand(cmd, cmdSize, segName, vmAddr, vmSize, fileOff, fileSize, maxProt, initProt, nSects, flags, sections, cmdOffset);
     }
 
     private static String getString(ByteBuffer buffer, int len) {
@@ -170,7 +181,7 @@ public class MachOSegmentCommand extends MachOLoadCommand {
         return sb.toString();
     }
 
-    public static class MachOSection {
+    public static final class MachOSection {
         private final String sectName;
         private final String segName;
         private final long addr;
@@ -184,7 +195,10 @@ public class MachOSegmentCommand extends MachOLoadCommand {
         private final int reserved2;
         private final int reserved3;
 
-        private MachOSection(String sectName, String segName, long addr, long size, int offset, int align, int relOff, int nReloc, int flags, int reserved1, int reserved2, int reserved3) {
+        private final int cmdOffset;
+
+        private MachOSection(String sectName, String segName, long addr, long size, int offset, int align, int relOff, int nReloc, int flags, int reserved1, int reserved2, int reserved3,
+                        int cmdOffset) {
             this.sectName = sectName;
             this.segName = segName;
             this.addr = addr;
@@ -197,6 +211,8 @@ public class MachOSegmentCommand extends MachOLoadCommand {
             this.reserved1 = reserved1;
             this.reserved2 = reserved2;
             this.reserved3 = reserved3;
+
+            this.cmdOffset = cmdOffset;
         }
 
         public String getSectName() {
@@ -247,7 +263,13 @@ public class MachOSegmentCommand extends MachOLoadCommand {
             return reserved3;
         }
 
+        public int getCmdOffset() {
+            return cmdOffset;
+        }
+
         private static MachOSection readSection32(ByteBuffer buffer) {
+            int cmdOffset = buffer.position();
+
             String sectName = getString(buffer, MachOSegmentCommand.SECTNAME_SIZE);
             String segName = getString(buffer, MachOSegmentCommand.SEGNAME_SIZE);
             long addr = Integer.toUnsignedLong(buffer.getInt());
@@ -260,10 +282,12 @@ public class MachOSegmentCommand extends MachOLoadCommand {
             int reserved1 = buffer.getInt();
             int reserved2 = buffer.getInt();
 
-            return new MachOSection(sectName, segName, addr, size, offset, align, relOff, nReloc, flags, reserved1, reserved2, 0);
+            return new MachOSection(sectName, segName, addr, size, offset, align, relOff, nReloc, flags, reserved1, reserved2, 0, cmdOffset);
         }
 
         private static MachOSection readSection64(ByteBuffer buffer) {
+            int cmdOffset = buffer.position();
+
             String sectName = getString(buffer, MachOSegmentCommand.SECTNAME_SIZE);
             String segName = getString(buffer, MachOSegmentCommand.SEGNAME_SIZE);
             long addr = buffer.getLong();
@@ -277,7 +301,7 @@ public class MachOSegmentCommand extends MachOLoadCommand {
             int reserved2 = buffer.getInt();
             int reserved3 = buffer.getInt();
 
-            return new MachOSection(sectName, segName, addr, size, offset, align, relOff, nReloc, flags, reserved1, reserved2, reserved3);
+            return new MachOSection(sectName, segName, addr, size, offset, align, relOff, nReloc, flags, reserved1, reserved2, reserved3, cmdOffset);
         }
     }
 

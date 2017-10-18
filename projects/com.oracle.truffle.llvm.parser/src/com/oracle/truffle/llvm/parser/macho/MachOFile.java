@@ -27,16 +27,10 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.machO;
+package com.oracle.truffle.llvm.parser.macho;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,31 +38,32 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.oracle.truffle.llvm.parser.machO.MachOSegmentCommand.MachOSection;
+import com.oracle.truffle.llvm.parser.macho.MachOSegmentCommand.MachOSection;
 
 public final class MachOFile {
 
-    private static final long MH_MAGIC = 0xFEEDFACEl;
-    private static final long MH_CIGAM = 0xCEFAEDFEl;
-    private static final long MH_MAGIC_64 = 0xFEEDFACFl;
-    private static final long MH_CIGAM_64 = 0xCFFAEDFEl;
+    private static final long MH_MAGIC = 0xFEEDFACEL;
+    private static final long MH_CIGAM = 0xCEFAEDFEL;
+    private static final long MH_MAGIC_64 = 0xFEEDFACFL;
+    private static final long MH_CIGAM_64 = 0xCFFAEDFEL;
 
     private static final String LLVM_SEGMENT = "__LLVM";
     private static final String INTERMEDIATE_SEGMENT = "";
     private static final String BITCODE_SECTION = "__bitcode";
     private static final String BUNDLE_SECTION = "__bundle";
-    private static final String WLLVM_BITCODE_SECTION = "__wllvmBc";
+    private static final String WLLVM_SEGMENT = "__WLLVM";
+    private static final String WLLVM_BITCODE_SECTION = "__llvm_bc";
 
     private static final int MH_OBJECT = 0x1; /* relocatable object file */
     private static final int MH_EXECUTE = 0x2; /* demand paged executable file */
     // currently unused types:
-    @SuppressWarnings("unused") private static final int MH_FVMLIB = 0x3; /* fixed VM shared library file */
-    @SuppressWarnings("unused") private static final int MH_CORE = 0x4; /* core file */
-    @SuppressWarnings("unused") private static final int MH_PRELOAD = 0x5; /* preloaded executable file */
-    @SuppressWarnings("unused") private static final int MH_DYLIB = 0x6; /* dynamically bound shared library */
-    @SuppressWarnings("unused") private static final int MH_DYLINKER = 0x7; /* dynamic link editor */
-    @SuppressWarnings("unused") private static final int MH_BUNDLE = 0x8; /* dynamically bound bundle file */
-    @SuppressWarnings("unused") private static final int MH_DYLIB_STUB = 0x9; /* shared library stub for static */
+    @SuppressWarnings("unused") private static final int MH_FVMLIB = 0x3;
+    @SuppressWarnings("unused") private static final int MH_CORE = 0x4;
+    @SuppressWarnings("unused") private static final int MH_PRELOAD = 0x5;
+    @SuppressWarnings("unused") private static final int MH_DYLIB = 0x6;
+    @SuppressWarnings("unused") private static final int MH_DYLINKER = 0x7;
+    @SuppressWarnings("unused") private static final int MH_BUNDLE = 0x8;
+    @SuppressWarnings("unused") private static final int MH_DYLIB_STUB = 0x9;
 
     private final MachOHeader header;
     private final MachOLoadCommandTable loadCommandTable;
@@ -78,6 +73,14 @@ public final class MachOFile {
         this.header = header;
         this.loadCommandTable = loadCommandTable;
         this.buffer = buffer;
+    }
+
+    public MachOSegmentCommand getSegment(String name) {
+        return loadCommandTable.getSegment(name);
+    }
+
+    public MachOHeader getHeader() {
+        return header;
     }
 
     public List<String> getDyLibs() {
@@ -99,7 +102,7 @@ public final class MachOFile {
                 bc = extractBitcodeFromObject();
                 break;
             case MH_EXECUTE:
-                if (loadCommandTable.getSegment(WLLVM_BITCODE_SECTION) != null) {
+                if (loadCommandTable.getSegment(WLLVM_SEGMENT) != null) {
                     bc = extractBitcodeFromWLLVMExecute();
                 } else {
                     bc = extractBitcodeFromExecute();
@@ -122,67 +125,20 @@ public final class MachOFile {
 
         // extract all bitcodes from the archive
         ByteBuffer[] bitcodes = new ByteBuffer[dataNodes.getLength()];
-        for (int i = 0; i < dataNodes.getLength(); i++) {
-            bitcodes[i] = extractBcFromXar(xar, dataNodes.item(i));
-        }
 
         if (bitcodes.length == 1) {
-            return bitcodes[0];
+            return extractBcFromXar(xar, dataNodes.item(0));
         } else {
-            try {
-                return linkBitcodes(bitcodes);
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException("Error while attempting to extract bitcode!");
-            }
+            throw new RuntimeException("Multiple bitcode files are found in the executable! Consider building with WLLVM and executing mx inject afterwards.");
         }
 
-    }
-
-    // dummy approach to support regularly built Mach-O files
-    private static ByteBuffer linkBitcodes(ByteBuffer[] bitcodes) throws IOException, InterruptedException {
-
-        // write the bitcodes to the disk
-        List<File> files = new ArrayList<>();
-        for (int i = 0; i < bitcodes.length; i++) {
-            File file = Files.createTempFile(".bc" + i + "_", ".bc").toFile();
-            file.deleteOnExit();
-            FileChannel out = new FileOutputStream(file).getChannel();
-            files.add(file);
-            out.write(bitcodes[i]);
-            out.close();
-        }
-
-        // create llvm-link command
-        File bcFile = Files.createTempFile(".linkedBc_", ".bc").toFile();
-        bcFile.deleteOnExit();
-        StringBuilder cmd = new StringBuilder("llvm-link -o ");
-        cmd.append(bcFile.getAbsolutePath());
-        for (File file : files) {
-            cmd.append(" ");
-            cmd.append(file.getAbsolutePath());
-        }
-
-        // call llvm-link
-        Process linkProc;
-        linkProc = Runtime.getRuntime().exec(cmd.toString());
-        linkProc.waitFor();
-
-        // read final bitcode
-        FileChannel in = new FileInputStream(bcFile).getChannel();
-        long fileSize = in.size();
-        ByteBuffer bc = ByteBuffer.allocate((int) fileSize);
-        in.read(bc);
-
-        bc.flip();
-
-        return bc;
     }
 
     private static ByteBuffer extractBcFromXar(Xar xar, Node data) {
         NodeList dataChildren = data.getChildNodes();
 
-        long offset = -1l;
-        long size = -1l;  // not specified whether "length" or "size" is needed
+        long offset = -1L;
+        long size = -1L;  // not specified whether "length" or "size" is needed
 
         Node n = dataChildren.item(0);
 
@@ -216,7 +172,7 @@ public final class MachOFile {
     }
 
     private ByteBuffer extractBitcodeFromWLLVMExecute() {
-        return getSectionData(WLLVM_BITCODE_SECTION, WLLVM_BITCODE_SECTION);
+        return getSectionData(WLLVM_SEGMENT, WLLVM_BITCODE_SECTION);
     }
 
     public ByteBuffer getSectionData(String segment, String section) {
@@ -247,7 +203,7 @@ public final class MachOFile {
     }
 
     public static MachOFile create(ByteBuffer data) {
-        long magic = Integer.toUnsignedLong(data.getInt(0));
+        long magic = Integer.toUnsignedLong(data.getInt());
 
         if (!isMachOMagicNumber(magic)) {
             throw new IllegalArgumentException("Invalid Mach-O file!");

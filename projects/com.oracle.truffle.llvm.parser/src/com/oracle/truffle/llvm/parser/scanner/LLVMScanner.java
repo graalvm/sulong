@@ -30,8 +30,11 @@
 
 package com.oracle.truffle.llvm.parser.scanner;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,7 +48,7 @@ import com.oracle.truffle.llvm.parser.elf.ElfFile;
 import com.oracle.truffle.llvm.parser.elf.ElfSectionHeaderTable.Entry;
 import com.oracle.truffle.llvm.parser.listeners.Module;
 import com.oracle.truffle.llvm.parser.listeners.ParserListener;
-import com.oracle.truffle.llvm.parser.machO.MachOFile;
+import com.oracle.truffle.llvm.parser.macho.MachOFile;
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 
 public final class LLVMScanner {
@@ -124,12 +127,19 @@ public final class LLVMScanner {
             b.limit((int) (offset + size));
             bitcode = b.slice();
         } else if (MachOFile.isMachOMagicNumber(magicWord)) {
+            b.position(0);
             MachOFile machOFile = MachOFile.create(b);
 
             List<String> libraries = machOFile.getDyLibs();
             model.addLibraries(libraries);
 
             bitcode = machOFile.extractBitcode();
+            try {
+                Files.write(Paths.get("/Users/oracle/Documents/MosanerWork/byteBc.bc"), bitcode.array());
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
             long wrapperMagic = Integer.toUnsignedLong(bitcode.getInt(bitcode.position()));
             if (wrapperMagic == WRAPPER_MAGIC_WORD) {

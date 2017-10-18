@@ -1,4 +1,5 @@
-/* Copyright (c) 2017, Oracle and/or its affiliates.
+/*
+ * Copyright (c) 2017, Oracle and/or its affiliates.
  *
  * All rights reserved.
  *
@@ -26,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.parser.machO;
+package com.oracle.truffle.llvm.parser.macho;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
