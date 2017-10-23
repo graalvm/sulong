@@ -149,7 +149,7 @@ suite = {
       "workingSets" : "Truffle, LLVM",
       "license" : "BSD-new",
     },
-    
+
     "com.oracle.truffle.llvm.parser.macho.injector" : {
       "subDir" : "projects",
       "sourceDirs" : ["src"],
@@ -348,15 +348,17 @@ suite = {
       ],
       "license" : "BSD-new",
     },
-    
+
     "BITCODE_INJECTOR" : {
       "path" : "build/bitcode-injector.jar",
       "subDir" : "graal",
       "sourcesPath" : "build/bitcode-injector.src.zip",
       "mainClass" : "com.oracle.truffle.llvm.parser.macho.injector.Injector",
       "dependencies" : [
-        "com.oracle.truffle.llvm.parser",
         "com.oracle.truffle.llvm.parser.macho.injector",
+      ],
+      "overlaps" : [
+        "SULONG",
       ],
       "distDependencies" : [
         "truffle:TRUFFLE_NFI",

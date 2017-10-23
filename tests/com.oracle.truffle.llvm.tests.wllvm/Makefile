@@ -44,8 +44,10 @@ else
 $(OBJDIR)/wllvm.bc: $(OBJDIR)/ref.wllvm
 	$(QUIETLY) extract-bc --output $@ $<
 
-$(OBJDIR)/ref.out: $(OBJDIR)/ref.wllvm $(OBJDIR)/wllvm.bc
-	cp $< $@
-	$(QUIETLY) objcopy -I binary -O elf64-x86-64 -B i386:x86-64 --rename-section .data=.llvmbc $(OBJDIR)/wllvm.bc $@	
+$(OBJDIR)/wllvm.bc.o: $(OBJDIR)/wllvm.bc
+	$(QUIETLY) objcopy -I binary -O elf64-x86-64 -B i386:x86-64 --rename-section .data=.llvmbc $< $@
+
+$(OBJDIR)/ref.out: caller.cpp callee.cpp $(OBJDIR)/wllvm.bc.o
+	clang++ -o $@ $^
 	
 endif

@@ -108,8 +108,6 @@ public final class Injector {
 
         ByteBuffer bc = readFile(bcFile);
 
-        // TODO check endianess of bc
-
         machOBuffer.position(0);
 
         FileChannel out = new FileOutputStream(wllvmFile).getChannel();
