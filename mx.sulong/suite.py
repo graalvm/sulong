@@ -358,8 +358,9 @@ suite = {
         "com.oracle.truffle.llvm.parser.macho.injector",
       ],
       "overlaps" : [
-        "SULONG",
+        "SULONG", # workaround, as mx does not add dependencies correctly to the manifest
       ],
+      # should contain a distDependency to SULONG (removed for above workaround):
       "distDependencies" : [
         "truffle:TRUFFLE_NFI",
       ],
