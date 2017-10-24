@@ -380,8 +380,7 @@ def runLLVM(args=None, out=None):
 
 def injectBitcode(args=None, out=None):
     """Injects the bitcode of a Mach-O WLLVM build into the executable"""
-    vmArgs, injectorArgs = truffle_extract_VM_args(args)
-    return mx.run_java(getCommonOptions(False) + vmArgs + mx.get_runtime_jvm_args('BITCODE_INJECTOR') + ["com.oracle.truffle.llvm.parser.macho.injector.Injector"] + injectorArgs, out=out)
+    return mx.run_java(mx.get_runtime_jvm_args('BITCODE_INJECTOR') + ["com.oracle.truffle.llvm.parser.macho.injector.Injector"] + args, out=out)
 
 def getCommonOptions(withAssertion, lib_args=None):
     options = ['-Dgraal.TruffleCompilationExceptionsArePrinted=true',

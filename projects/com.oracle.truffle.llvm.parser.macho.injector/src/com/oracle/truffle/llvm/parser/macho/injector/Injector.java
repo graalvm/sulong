@@ -84,6 +84,54 @@ public final class Injector {
         ByteBuffer machOBuffer = readFile(wllvmFile);
         MachOFile machO = MachOFile.create(machOBuffer);
 
+        MachOSection sec = getBcSection(machO);
+
+        // zero out the paths of the bc files
+        zeroOutSection(machOBuffer, sec);
+
+        // modify the __llvm_bc section command
+        int secOffset = sec.getCmdOffset();
+
+        int offsetOffset = secOffset + MachOSegmentCommand.SEGNAME_SIZE + MachOSegmentCommand.SECTNAME_SIZE + Long.BYTES + Long.BYTES;
+        machOBuffer.putInt(offsetOffset, machOBuffer.limit());
+
+        int sizeOffset = secOffset + MachOSegmentCommand.SEGNAME_SIZE + MachOSegmentCommand.SECTNAME_SIZE + Long.BYTES;
+        machOBuffer.putLong(sizeOffset, bcFile.length());
+
+        writeToFile(wllvmFile, machOBuffer);
+
+        // append bitcode to file
+        ByteBuffer bc = readFile(bcFile);
+        appendToFile(wllvmFile, bc);
+
+    }
+
+    private static void writeToFile(File file, ByteBuffer buffer) {
+        try {
+            buffer.position(0);
+            FileChannel out = new FileOutputStream(file).getChannel();
+            out.write(buffer);
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Error while writing to file " + file.getAbsolutePath() + " !");
+        }
+    }
+
+    private static void appendToFile(File file, ByteBuffer buffer) {
+        try {
+            RandomAccessFile raf = new RandomAccessFile(file, "rws");
+            long prevSize = raf.length();
+            raf.setLength(raf.length() + buffer.capacity());
+
+            raf.seek(prevSize);
+            raf.write(buffer.array());
+            raf.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Error while processing file " + file.getAbsolutePath() + " !");
+        }
+    }
+
+    private static MachOSection getBcSection(MachOFile machO) {
         MachOSegmentCommand seg = machO.getSegment("__WLLVM");
 
         if (seg == null) {
@@ -96,32 +144,7 @@ public final class Injector {
             throw new RuntimeException("Not a valid wllvm build (missing __llvm_bc section)!");
         }
 
-        // zero out the paths of the bc files
-        zeroOutSection(machOBuffer, sec);
-
-        int secOffset = sec.getCmdOffset();
-        int offsetOffset = secOffset + MachOSegmentCommand.SEGNAME_SIZE + MachOSegmentCommand.SECTNAME_SIZE + Long.SIZE / Byte.SIZE + Long.SIZE / Byte.SIZE;
-        int sizeOffset = secOffset + MachOSegmentCommand.SEGNAME_SIZE + MachOSegmentCommand.SECTNAME_SIZE + Long.SIZE / Byte.SIZE;
-
-        machOBuffer.putInt(offsetOffset, machOBuffer.limit());
-        machOBuffer.putLong(sizeOffset, bcFile.length());
-
-        ByteBuffer bc = readFile(bcFile);
-
-        machOBuffer.position(0);
-
-        FileChannel out = new FileOutputStream(wllvmFile).getChannel();
-        out.write(machOBuffer);
-        out.close();
-
-        RandomAccessFile raf = new RandomAccessFile(wllvmFile, "rws");
-        long prevSize = raf.length();
-        raf.setLength(raf.length() + bcFile.length());
-
-        raf.seek(prevSize);
-        raf.write(bc.array());
-        raf.close();
-
+        return sec;
     }
 
     private static ByteBuffer readFile(File file) {
@@ -133,7 +156,7 @@ public final class Injector {
             in.close();
             buffer.flip();
             return buffer;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error while reading file " + file.getAbsolutePath() + " !");
         }
     }
