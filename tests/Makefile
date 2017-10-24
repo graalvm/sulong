@@ -23,6 +23,7 @@
 # questions.
 #
 QUIETLY$(MX_VERBOSE)  = @
+export LLVM_COMPILER=clang
 
 ifeq ($(BUILD_REF),1)
 REF_TARGETS:=$(TESTS:%=%/ref.out)
@@ -46,13 +47,25 @@ BC_FILE=%/O0.bc.o
 	$(QUIETLY) objcopy -I binary -O elf64-x86-64 -B i386:x86-64 --rename-section .data=.llvmbc $< $@
 endif
 
+ifeq ($(OS), darwin)
+%/ref.out: %.c $(BC_FILE)
+	@mkdir -p $(shell dirname $@)
+	$(QUIETLY) wllvm $< -o $@
+	$(QUIETLY) java -jar $(INJECTOR) $@
+
+%/ref.out: %.cpp $(BC_FILE)
+	@mkdir -p $(shell dirname $@)
+	$(QUIETLY) wllvm++ $< -o $@
+	$(QUIETLY) java -jar $(INJECTOR) $@
+else
 %/ref.out: %.c $(BC_FILE)
 	@mkdir -p $(shell dirname $@)
 	$(QUIETLY) clang $(EMBED_BC) -Wno-everything $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 %/ref.out: %.cpp $(BC_FILE)
 	@mkdir -p $(shell dirname $@)
-	$(QUIETLY) clang++ $(EMBED_BC) -Wno-everything $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+	$(QUIETLY) clang++ $(EMBED_BC) -Wno-everything $(CPPFLAGS) $(LDFLAGS) -o $@ $^
+endif
 
 %.bc: %.ll
 	$(QUIETLY) $(DRAGONEGG_LLVMAS) -o $@ $<

@@ -34,10 +34,6 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import com.oracle.truffle.llvm.parser.macho.MachOSegmentCommand.MachOSection;
 
 public final class MachOFile {
@@ -47,10 +43,8 @@ public final class MachOFile {
     private static final long MH_MAGIC_64 = 0xFEEDFACFL;
     private static final long MH_CIGAM_64 = 0xCFFAEDFEL;
 
-    private static final String LLVM_SEGMENT = "__LLVM";
     private static final String INTERMEDIATE_SEGMENT = "";
     private static final String BITCODE_SECTION = "__bitcode";
-    private static final String BUNDLE_SECTION = "__bundle";
     private static final String WLLVM_SEGMENT = "__WLLVM";
     private static final String WLLVM_BITCODE_SECTION = "__llvm_bc";
 
@@ -102,68 +96,16 @@ public final class MachOFile {
                 bc = extractBitcodeFromObject();
                 break;
             case MH_EXECUTE:
-                if (loadCommandTable.getSegment(WLLVM_SEGMENT) != null) {
-                    bc = extractBitcodeFromWLLVMExecute();
-                } else {
-                    bc = extractBitcodeFromExecute();
+                if (loadCommandTable.getSegment(WLLVM_SEGMENT) == null) {
+                    throw new RuntimeException("Executable has to be built with WLLVM!");
                 }
+                bc = extractBitcodeFromWLLVMExecute();
                 break;
             default:
                 throw new RuntimeException("Mach-O file type not supported!");
         }
 
         bc.order(ByteOrder.LITTLE_ENDIAN);
-        return bc;
-    }
-
-    private ByteBuffer extractBitcodeFromExecute() {
-        ByteBuffer sectionData = getSectionData(LLVM_SEGMENT, BUNDLE_SECTION);
-        Xar xar = Xar.create(sectionData);
-
-        Document bcDoc = xar.getToc().getTableOfContents();
-        NodeList dataNodes = bcDoc.getElementsByTagName("data");
-
-        // extract all bitcodes from the archive
-        ByteBuffer[] bitcodes = new ByteBuffer[dataNodes.getLength()];
-
-        if (bitcodes.length == 1) {
-            return extractBcFromXar(xar, dataNodes.item(0));
-        } else {
-            throw new RuntimeException("Multiple bitcode files are found in the executable! Consider building with WLLVM and executing mx inject afterwards.");
-        }
-
-    }
-
-    private static ByteBuffer extractBcFromXar(Xar xar, Node data) {
-        NodeList dataChildren = data.getChildNodes();
-
-        long offset = -1L;
-        long size = -1L;  // not specified whether "length" or "size" is needed
-
-        Node n = dataChildren.item(0);
-
-        while (n != null) {
-            if (n.getNodeName().equals("offset")) {
-                offset = Long.parseLong(n.getTextContent());
-            } else if (n.getNodeName().equals("size")) {
-                size = Long.parseLong(n.getTextContent());
-            }
-            n = n.getNextSibling();
-        }
-
-        if (size == -1 || offset == -1) {
-            throw new RuntimeException("Error while attempting to extract bitcode from a xar archive!");
-        }
-
-        ByteBuffer xarHeap = xar.getHeap();
-        int oldLimit = xarHeap.limit();
-
-        xarHeap.position((int) offset);
-        xarHeap.limit((int) (offset + size));
-
-        ByteBuffer bc = xarHeap.slice();
-        xarHeap.limit(oldLimit);
-
         return bc;
     }
 

@@ -289,7 +289,7 @@ suite = {
       ],
       "buildEnv" : {
         "OS" : "<os>",
-        "INJECTOR" : "<path:BITCODE_INJECTOR>"
+        "INJECTOR" : "<path:BITCODE_INJECTOR>",
       },
       "buildDependencies" : [
         "BITCODE_INJECTOR",
@@ -313,7 +313,11 @@ suite = {
       "buildEnv" : {
         "LDFLAGS" : "-lm",
         "OS" : "<os>",
+        "INJECTOR" : "<path:BITCODE_INJECTOR>",
       },
+      "buildDependencies" : [
+        "BITCODE_INJECTOR",
+      ],
     },
     "com.oracle.truffle.llvm.tests.sulongcpp" : {
       "subDir" : "tests",
@@ -321,7 +325,11 @@ suite = {
       "variants" : ['O0', 'O0_MISC_OPTS'],
       "buildEnv" : {
         "OS" : "<os>",
+        "INJECTOR" : "<path:BITCODE_INJECTOR>",
       },
+      "buildDependencies" : [
+        "BITCODE_INJECTOR",
+      ],
     },
     "com.oracle.truffle.llvm.tests.libc" : {
       "subDir" : "tests",

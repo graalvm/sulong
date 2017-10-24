@@ -30,11 +30,8 @@
 
 package com.oracle.truffle.llvm.parser.scanner;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -134,12 +131,6 @@ public final class LLVMScanner {
             model.addLibraries(libraries);
 
             bitcode = machOFile.extractBitcode();
-            try {
-                Files.write(Paths.get("/Users/oracle/Documents/MosanerWork/byteBc.bc"), bitcode.array());
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
 
             long wrapperMagic = Integer.toUnsignedLong(bitcode.getInt(bitcode.position()));
             if (wrapperMagic == WRAPPER_MAGIC_WORD) {
