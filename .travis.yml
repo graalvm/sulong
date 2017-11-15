@@ -81,11 +81,11 @@ matrix:
     jdk: oraclejdk8
   - env: TEST_COMMAND='mx gate --tags parser' COMPILE_COMMAND='mx build'
     jdk: oraclejdk8
-  - env: TEST_COMMAND='mx gate --tags gcc_c' COMPILE_COMMAND='mx build --dependencies SULONG_TEST,LAUNCHER_COMMON,WORD_API'
+  - env: TEST_COMMAND='mx gate --tags gcc_c' COMPILE_COMMAND='mx build --dependencies SULONG_TEST,LAUNCHER_COMMON,WORD_API,TRUFFLE_DEBUG'
     jdk: oraclejdk8
-  - env: TEST_COMMAND='mx gate --tags gcc_cpp' COMPILE_COMMAND='mx build --dependencies SULONG_TEST,LAUNCHER_COMMON,WORD_API'
+  - env: TEST_COMMAND='mx gate --tags gcc_cpp' COMPILE_COMMAND='mx build --dependencies SULONG_TEST,LAUNCHER_COMMON,WORD_API,TRUFFLE_DEBUG'
     jdk: oraclejdk8
-  - env: TEST_COMMAND='mx gate --tags gcc_fortran' COMPILE_COMMAND='mx build --dependencies SULONG_TEST,LAUNCHER_COMMON,WORD_API'
+  - env: TEST_COMMAND='mx gate --tags gcc_fortran' COMPILE_COMMAND='mx build --dependencies SULONG_TEST,LAUNCHER_COMMON,WORD_API,TRUFFLE_DEBUG'
     jdk: oraclejdk8
 after_failure:
   - find . -iname "*.log" -print0 | xargs -0 cat
