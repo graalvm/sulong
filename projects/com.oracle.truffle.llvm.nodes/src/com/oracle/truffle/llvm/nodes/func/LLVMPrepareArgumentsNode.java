@@ -90,12 +90,6 @@ public class LLVMPrepareArgumentsNode extends LLVMNode {
     public Object[] execute(VirtualFrame frame) {
         Object[] mainArgs = (Object[]) getargs.executeGeneric(frame);
         int type = 0;
-        // Rust extra handling: main(i64,...)
-        if (types.length > 0 && types[0] instanceof PrimitiveType) {
-            if (((PrimitiveType) types[0]).getPrimitiveKind() == PrimitiveKind.I64) {
-                type = 1;
-            }
-        }
         if (returnType instanceof VoidType) {
             type = 2;
         } else if (returnType instanceof PrimitiveType) {
@@ -108,6 +102,12 @@ public class LLVMPrepareArgumentsNode extends LLVMNode {
                     break;
                 case I64:
                     type = 5;
+                    // Rust extra handling: main(i64,...)
+                    if (types.length > 0 && types[0] instanceof PrimitiveType) {
+                        if (((PrimitiveType) types[0]).getPrimitiveKind() == PrimitiveKind.I64) {
+                            type = 1;
+                        }
+                    }
                     break;
             }
         }
