@@ -27,12 +27,28 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.runtime.types;
+package com.oracle.truffle.llvm.nodes.asm.syscall;
 
-public abstract class AggregateType extends Type {
-    public abstract int getNumberOfElements();
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNode;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNodeGen;
+import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
-    public abstract Type getElementType(long index);
+public abstract class LLVMAMD64SyscallFstatfsNode extends LLVMAMD64SyscallOperationNode {
+    @Child private LLVMAMD64PosixCallNode fstatfs;
 
-    public abstract long getOffsetOf(long index, DataSpecConverter targetDataLayout);
+    public LLVMAMD64SyscallFstatfsNode() {
+        super("fstatfs");
+        fstatfs = LLVMAMD64PosixCallNodeGen.create("fstatfs", "(SINT32,UINT64):SINT32", 2);
+    }
+
+    @Specialization
+    protected long execute(long fd, LLVMAddress buf) {
+        return (int) fstatfs.execute((int) fd, buf.getVal());
+    }
+
+    @Specialization
+    protected long execute(long fd, long buf) {
+        return execute(fd, LLVMAddress.fromLong(buf));
+    }
 }

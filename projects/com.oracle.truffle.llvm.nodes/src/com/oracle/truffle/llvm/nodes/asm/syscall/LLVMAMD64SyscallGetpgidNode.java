@@ -27,12 +27,22 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.runtime.types;
+package com.oracle.truffle.llvm.nodes.asm.syscall;
 
-public abstract class AggregateType extends Type {
-    public abstract int getNumberOfElements();
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNode;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNodeGen;
 
-    public abstract Type getElementType(long index);
+public class LLVMAMD64SyscallGetpgidNode extends LLVMAMD64SyscallOperationNode {
+    @Child private LLVMAMD64PosixCallNode getpgid;
 
-    public abstract long getOffsetOf(long index, DataSpecConverter targetDataLayout);
+    public LLVMAMD64SyscallGetpgidNode() {
+        super("getpgid");
+        getpgid = LLVMAMD64PosixCallNodeGen.create("getpgid", "(SINT32):SINT32", 1);
+    }
+
+    @Override
+    public long execute(Object rdi, Object rsi, Object rdx, Object r10, Object r8, Object r9) {
+        int pid = (int) (long) rdi;
+        return (int) getpgid.execute(pid);
+    }
 }

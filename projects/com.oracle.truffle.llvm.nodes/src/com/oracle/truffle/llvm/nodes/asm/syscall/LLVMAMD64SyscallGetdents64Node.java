@@ -27,12 +27,28 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.runtime.types;
+package com.oracle.truffle.llvm.nodes.asm.syscall;
 
-public abstract class AggregateType extends Type {
-    public abstract int getNumberOfElements();
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNode;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNodeGen;
+import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
-    public abstract Type getElementType(long index);
+public abstract class LLVMAMD64SyscallGetdents64Node extends LLVMAMD64SyscallOperationNode {
+    @Child private LLVMAMD64PosixCallNode getdents64;
 
-    public abstract long getOffsetOf(long index, DataSpecConverter targetDataLayout);
+    public LLVMAMD64SyscallGetdents64Node() {
+        super("getdents64");
+        getdents64 = LLVMAMD64PosixCallNodeGen.create("getdents64", "(UINT32,UINT64,UINT32):SINT32", 3);
+    }
+
+    @Specialization
+    protected long execute(long fd, LLVMAddress dirp, long count) {
+        return (int) getdents64.execute((int) fd, dirp.getVal(), (int) count);
+    }
+
+    @Specialization
+    protected long execute(long fd, long dirp, long count) {
+        return execute(fd, LLVMAddress.fromLong(dirp), count);
+    }
 }

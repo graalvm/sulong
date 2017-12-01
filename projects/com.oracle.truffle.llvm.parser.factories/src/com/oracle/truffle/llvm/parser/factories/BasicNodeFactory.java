@@ -142,6 +142,7 @@ import com.oracle.truffle.llvm.nodes.literals.LLVMSimpleLiteralNode.LLVMTruffleO
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorAddressLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorDoubleLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorFloatLiteralNodeGen;
+import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorFunctionLiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorI16LiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorI1LiteralNodeGen;
 import com.oracle.truffle.llvm.nodes.literals.LLVMVectorLiteralNodeFactory.LLVMVectorI32LiteralNodeGen;
@@ -737,7 +738,11 @@ public class BasicNodeFactory implements NodeFactory {
                     throw new AssertionError();
             }
         } else if (llvmType instanceof PointerType) {
-            return LLVMVectorAddressLiteralNodeGen.create(vals);
+            if (((PointerType) llvmType).getPointeeType() instanceof FunctionType) {
+                return LLVMVectorFunctionLiteralNodeGen.create(vals);
+            } else {
+                return LLVMVectorAddressLiteralNodeGen.create(vals);
+            }
         } else {
             throw new AssertionError(llvmType + " not yet supported");
         }
@@ -1109,7 +1114,7 @@ public class BasicNodeFactory implements NodeFactory {
     }
 
     @Override
-    public LLVMExpressionNode createTypedElementPointer(LLVMParserRuntime runtime, LLVMExpressionNode aggregateAddress, LLVMExpressionNode index, int indexedTypeLength,
+    public LLVMExpressionNode createTypedElementPointer(LLVMParserRuntime runtime, LLVMExpressionNode aggregateAddress, LLVMExpressionNode index, long indexedTypeLength,
                     Type targetType) {
         return LLVMAddressGetElementPtrNodeGen.create(aggregateAddress, index, indexedTypeLength, targetType);
     }
@@ -1350,7 +1355,7 @@ public class BasicNodeFactory implements NodeFactory {
     }
 
     @Override
-    public LLVMExpressionNode createInsertValue(LLVMParserRuntime runtime, LLVMExpressionNode resultAggregate, LLVMExpressionNode sourceAggregate, int size, int offset,
+    public LLVMExpressionNode createInsertValue(LLVMParserRuntime runtime, LLVMExpressionNode resultAggregate, LLVMExpressionNode sourceAggregate, int size, long offset,
                     LLVMExpressionNode valueToInsert, Type llvmType) {
         LLVMStoreNode store;
         if (llvmType instanceof PrimitiveType) {
@@ -1802,7 +1807,7 @@ public class BasicNodeFactory implements NodeFactory {
         }
     }
 
-    private static int getOverflowFieldOffset(LLVMParserRuntime runtime, FunctionDeclaration declaration) {
+    private static long getOverflowFieldOffset(LLVMParserRuntime runtime, FunctionDeclaration declaration) {
         return runtime.getContext().getIndexOffset(1, (AggregateType) declaration.getType().getReturnType());
     }
 

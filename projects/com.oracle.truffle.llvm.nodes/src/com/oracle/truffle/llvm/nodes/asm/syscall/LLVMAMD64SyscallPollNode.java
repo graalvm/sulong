@@ -27,12 +27,28 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.runtime.types;
+package com.oracle.truffle.llvm.nodes.asm.syscall;
 
-public abstract class AggregateType extends Type {
-    public abstract int getNumberOfElements();
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNode;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNodeGen;
+import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
-    public abstract Type getElementType(long index);
+public abstract class LLVMAMD64SyscallPollNode extends LLVMAMD64SyscallOperationNode {
+    @Child private LLVMAMD64PosixCallNode poll;
 
-    public abstract long getOffsetOf(long index, DataSpecConverter targetDataLayout);
+    public LLVMAMD64SyscallPollNode() {
+        super("poll");
+        poll = LLVMAMD64PosixCallNodeGen.create("poll", "(UINT64,UINT64,SINT32):SINT32", 3);
+    }
+
+    @Specialization
+    protected long execute(LLVMAddress fds, long nfds, long timeout) {
+        return (int) poll.execute(fds.getVal(), nfds, (int) timeout);
+    }
+
+    @Specialization
+    protected long execute(long fds, long nfds, long timeout) {
+        return execute(LLVMAddress.fromLong(fds), nfds, timeout);
+    }
 }

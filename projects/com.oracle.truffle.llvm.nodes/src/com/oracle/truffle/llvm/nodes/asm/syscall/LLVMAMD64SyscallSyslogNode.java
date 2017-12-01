@@ -27,12 +27,28 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.runtime.types;
+package com.oracle.truffle.llvm.nodes.asm.syscall;
 
-public abstract class AggregateType extends Type {
-    public abstract int getNumberOfElements();
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNode;
+import com.oracle.truffle.llvm.nodes.asm.syscall.posix.LLVMAMD64PosixCallNodeGen;
+import com.oracle.truffle.llvm.runtime.LLVMAddress;
 
-    public abstract Type getElementType(long index);
+public abstract class LLVMAMD64SyscallSyslogNode extends LLVMAMD64SyscallOperationNode {
+    @Child private LLVMAMD64PosixCallNode syslog;
 
-    public abstract long getOffsetOf(long index, DataSpecConverter targetDataLayout);
+    public LLVMAMD64SyscallSyslogNode() {
+        super("syslog");
+        syslog = LLVMAMD64PosixCallNodeGen.create("syslog", "(SINT32,UINT64,SINT32):SINT32", 3);
+    }
+
+    @Specialization
+    protected long execute(long type, LLVMAddress bufp, long len) {
+        return (int) syslog.execute((int) type, bufp.getVal(), (int) len);
+    }
+
+    @Specialization
+    protected long execute(long type, long bufp, long len) {
+        return execute(type, LLVMAddress.fromLong(bufp), len);
+    }
 }
