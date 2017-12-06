@@ -27,21 +27,54 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <setjmp.h>
-#include "unsupported.h"
+package com.oracle.truffle.llvm.runtime;
 
-__attribute__((weak)) int setjmp(jmp_buf env) {
-  WARN_UNSUPPORTED(setjmp);
-  return 0;
+import com.oracle.truffle.api.CompilerDirectives.ValueType;
+
+@ValueType
+public final class LLVMLongjmpTarget {
+    public final long node;
+    public final int pc;
+    public final long hash;
+
+    public LLVMLongjmpTarget(long node, int pc) {
+        this.node = node;
+        this.pc = pc;
+        this.hash = hash(node, pc);
+        assert getNode() == node;
+    }
+
+    public LLVMLongjmpTarget(long hash) {
+        this.node = getNode(hash);
+        this.pc = getPC(hash);
+        this.hash = hash;
+    }
+
+    public long getNode() {
+        return node;
+    }
+
+    public int getPC() {
+        return pc;
+    }
+
+    public long getHash() {
+        return hash;
+    }
+
+    public boolean is(long n) {
+        return node == n;
+    }
+
+    public static long hash(long node, long pc) {
+        return node << 31 | pc;
+    }
+
+    public static long getNode(long hash) {
+        return hash >>> 31;
+    }
+
+    public static int getPC(long hash) {
+        return (int) (hash & 0x7FFFFFFF);
+    }
 }
-
-__attribute__((weak)) int sigsetjmp(sigjmp_buf env, int savesigs) {
-  WARN_UNSUPPORTED(sigsetjmp);
-  return 0;
-}
-
-__attribute__((weak)) void longjmp(jmp_buf env, int val) { ERR_UNSUPPORTED(longjmp); }
-
-__attribute__((weak)) void siglongjmp(sigjmp_buf env, int val) { ERR_UNSUPPORTED(siglongjmp); }

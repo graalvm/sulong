@@ -84,8 +84,10 @@ import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMCTypeIntrinsicsFactory.LLV
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMCTypeIntrinsicsFactory.LLVMToUpperNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMCTypeIntrinsicsFactory.LLVMTolowerNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMExitNodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMLongjmpNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMMemIntrinsicFactory.LLVMLibcMemcpyNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMMemIntrinsicFactory.LLVMLibcMemsetNodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMSetjmpNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMSignalNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMSyscall;
 import com.oracle.truffle.llvm.nodes.intrinsics.c.LLVMTruffleReadBytesNodeGen;
@@ -304,6 +306,7 @@ public class NFIIntrinsicsProvider implements NativeIntrinsicProvider, ContextEx
         registerComplexNumberIntrinsics();
         registerCTypeIntrinsics();
         registerManagedAllocationIntrinsics();
+        registerSetjmpIntrinsics();
         return this;
     }
 
@@ -1492,6 +1495,39 @@ public class NFIIntrinsicsProvider implements NativeIntrinsicProvider, ContextEx
             @Override
             protected RootCallTarget generate(FunctionType type) {
                 return wrap("@__muldc3", new LLVMComplexMul(LLVMArgNodeGen.create(1), LLVMArgNodeGen.create(2), LLVMArgNodeGen.create(3), LLVMArgNodeGen.create(4), LLVMArgNodeGen.create(5)));
+            }
+        });
+    }
+
+    protected void registerSetjmpIntrinsics() {
+        factories.put("@_setjmp", new LLVMNativeIntrinsicFactory(true, false) {
+            @Override
+            protected RootCallTarget generate(FunctionType type) {
+                return wrap("@_setjmp", LLVMSetjmpNodeGen.create(LLVMArgNodeGen.create(1)));
+            }
+        });
+        factories.put("@__sigsetjmp", new LLVMNativeIntrinsicFactory(true, false) {
+            @Override
+            protected RootCallTarget generate(FunctionType type) {
+                return wrap("@__sigsetjmp", LLVMSetjmpNodeGen.create(LLVMArgNodeGen.create(1)));
+            }
+        });
+        factories.put("@longjmp", new LLVMNativeIntrinsicFactory(true, false) {
+            @Override
+            protected RootCallTarget generate(FunctionType type) {
+                return wrap("@longjmp", LLVMLongjmpNodeGen.create(LLVMArgNodeGen.create(1), LLVMArgNodeGen.create(2)));
+            }
+        });
+        factories.put("@_longjmp", new LLVMNativeIntrinsicFactory(true, false) {
+            @Override
+            protected RootCallTarget generate(FunctionType type) {
+                return wrap("@_longjmp", LLVMLongjmpNodeGen.create(LLVMArgNodeGen.create(1), LLVMArgNodeGen.create(2)));
+            }
+        });
+        factories.put("@siglongjmp", new LLVMNativeIntrinsicFactory(true, false) {
+            @Override
+            protected RootCallTarget generate(FunctionType type) {
+                return wrap("@siglongjmp", LLVMLongjmpNodeGen.create(LLVMArgNodeGen.create(1), LLVMArgNodeGen.create(2)));
             }
         });
     }

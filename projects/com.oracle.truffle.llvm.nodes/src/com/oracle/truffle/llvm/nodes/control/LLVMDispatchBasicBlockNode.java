@@ -45,6 +45,7 @@ import com.oracle.truffle.llvm.nodes.func.LLVMResumeNode;
 import com.oracle.truffle.llvm.nodes.others.LLVMUnreachableNode;
 import com.oracle.truffle.llvm.runtime.LLVMException;
 import com.oracle.truffle.llvm.runtime.debug.scope.LLVMSourceLocation;
+import com.oracle.truffle.llvm.runtime.LLVMLongjmpException;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
@@ -64,6 +65,16 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
         this.source = source;
     }
 
+    @CompilationFinal private FrameSlot setjmpReturnValue;
+
+    private FrameSlot getSetjmpReturnValueSlot() {
+        if (setjmpReturnValue == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            setjmpReturnValue = getRootNode().getFrameDescriptor().findFrameSlot(LLVMLongjmpException.SETJMP_RETURN_VALUE_FRAME_SLOT_ID);
+        }
+        return setjmpReturnValue;
+    }
+
     @Override
     @ExplodeLoop(kind = LoopExplosionKind.MERGE_EXPLODE)
     public Object executeGeneric(VirtualFrame frame) {
@@ -77,7 +88,26 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
             LLVMBasicBlockNode bb = bodyNodes[basicBlockIndex];
 
             // execute all statements
-            bb.executeStatements(frame);
+            try {
+                bb.executeStatements(frame);
+            } catch (LLVMLongjmpException e) {
+                long nodeId = e.getTarget().getNode();
+                for (int i = 0; i < bodyNodes.length; i++) {
+                    LLVMBasicBlockNode b = bodyNodes[i];
+                    if (b.getNodeId() == nodeId) {
+                        int val = e.getValue();
+                        if (val == 0) {
+                            val = 1;
+                        }
+                        b.setStart(e.getTarget().getPC());
+                        frame.setInt(getSetjmpReturnValueSlot(), val);
+                        basicBlockIndex = i;
+                        nullDeadSlots(frame, basicBlockIndex, beforeBlockNuller);
+                        continue outer;
+                    }
+                }
+                throw e;
+            }
 
             // execute control flow node, write phis, null stack frame slots, and dispatch to
             // the correct successor block

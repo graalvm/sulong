@@ -43,8 +43,10 @@ import com.oracle.truffle.llvm.parser.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.parser.model.visitors.ModelVisitor;
 import com.oracle.truffle.llvm.parser.model.visitors.ValueInstructionVisitor;
 import com.oracle.truffle.llvm.runtime.LLVMException;
+import com.oracle.truffle.llvm.runtime.LLVMLongjmpException;
 import com.oracle.truffle.llvm.runtime.memory.LLVMStack;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
+import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.VoidType;
 
@@ -87,6 +89,8 @@ public final class StackAllocation {
             final FrameDescriptor frame = new FrameDescriptor();
             frame.addFrameSlot(LLVMException.FRAME_SLOT_ID, null, FrameSlotKind.Object);
             frame.addFrameSlot(LLVMStack.FRAME_ID, new PointerType(VoidType.INSTANCE), FrameSlotKind.Object);
+            frame.addFrameSlot(LLVMLongjmpException.CURRENT_INSTRUCTION_FRAME_SLOT_ID, null, FrameSlotKind.Object);
+            frame.addFrameSlot(LLVMLongjmpException.SETJMP_RETURN_VALUE_FRAME_SLOT_ID, PrimitiveType.I32, FrameSlotKind.Int);
             for (FunctionParameter parameter : functionDefinition.getParameters()) {
                 Type type = parameter.getType();
                 if (parameter.isSourceVariable()) {

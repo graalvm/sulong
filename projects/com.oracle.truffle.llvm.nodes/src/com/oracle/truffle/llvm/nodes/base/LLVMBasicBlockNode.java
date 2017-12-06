@@ -35,6 +35,8 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory;
 import com.oracle.truffle.api.nodes.ControlFlowException;
@@ -43,6 +45,9 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.llvm.nodes.func.LLVMFunctionStartNode;
 import com.oracle.truffle.llvm.runtime.GuestLanguageRuntimeException;
+import com.oracle.truffle.llvm.runtime.LLVMContext.FrameSnapshot;
+import com.oracle.truffle.llvm.runtime.LLVMLongjmpException;
+import com.oracle.truffle.llvm.runtime.LLVMLongjmpTarget;
 import com.oracle.truffle.llvm.runtime.SulongRuntimeException;
 import com.oracle.truffle.llvm.runtime.SulongStackTrace;
 import com.oracle.truffle.llvm.runtime.debug.scope.LLVMSourceLocation;
@@ -72,6 +77,14 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
 
     @CompilationFinal(dimensions = 1) private final long[] successorExecutionCount;
 
+    @CompilationFinal private FrameSlot programCounter;
+    @CompilationFinal private FrameSlot setjmpReturnValue;
+
+    @CompilationFinal private String uniqueID;
+    @CompilationFinal private long id;
+
+    private int start = 0;
+
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         CompilerAsserts.neverPartOfCompilation();
@@ -86,16 +99,110 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
         successorExecutionCount = termInstruction.needsBranchProfiling() ? new long[termInstruction.getSuccessorCount()] : null;
     }
 
+    private FrameSlot getPCSlot() {
+        if (programCounter == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            programCounter = getRootNode().getFrameDescriptor().findFrameSlot(LLVMLongjmpException.CURRENT_INSTRUCTION_FRAME_SLOT_ID);
+        }
+        return programCounter;
+    }
+
+    private FrameSlot getSetjmpReturnValueSlot() {
+        if (setjmpReturnValue == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            setjmpReturnValue = getRootNode().getFrameDescriptor().findFrameSlot(LLVMLongjmpException.SETJMP_RETURN_VALUE_FRAME_SLOT_ID);
+        }
+        return setjmpReturnValue;
+    }
+
+    public long getNodeId() {
+        getUniqueID();
+        return id;
+    }
+
+    public void setStart(int pc) {
+        start = pc;
+    }
+
+    private String getUniqueID() {
+        if (uniqueID == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            LLVMFunctionStartNode f = NodeUtil.findParent(this, LLVMFunctionStartNode.class);
+            uniqueID = f.getName() + ":" + getBlockId();
+            id = getContextReference().get().getBlockID(uniqueID);
+        }
+        return uniqueID;
+    }
+
     @ExplodeLoop
     public void executeStatements(VirtualFrame frame) {
         blockEntered.enter();
         for (int i = 0; i < statements.length; i++) {
+            if (i < start) { // constant number of loop iterations ...
+                continue;
+            }
+            frame.setObject(getPCSlot(), new LLVMLongjmpTarget(getNodeId(), i));
             LLVMExpressionNode statement = statements[i];
             try {
                 if (traceEnabled()) {
                     trace(statement);
                 }
                 statement.executeGeneric(frame);
+            } catch (LLVMLongjmpException e) {
+                LLVMLongjmpTarget target = e.getTarget();
+
+                // restore old frame
+                CompilerDirectives.transferToInterpreter();
+                FrameSnapshot oldFrame = getContextReference().get().getSetjmpEnvironment(target.getHash());
+                Object[] values = oldFrame.getValues();
+                FrameDescriptor fields = frame.getFrameDescriptor();
+                for (FrameSlot slot : fields.getSlots()) {
+                    FrameSlot oldSlot = oldFrame.getFrameDescriptor().findFrameSlot(slot.getIdentifier());
+                    if (oldSlot == null) { // slot did not exist
+                        continue;
+                    }
+                    if (slot.getKind() != oldSlot.getKind()) { // slot changed type
+                        CompilerDirectives.transferToInterpreterAndInvalidate();
+                        slot.setKind(oldSlot.getKind());
+                    }
+                    int slotId = oldSlot.getIndex();
+                    switch (slot.getKind()) {
+                        case Boolean:
+                            frame.setBoolean(slot, (boolean) values[slotId]);
+                            break;
+                        case Byte:
+                            frame.setByte(slot, (byte) values[slotId]);
+                            break;
+                        case Int:
+                            frame.setInt(slot, (int) values[slotId]);
+                            break;
+                        case Long:
+                            frame.setLong(slot, (long) values[slotId]);
+                            break;
+                        case Float:
+                            frame.setFloat(slot, (float) values[slotId]);
+                            break;
+                        case Double:
+                            frame.setDouble(slot, (double) values[slotId]);
+                            break;
+                        case Object:
+                            frame.setObject(slot, values[slotId]);
+                            break;
+                    }
+                }
+
+                if (target.is(getNodeId())) {
+                    int val = e.getValue();
+                    if (val == 0) {
+                        val = 1;
+                    }
+                    frame.setInt(getSetjmpReturnValueSlot(), val);
+                    i = target.getPC();
+                    statement = statements[i];
+                    statement.executeGeneric(frame);
+                } else {
+                    throw e;
+                }
             } catch (ControlFlowException e) {
                 controlFlowExceptionProfile.enter();
                 throw e;
@@ -111,6 +218,10 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
                 final SulongStackTrace stackTrace = new SulongStackTrace(t.getMessage());
                 fillStackTrace(stackTrace, i);
                 throw new SulongRuntimeException(t, stackTrace);
+            } finally {
+                // reset setjmp/longjmp specific values
+                start = 0;
+                frame.setInt(getSetjmpReturnValueSlot(), 0);
             }
         }
     }
@@ -203,8 +314,8 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
          * It is possible to get race conditions (compiler and AST interpeter thread). This avoids a
          * probability > 1.
          *
-         * We make sure that we read each element only once. We also make sure that the compiler
-         * reduces the conditions to constants.
+         * We make sure that we read each element only once. We also make sure that the compiler reduces the
+         * conditions to constants.
          */
         long succCount = 0;
         long totalExecutionCount = 0;

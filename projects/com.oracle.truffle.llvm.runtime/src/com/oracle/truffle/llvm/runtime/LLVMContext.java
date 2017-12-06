@@ -117,6 +117,28 @@ public final class LLVMContext {
     // #define SIG_ERR ((__sighandler_t) -1) /* Error return. */
     private final LLVMAddress sigErr;
 
+    private long nextBlockID = 0;
+    private final Map<String, Long> uniqueBlockIDs = new HashMap<>();
+    private final Map<Long, FrameSnapshot> setjmpEnvironments = new HashMap<>();
+
+    public static final class FrameSnapshot {
+        private final FrameDescriptor descriptor;
+        private final Object[] values;
+
+        private FrameSnapshot(FrameDescriptor descriptor, Object[] values) {
+            this.descriptor = descriptor;
+            this.values = values;
+        }
+
+        public FrameDescriptor getFrameDescriptor() {
+            return descriptor;
+        }
+
+        public Object[] getValues() {
+            return values;
+        }
+    }
+
     public static final class LLVMGlobalsStack {
 
         static final Unsafe UNSAFE = getUnsafe();
@@ -236,6 +258,26 @@ public final class LLVMContext {
         } else {
             addExternalLibrary("libsulong.bc");
         }
+    }
+
+    public long getBlockID(String name) {
+        synchronized (uniqueBlockIDs) {
+            Long id = uniqueBlockIDs.get(name);
+            if (id == null) {
+                id = nextBlockID++;
+                uniqueBlockIDs.put(name, id);
+            }
+            assert id < nextBlockID; // check for wrap-around
+            return id;
+        }
+    }
+
+    public void storeSetjmpEnvironment(long id, FrameDescriptor descriptor, Object[] values) {
+        setjmpEnvironments.put(id, new FrameSnapshot(descriptor, values));
+    }
+
+    public FrameSnapshot getSetjmpEnvironment(long id) {
+        return setjmpEnvironments.get(id);
     }
 
     public LLVMGlobalsStack getGlobalsStack() {
