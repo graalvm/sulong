@@ -48,6 +48,7 @@ import com.oracle.truffle.llvm.runtime.GuestLanguageRuntimeException;
 import com.oracle.truffle.llvm.runtime.LLVMContext.FrameSnapshot;
 import com.oracle.truffle.llvm.runtime.LLVMLongjmpException;
 import com.oracle.truffle.llvm.runtime.LLVMLongjmpTarget;
+import com.oracle.truffle.llvm.runtime.LLVMSetjmpException;
 import com.oracle.truffle.llvm.runtime.SulongRuntimeException;
 import com.oracle.truffle.llvm.runtime.SulongStackTrace;
 import com.oracle.truffle.llvm.runtime.debug.scope.LLVMSourceLocation;
@@ -83,7 +84,7 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
     @CompilationFinal private String uniqueID;
     @CompilationFinal private long id;
 
-    private int start = 0;
+    @CompilationFinal private int start = 0;
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
@@ -121,6 +122,7 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
     }
 
     public void setStart(int pc) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         start = pc;
     }
 
@@ -137,17 +139,22 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
     @ExplodeLoop
     public void executeStatements(VirtualFrame frame) {
         blockEntered.enter();
-        for (int i = 0; i < statements.length; i++) {
-            if (i < start) { // constant number of loop iterations ...
-                continue;
-            }
-            frame.setObject(getPCSlot(), new LLVMLongjmpTarget(getNodeId(), i));
+        CompilerAsserts.partialEvaluationConstant(start);
+        for (int i = start; i < statements.length; i++) {
             LLVMExpressionNode statement = statements[i];
             try {
                 if (traceEnabled()) {
                     trace(statement);
                 }
                 statement.executeGeneric(frame);
+            } catch (LLVMSetjmpException e) {
+                // restart, this time with target info
+                frame.setObject(getPCSlot(), new LLVMLongjmpTarget(getNodeId(), i));
+                try {
+                    statement.executeGeneric(frame);
+                } finally {
+                    frame.setObject(getPCSlot(), null);
+                }
             } catch (LLVMLongjmpException e) {
                 LLVMLongjmpTarget target = e.getTarget();
 
@@ -219,9 +226,7 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
                 fillStackTrace(stackTrace, i);
                 throw new SulongRuntimeException(t, stackTrace);
             } finally {
-                // reset setjmp/longjmp specific values
                 start = 0;
-                frame.setInt(getSetjmpReturnValueSlot(), 0);
             }
         }
     }

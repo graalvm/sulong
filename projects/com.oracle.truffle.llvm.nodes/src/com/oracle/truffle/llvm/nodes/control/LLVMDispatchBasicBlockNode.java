@@ -65,7 +65,16 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
         this.source = source;
     }
 
+    @CompilationFinal private FrameSlot programCounter;
     @CompilationFinal private FrameSlot setjmpReturnValue;
+
+    private FrameSlot getPCSlot() {
+        if (programCounter == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            programCounter = getRootNode().getFrameDescriptor().findFrameSlot(LLVMLongjmpException.CURRENT_INSTRUCTION_FRAME_SLOT_ID);
+        }
+        return programCounter;
+    }
 
     private FrameSlot getSetjmpReturnValueSlot() {
         if (setjmpReturnValue == null) {
@@ -79,6 +88,7 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
     @ExplodeLoop(kind = LoopExplosionKind.MERGE_EXPLODE)
     public Object executeGeneric(VirtualFrame frame) {
         Object returnValue = null;
+        frame.setObject(getPCSlot(), null);
 
         CompilerAsserts.compilationConstant(bodyNodes.length);
         int basicBlockIndex = 0;

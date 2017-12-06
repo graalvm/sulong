@@ -47,6 +47,7 @@ import com.oracle.truffle.llvm.nodes.memory.store.LLVMI64StoreNodeGen;
 import com.oracle.truffle.llvm.nodes.memory.store.LLVMStoreNode;
 import com.oracle.truffle.llvm.runtime.LLVMLongjmpException;
 import com.oracle.truffle.llvm.runtime.LLVMLongjmpTarget;
+import com.oracle.truffle.llvm.runtime.LLVMSetjmpException;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
 @NodeChild(value = "jmpbuf", type = LLVMExpressionNode.class)
@@ -60,11 +61,13 @@ public abstract class LLVMSetjmp extends LLVMIntrinsic {
         return (LLVMLongjmpTarget) FrameUtil.getObjectSafe(frame, slot);
     }
 
-    private static int getReturnValue() {
+    private static int getReturnAndResetValue() {
         CompilerDirectives.transferToInterpreter();
         Frame frame = Truffle.getRuntime().getCallerFrame().getFrame(FrameAccess.READ_ONLY);
         FrameSlot slot = frame.getFrameDescriptor().findFrameSlot(LLVMLongjmpException.SETJMP_RETURN_VALUE_FRAME_SLOT_ID);
-        return FrameUtil.getIntSafe(frame, slot);
+        int value = FrameUtil.getIntSafe(frame, slot);
+        frame.setInt(slot, 0);
+        return value;
     }
 
     private void storeFrame(long id) {
@@ -109,9 +112,12 @@ public abstract class LLVMSetjmp extends LLVMIntrinsic {
 
     @Specialization
     protected int doOp(VirtualFrame frame, Object env) {
-        int returnValue = getReturnValue();
+        int returnValue = getReturnAndResetValue();
         if (returnValue == 0) {
             LLVMLongjmpTarget target = getPC();
+            if (target == null) {
+                throw new LLVMSetjmpException();
+            }
             storeFrame(target.getHash());
             storeI64.executeWithTarget(frame, env, target.getHash());
         }
