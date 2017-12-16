@@ -490,15 +490,25 @@ public final class LLVMMemory {
         }
     }
 
-    public LLVMAddress allocateCString(String string) {
-        LLVMAddress baseAddress = allocateMemory(string.length() + 1);
-        long currentAddress = baseAddress.getVal();
+    private void allocateString(String string, LLVMAddress address) {
+        long currentAddress = address.getVal();
         for (int i = 0; i < string.length(); i++) {
             byte c = (byte) string.charAt(i);
             putI8(currentAddress, c);
             currentAddress++;
         }
-        putI8(currentAddress, (byte) 0);
+    }
+
+    public LLVMAddress allocateCString(String string) {
+        LLVMAddress baseAddress = allocateMemory(string.length() + 1);
+        allocateString(string, baseAddress);
+        putI8(baseAddress.getVal() + string.length(), (byte) 0);
+        return baseAddress;
+    }
+
+    public LLVMAddress allocateRustString(String string) {
+        LLVMAddress baseAddress = allocateMemory(string.length());
+        allocateString(string, baseAddress);
         return baseAddress;
     }
 

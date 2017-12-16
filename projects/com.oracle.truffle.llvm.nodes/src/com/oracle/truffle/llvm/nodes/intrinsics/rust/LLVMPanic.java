@@ -31,19 +31,18 @@ package com.oracle.truffle.llvm.nodes.intrinsics.rust;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMIntrinsic;
+import com.oracle.truffle.llvm.nodes.intrinsics.rust.CommonRustTypes.StrSliceType;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
 import com.oracle.truffle.llvm.runtime.global.LLVMGlobal;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMToNativeNode;
 import com.oracle.truffle.llvm.runtime.types.DataSpecConverter;
-import com.oracle.truffle.llvm.runtime.types.PointerType;
 import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
 import com.oracle.truffle.llvm.runtime.types.StructureType;
 import com.oracle.truffle.llvm.runtime.types.Type;
@@ -52,8 +51,8 @@ import com.oracle.truffle.llvm.runtime.types.Type;
 public abstract class LLVMPanic extends LLVMIntrinsic {
 
     protected PanicLocType createPanicLocation() {
-        DataSpecConverter dataSpecConverter = getContextReference().get().getDataSpecConverter();
-        return PanicLocType.create(dataSpecConverter);
+        DataSpecConverter datalayout = getContextReference().get().getDataSpecConverter();
+        return PanicLocType.create(datalayout);
     }
 
     @Specialization
@@ -72,11 +71,10 @@ public abstract class LLVMPanic extends LLVMIntrinsic {
         private final long offsetFilename;
         private final long offsetLineNr;
 
-        private PanicLocType(DataSpecConverter dataLayout, Type type, StrSliceType strslice) {
+        private PanicLocType(DataSpecConverter dataLayout, StructureType type, StrSliceType strslice) {
             this.strslice = strslice;
-            StructureType structureType = (StructureType) ((PointerType) type).getElementType(0);
-            this.offsetFilename = structureType.getOffsetOf(1, dataLayout);
-            this.offsetLineNr = structureType.getOffsetOf(2, dataLayout);
+            this.offsetFilename = type.getOffsetOf(1, dataLayout);
+            this.offsetLineNr = type.getOffsetOf(2, dataLayout);
         }
 
         RustPanicException read(LLVMMemory memory, long address) {
@@ -90,40 +88,9 @@ public abstract class LLVMPanic extends LLVMIntrinsic {
         static PanicLocType create(DataSpecConverter dataLayout) {
             CompilerAsserts.neverPartOfCompilation();
             StrSliceType strslice = StrSliceType.create(dataLayout);
-            Type type = new PointerType((new StructureType(false, new Type[]{strslice.getType(), strslice.getType(), PrimitiveType.I32})));
+            StructureType type = new StructureType(false, new Type[]{strslice.getType(), strslice.getType(), PrimitiveType.I32});
             return new PanicLocType(dataLayout, type, strslice);
         }
     }
 
-    private static final class StrSliceType {
-
-        private final long lengthOffset;
-        private final Type type;
-
-        private StrSliceType(DataSpecConverter dataLayout, Type type) {
-            this.lengthOffset = ((StructureType) type).getOffsetOf(1, dataLayout);
-            this.type = type;
-        }
-
-        @TruffleBoundary
-        String read(LLVMMemory memory, long address) {
-            long strAddr = memory.getAddress(address).getVal();
-            int strLen = memory.getI32(address + lengthOffset);
-            StringBuilder strBuilder = new StringBuilder();
-            for (int i = 0; i < strLen; i++) {
-                strBuilder.append((char) Byte.toUnsignedInt(memory.getI8(strAddr)));
-                strAddr += Byte.BYTES;
-            }
-            return strBuilder.toString();
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        static StrSliceType create(DataSpecConverter dataLayout) {
-            Type type = new StructureType(false, new Type[]{new PointerType(PrimitiveType.I8), PrimitiveType.I64});
-            return new StrSliceType(dataLayout, type);
-        }
-    }
 }

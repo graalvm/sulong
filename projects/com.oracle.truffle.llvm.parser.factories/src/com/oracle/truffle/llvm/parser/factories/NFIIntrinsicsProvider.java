@@ -125,9 +125,12 @@ import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMMemoryIntrinsicFactory.
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMMemoryIntrinsicFactory.LLVMReallocNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMComplexDiv;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith.LLVMComplexMul;
+import com.oracle.truffle.llvm.nodes.intrinsics.rust.LLVMEnvArgsOsNextNodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.rust.LLVMEnvArgsOsNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.rust.LLVMLangStartNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.rust.LLVMPanicNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.rust.LLVMProcessExitNodeGen;
+import com.oracle.truffle.llvm.nodes.intrinsics.rust.RustContext;
 import com.oracle.truffle.llvm.nodes.intrinsics.sulong.LLVMPrintStackTraceNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.sulong.LLVMRunConstructorFunctionsNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.sulong.LLVMRunDestructorFunctionsNodeGen;
@@ -185,6 +188,7 @@ public class NFIIntrinsicsProvider implements NativeIntrinsicProvider, ContextEx
 
     protected final Map<String, LLVMNativeIntrinsicFactory> factories = new HashMap<>();
     protected final Demangler demangler = new Demangler();
+    protected final RustContext rustContext = new RustContext();
     protected final TruffleLanguage<?> language;
 
     public NFIIntrinsicsProvider(TruffleLanguage<?> language) {
@@ -1003,8 +1007,8 @@ public class NFIIntrinsicsProvider implements NativeIntrinsicProvider, ContextEx
 
             @Override
             protected RootCallTarget generate(FunctionType type) {
-                return wrap("@std::rt::lang_start", LLVMLangStartNodeGen.create(LLVMArgNodeGen.create(0), LLVMArgNodeGen.create(1),
-                                LLVMArgNodeGen.create(2), LLVMArgNodeGen.create(3)));
+                return wrap("@std::rt::lang_start", LLVMLangStartNodeGen.create(rustContext, language, LLVMArgNodeGen.create(0),
+                                LLVMArgNodeGen.create(1), LLVMArgNodeGen.create(2), LLVMArgNodeGen.create(3)));
             }
         });
         factories.put("@std::process::exit", new LLVMNativeIntrinsicFactory(true, false) {
@@ -1019,6 +1023,20 @@ public class NFIIntrinsicsProvider implements NativeIntrinsicProvider, ContextEx
             @Override
             protected RootCallTarget generate(FunctionType type) {
                 return wrap("@core::panicking::panic", LLVMPanicNodeGen.create(LLVMArgNodeGen.create(1)));
+            }
+        });
+        factories.put("@std::env::args_os", new LLVMNativeIntrinsicFactory(true, false) {
+            @Override
+            protected RootCallTarget generate(FunctionType type) {
+                return wrap("@std::env::args_os", LLVMEnvArgsOsNodeGen.create(
+                                rustContext, LLVMArgNodeGen.create(1)));
+            }
+        });
+        factories.put("@_$LT$std..env..ArgsOs$u20$as$u20$core..iter..iterator..Iterator$GT$::next", new LLVMNativeIntrinsicFactory(true, false) {
+            @Override
+            protected RootCallTarget generate(FunctionType type) {
+                return wrap("@_$LT$std..env..ArgsOs$u20$as$u20$core..iter..iterator..Iterator$GT$::next", LLVMEnvArgsOsNextNodeGen.create(
+                                rustContext, LLVMArgNodeGen.create(1), LLVMArgNodeGen.create(2)));
             }
         });
     }
