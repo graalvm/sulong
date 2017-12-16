@@ -255,6 +255,7 @@ public final class Runner {
     }
 
     private LLVMParserResult parseBitcodeFile(Source source, ExternalLibrary library, BitcodeParserResult bitcodeParserResult, LLVMLanguage language, LLVMContext context) {
+        context.setMainSourceFile(source);
         return LLVMParserRuntime.parse(source, library, bitcodeParserResult, language, context, nodeFactory);
     }
 }

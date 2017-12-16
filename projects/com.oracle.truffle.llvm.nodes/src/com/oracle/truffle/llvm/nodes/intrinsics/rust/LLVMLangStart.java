@@ -31,57 +31,94 @@ package com.oracle.truffle.llvm.nodes.intrinsics.rust;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.llvm.nodes.func.LLVMDispatchNode;
 import com.oracle.truffle.llvm.nodes.func.LLVMDispatchNodeGen;
 import com.oracle.truffle.llvm.nodes.func.LLVMLookupDispatchNode;
 import com.oracle.truffle.llvm.nodes.func.LLVMLookupDispatchNodeGen;
 import com.oracle.truffle.llvm.nodes.intrinsics.llvm.LLVMIntrinsic;
+import com.oracle.truffle.llvm.nodes.intrinsics.rust.LLVMLangStartNodeGen.RustContextDestructorNodeGen;
 import com.oracle.truffle.llvm.runtime.LLVMAddress;
+import com.oracle.truffle.llvm.runtime.LLVMContext;
 import com.oracle.truffle.llvm.runtime.LLVMFunctionDescriptor;
+import com.oracle.truffle.llvm.runtime.LLVMLanguage;
+import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
+import com.oracle.truffle.llvm.runtime.memory.LLVMStack.StackPointer;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
 
 @NodeChildren({@NodeChild(type = LLVMExpressionNode.class), @NodeChild(type = LLVMExpressionNode.class), @NodeChild(type = LLVMExpressionNode.class), @NodeChild(type = LLVMExpressionNode.class)})
 public abstract class LLVMLangStart extends LLVMIntrinsic {
 
+    private final RustContext rustContext;
+    private final RootCallTarget rustContextDestructorCallTarget;
+
+    public LLVMLangStart(RustContext rustContext, TruffleLanguage<?> language) {
+        this.rustContext = rustContext;
+        this.rustContextDestructorCallTarget = Truffle.getRuntime().createCallTarget(RustContextDestructorNodeGen.create(language, rustContext));
+    }
+
     @Specialization(guards = "main.getVal() == cachedMain.getVal()")
     @SuppressWarnings("unused")
-    protected long doIntrinsic(VirtualFrame frame, long stackPointer, LLVMAddress main, long argc, LLVMAddress argv,
+    protected long doIntrinsic(VirtualFrame frame, StackPointer stackPointer, LLVMAddress main, long argc, LLVMAddress argv,
                     @Cached("main") LLVMAddress cachedMain,
                     @Cached("getMainDescriptor(cachedMain)") LLVMFunctionDescriptor mainDescriptor,
-                    @Cached("getDispatchNode(mainDescriptor)") LLVMDispatchNode dispatchNode) {
+                    @Cached("getDispatchNode(mainDescriptor)") LLVMDispatchNode dispatchNode,
+                    @Cached("getLLVMMemory()") LLVMMemory memory) {
+        sysInit(memory);
         dispatchNode.executeDispatch(frame, mainDescriptor, new Object[]{stackPointer});
         return 0;
     }
 
     @Specialization
     @SuppressWarnings("unused")
-    protected long doGeneric(VirtualFrame frame, long stackPointer, LLVMAddress main, long argc, LLVMAddress argv,
-                    @Cached("getLookupDispatchNode(main)") LLVMLookupDispatchNode dispatchNode) {
+    public long executeGeneric(VirtualFrame frame, StackPointer stackPointer, LLVMAddress main, long argc, LLVMAddress argv,
+                    @Cached("getLookupDispatchNode(main)") LLVMLookupDispatchNode dispatchNode,
+                    @Cached("getLLVMMemory()") LLVMMemory memory) {
+        sysInit(memory);
         dispatchNode.executeDispatch(frame, main, new Object[]{stackPointer});
         return 0;
     }
 
     @Specialization(guards = "main == cachedMain")
     @SuppressWarnings("unused")
-    protected long doIntrinsic(VirtualFrame frame, long stackPointer, LLVMFunctionDescriptor main, long argc, LLVMAddress argv,
+    protected long doIntrinsic(VirtualFrame frame, StackPointer stackPointer, LLVMFunctionDescriptor main, long argc, LLVMAddress argv,
                     @Cached("main") LLVMFunctionDescriptor cachedMain,
-                    @Cached("getDispatchNode(main)") LLVMDispatchNode dispatchNode) {
+                    @Cached("getDispatchNode(main)") LLVMDispatchNode dispatchNode,
+                    @Cached("getLLVMMemory()") LLVMMemory memory) {
+        sysInit(memory);
         dispatchNode.executeDispatch(frame, main, new Object[]{stackPointer});
         return 0;
     }
 
     @Specialization
     @SuppressWarnings("unused")
-    protected long doGeneric(VirtualFrame frame, long stackPointer, LLVMFunctionDescriptor main, long argc, LLVMAddress argv,
-                    @Cached("getDispatchNode(main)") LLVMDispatchNode dispatchNode) {
+    protected long doGeneric(VirtualFrame frame, StackPointer stackPointer, LLVMFunctionDescriptor main, long argc, LLVMAddress argv,
+                    @Cached("getDispatchNode(main)") LLVMDispatchNode dispatchNode,
+                    @Cached("getLLVMMemory()") LLVMMemory memory) {
+        sysInit(memory);
         dispatchNode.executeDispatch(frame, main, new Object[]{stackPointer});
         return 0;
+    }
+
+    @TruffleBoundary
+    private void sysInit(LLVMMemory memory) {
+        LLVMContext context = getContextReference().get();
+        Object[] args = context.getMainArguments();
+        Object[] sysArgs = new Object[args.length + 1];
+        System.arraycopy(args, 0, sysArgs, 1, args.length);
+        sysArgs[0] = context.getMainSourceFile().getPath();
+        rustContext.sysInit(memory, context.getDataSpecConverter(), sysArgs);
+        context.registerDestructorFunction(rustContextDestructorCallTarget);
     }
 
     @TruffleBoundary
@@ -99,4 +136,22 @@ public abstract class LLVMLangStart extends LLVMIntrinsic {
         FunctionType functionType = getContextReference().get().getFunctionDescriptor(main).getType();
         return LLVMLookupDispatchNodeGen.create(functionType);
     }
+
+    abstract static class RustContextDestructorNode extends RootNode {
+
+        private final RustContext rustContext;
+
+        RustContextDestructorNode(TruffleLanguage<?> language, RustContext rustContext) {
+            super(language, new FrameDescriptor());
+            this.rustContext = rustContext;
+        }
+
+        @Specialization
+        public Object execute() {
+            rustContext.dispose(getLanguage(LLVMLanguage.class).getCapability(LLVMMemory.class));
+            return null;
+        }
+
+    }
+
 }
