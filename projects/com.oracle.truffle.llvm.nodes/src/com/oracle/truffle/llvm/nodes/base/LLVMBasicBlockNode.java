@@ -319,8 +319,8 @@ public class LLVMBasicBlockNode extends LLVMExpressionNode {
          * It is possible to get race conditions (compiler and AST interpeter thread). This avoids a
          * probability > 1.
          *
-         * We make sure that we read each element only once. We also make sure that the compiler reduces the
-         * conditions to constants.
+         * We make sure that we read each element only once. We also make sure that the compiler
+         * reduces the conditions to constants.
          */
         long succCount = 0;
         long totalExecutionCount = 0;
