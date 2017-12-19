@@ -63,7 +63,7 @@ public abstract class LLVMSetjmp extends LLVMIntrinsic {
 
     private static int getReturnAndResetValue() {
         CompilerDirectives.transferToInterpreter();
-        Frame frame = Truffle.getRuntime().getCallerFrame().getFrame(FrameAccess.READ_ONLY);
+        Frame frame = Truffle.getRuntime().getCallerFrame().getFrame(FrameAccess.READ_WRITE);
         FrameSlot slot = frame.getFrameDescriptor().findFrameSlot(LLVMLongjmpException.SETJMP_RETURN_VALUE_FRAME_SLOT_ID);
         int value = FrameUtil.getIntSafe(frame, slot);
         frame.setInt(slot, 0);
@@ -72,7 +72,7 @@ public abstract class LLVMSetjmp extends LLVMIntrinsic {
 
     private void storeFrame(long id) {
         CompilerDirectives.transferToInterpreter();
-        Frame frame = Truffle.getRuntime().getCallerFrame().getFrame(FrameAccess.READ_ONLY);
+        Frame frame = Truffle.getRuntime().getCallerFrame().getFrame(FrameAccess.READ_WRITE);
         MaterializedFrame materialized = frame.materialize();
         FrameDescriptor descriptor = materialized.getFrameDescriptor();
         List<? extends FrameSlot> slots = descriptor.getSlots();
