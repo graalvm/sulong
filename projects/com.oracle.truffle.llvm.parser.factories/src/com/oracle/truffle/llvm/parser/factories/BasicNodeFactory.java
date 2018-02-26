@@ -48,6 +48,7 @@ import com.oracle.truffle.llvm.nodes.control.LLVMBrUnconditionalNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMConditionalBranchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMDispatchBasicBlockNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMIndirectBranchNode;
+import com.oracle.truffle.llvm.nodes.control.LLVMLoopNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMRetNodeFactory.LLVM80BitFloatRetNodeGen;
 import com.oracle.truffle.llvm.nodes.control.LLVMRetNodeFactory.LLVMAddressRetNodeGen;
 import com.oracle.truffle.llvm.nodes.control.LLVMRetNodeFactory.LLVMDoubleRetNodeGen;
@@ -1280,6 +1281,11 @@ public class BasicNodeFactory implements NodeFactory {
     @Override
     public LLVMControlFlowNode createUnconditionalBranch(int unconditionalIndex, LLVMStatementNode phiWrites, LLVMSourceLocation source) {
         return LLVMBrUnconditionalNode.create(unconditionalIndex, phiWrites, source);
+    }
+
+    @Override
+    public LLVMExpressionNode createLoopNode(LLVMExpressionNode[] basicBlocks, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller) {
+        return LLVMLoopNode.create(Arrays.copyOf(basicBlocks, basicBlocks.length, LLVMExpressionNode[].class), beforeBlockNuller, afterBlockNuller);
     }
 
     @Override

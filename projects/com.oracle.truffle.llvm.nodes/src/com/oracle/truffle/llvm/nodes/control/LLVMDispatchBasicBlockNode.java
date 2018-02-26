@@ -54,22 +54,26 @@ import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStatementNode;
 public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
 
     private final FrameSlot exceptionValueSlot;
-    private final LLVMSourceLocation source;
-    @Children private final LLVMBasicBlockNode[] bodyNodes;
+
+
     @Child private LLVMUniquesRegionAllocNode uniquesRegionAllocNode;
+    private final LLVMSourceLocation sourceSection;
+    @Children private final LLVMStatementNode[] bodyNodes;
+
     @CompilationFinal(dimensions = 2) private final FrameSlot[][] beforeBlockNuller;
     @CompilationFinal(dimensions = 2) private final FrameSlot[][] afterBlockNuller;
     @Children private final LLVMStatementNode[] copyArgumentsToFrame;
 
-    public LLVMDispatchBasicBlockNode(FrameSlot exceptionValueSlot, LLVMBasicBlockNode[] bodyNodes, LLVMUniquesRegionAllocNode uniquesRegionAllocNode, FrameSlot[][] beforeBlockNuller,
-                    FrameSlot[][] afterBlockNuller, LLVMSourceLocation source,
+
+    public LLVMDispatchBasicBlockNode(FrameSlot exceptionValueSlot, LLVMStatementNode[] bodyNodes, LLVMUniquesRegionAllocNode uniquesRegionAllocNode, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller, LLVMSourceLocation source,
                     LLVMStatementNode[] copyArgumentsToFrame) {
+
         this.exceptionValueSlot = exceptionValueSlot;
         this.bodyNodes = bodyNodes;
         this.uniquesRegionAllocNode = uniquesRegionAllocNode;
         this.beforeBlockNuller = beforeBlockNuller;
         this.afterBlockNuller = afterBlockNuller;
-        this.source = source;
+        this.sourceSection = source;
         this.copyArgumentsToFrame = copyArgumentsToFrame;
     }
 
@@ -93,10 +97,20 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
         int backEdgeCounter = 0;
         outer: while (basicBlockIndex != LLVMBasicBlockNode.RETURN_FROM_FUNCTION) {
             CompilerAsserts.partialEvaluationConstant(basicBlockIndex);
-            LLVMBasicBlockNode bb = bodyNodes[basicBlockIndex];
+
+            if(bodyNodes[basicBlockIndex] instanceof LLVMLoopNode) {
+                LLVMLoopNode loop = (LLVMLoopNode) bodyNodes[basicBlockIndex];
+                basicBlockIndex = loop.executeLoop(frame);
+                continue outer;
+            }
+
+            assert(bodyNodes[basicBlockIndex] instanceof LLVMBasicBlockNode);
+            LLVMBasicBlockNode bb = (LLVMBasicBlockNode) bodyNodes[basicBlockIndex];
 
             // execute all statements
             bb.execute(frame);
+
+
 
             // execute control flow node, write phis, null stack frame slots, and dispatch to
             // the correct successor block

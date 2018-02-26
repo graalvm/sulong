@@ -238,4 +238,6 @@ public interface NodeFactory extends InteropNodeFactory {
     ForeignToLLVM createForeignToLLVM(LLVMInteropType.Value type);
 
     ForeignToLLVM createForeignToLLVM(ForeignToLLVMType type);
+
+    LLVMExpressionNode createLoopNode(LLVMExpressionNode[] basicBlocks, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller);
 }
