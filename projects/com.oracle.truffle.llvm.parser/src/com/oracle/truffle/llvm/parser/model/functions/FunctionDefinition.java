@@ -31,6 +31,7 @@ package com.oracle.truffle.llvm.parser.model.functions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,6 +51,7 @@ import com.oracle.truffle.llvm.parser.model.symbols.instructions.Instruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.ValueInstruction;
 import com.oracle.truffle.llvm.parser.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.parser.model.visitors.SymbolVisitor;
+import com.oracle.truffle.llvm.parser.util.LLVMLoopFinder;
 import com.oracle.truffle.llvm.runtime.debug.scope.LLVMSourceLocation;
 import com.oracle.truffle.llvm.runtime.types.FunctionType;
 import com.oracle.truffle.llvm.runtime.types.Type;
@@ -71,6 +73,7 @@ public final class FunctionDefinition implements Constant, FunctionSymbol, Metad
     private InstructionBlock[] blocks = EMPTY;
     private int currentBlock = 0;
     private String name;
+    private Set<List<Integer>> loops;
 
     public FunctionDefinition(FunctionType type, String name, Linkage linkage, Visibility visibility, AttributesCodeEntry paramAttr) {
         this.type = type;
@@ -78,6 +81,13 @@ public final class FunctionDefinition implements Constant, FunctionSymbol, Metad
         this.paramAttr = paramAttr;
         this.linkage = linkage;
         this.visibility = visibility;
+
+        this.loops = new HashSet<>();
+    }
+
+    public void updateLoops() {
+        LLVMLoopFinder loopFinder = new LLVMLoopFinder(this);
+        this.loops = loopFinder.findLoops();
     }
 
     public FunctionDefinition(FunctionType type, Linkage linkage, Visibility visibility, AttributesCodeEntry paramAttr) {
@@ -95,6 +105,10 @@ public final class FunctionDefinition implements Constant, FunctionSymbol, Metad
             mdAttachments = new ArrayList<>(1);
         }
         return mdAttachments;
+    }
+
+    public Set<List<Integer>> getLoops() {
+        return loops;   // TODO copy before return
     }
 
     public Linkage getLinkage() {
