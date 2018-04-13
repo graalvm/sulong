@@ -113,11 +113,15 @@ clangFormatVersions = [
 
 def _unittest_config_participant(config):
     (vmArgs, mainClass, mainClassArgs) = config
-    libs = [mx_subst.path_substitutions.substitute('<path:SULONG_TEST_NATIVE>/<lib:sulongtest>')]
-    rustStd = findRustLibrary('std', on_failure=lambda msg: None)
-    if rustStd is not None:
-        libs.append(rustStd)
-    vmArgs = getCommonOptions(True, libs) + vmArgs
+    libs = ['<path:SULONG_TEST_NATIVE>/<lib:sulongtest>']
+    (testSuitePath,), _ = extract_arg_values(vmArgs, '-Dsulongtest.testSuitePath')
+
+    # gather library dependencies
+    for libs_file in glob.glob(os.path.join(testSuitePath, '*', 'libs')):
+        with open(libs_file, 'r') as l:
+            libs += l.readline().split()
+
+    vmArgs = getCommonOptions(True, [mx_subst.path_substitutions.substitute(lib) for lib in libs]) + vmArgs
     return (vmArgs, mainClass, mainClassArgs)
 
 add_config_participant(_unittest_config_participant)
@@ -445,6 +449,15 @@ def extract_compiler_args(args, useDoubleDash=False):
                 remainder += [arg]
     return compilerArgs, remainder
 
+def extract_arg_values(vmArgs, argKey):
+    values, remainder = [], []
+    for arg in vmArgs:
+        if arg.startswith(argKey + '='):
+            values += arg[(len(argKey)+1):].split(':')
+        else:
+            remainder += [arg]
+    return values, remainder
+
 def runLLVM(args=None, out=None):
     """uses Sulong to execute a LLVM IR file"""
     vmArgs, sulongArgs = truffle_extract_VM_args(args)
@@ -465,15 +478,9 @@ def getCommonOptions(withAssertion, lib_args=None):
     return options
 
 def substituteLibAliases(vmArgs):
-    librariesOption = '-Dpolyglot.llvm.libraries='
-    substitutedVmArgs = []
-    lib_args = None
-    for vmArg in vmArgs:
-        if vmArg.startswith(librariesOption):
-            lib_args = vmArg[len(librariesOption):].split(':')
-        else:
-            substitutedVmArgs.append(vmArg)
-    if lib_args is None:
+    librariesOption = '-Dpolyglot.llvm.libraries'
+    lib_args, substitutedVmArgs = extract_arg_values(vmArgs, librariesOption)
+    if len(lib_args) == 0:
         return vmArgs
 
     lib_aliases = {
@@ -491,7 +498,7 @@ def substituteLibAliases(vmArgs):
                     lib_arg = lib_arg.replace('*', match.group(1))
                 lib_arg = mx_subst.path_substitutions.substitute(lib_arg)
         resolved_lib_args.append(lib_arg)
-    substitutedVmArgs.append(librariesOption + ':'.join(resolved_lib_args))
+    substitutedVmArgs.append(librariesOption + '=' + ':'.join(resolved_lib_args))
 
     return substitutedVmArgs
 

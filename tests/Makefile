@@ -38,8 +38,10 @@ endif
 BC_TARGETS:=$(foreach var,$(VARIANTS),$(TESTS:%=%/$(var).bc))
 CXXFLAGS=-std=c++11 -stdlib=libc++ -DLIBCXXABI_SILENT_TERMINATE
 
+LIBS_TARGETS:=$(LIBS_LOCATIONS:%=%/libs)
+
 .PHONY: default
-default: $(REF_TARGETS) $(BC_TARGETS)
+default: $(REF_TARGETS) $(BC_TARGETS) $(LIBS_TARGETS)
 
 ifeq ($(OS), darwin)
 EMBED_BC=-fembed-bitcode
@@ -101,3 +103,7 @@ $(eval $(call OPT_RULES,O3,-O3))
 
 %_MEM2REG.bc: %.bc
 	$(QUIETLY) opt -o $@ -mem2reg $<
+
+%/libs:
+	@mkdir -p $(shell dirname $@)
+	@echo "$(LIB_ENTRIES)" > $@

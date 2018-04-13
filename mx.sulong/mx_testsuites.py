@@ -285,54 +285,71 @@ def renameBenchmarkFiles(directory):
 
 mx_subst.path_substitutions.register_no_arg('sulong_include', lambda: os.path.join(mx.suite('sulong').dir, 'include'))
 
+def cached(meth):
+    cached_attr = '_cached_' + meth.__name__
+    def _cached_meth(self):
+        if not hasattr(self, cached_attr):
+            setattr(self, cached_attr, meth(self))
+        return getattr(self, cached_attr)
+    return _cached_meth
+
+class Dependency(object):
+    def __init__(self, isFulfilled):
+        self._isFulfilled = isFulfilled
+
+    @cached
+    def isFulfilled(self):
+        return self._isFulfilled()
+
+Dependency.RUST = Dependency(lambda: mx_sulong.checkRust()) # pylint: disable=W0108
+Dependency.DRAGONEGG = Dependency(lambda: mx_sulong.dragonEggPath() is not None and os.path.exists(mx_sulong.dragonEggPath()) and mx_sulong.getGCC(optional=True) is not None)
 
 class SulongTestSuite(mx.NativeProject):
-    def __init__(self, suite, name, deps, workingSets, subDir, results=None, output=None, buildRef=True, **args):
+    def __init__(self, suite, name, deps, workingSets, subDir, results=None, output=None, buildRef=True, libraries=(), **args):
         d = os.path.join(suite.dir, subDir) # use common Makefile for all test suites
         mx.NativeProject.__init__(self, suite, name, subDir, [], deps, workingSets, results, output, d, **args)
         self.vpath = True
         self.buildRef = buildRef
+        self.libraries = libraries
 
-    @staticmethod
-    def haveDragonegg():
-        if not hasattr(SulongTestSuite, '_haveDragonegg'):
-            SulongTestSuite._haveDragonegg = mx_sulong.dragonEggPath() is not None and os.path.exists(mx_sulong.dragonEggPath()) and mx_sulong.getGCC(optional=True) is not None
-        return SulongTestSuite._haveDragonegg
-
-    @staticmethod
-    def haveRust():
-        if not hasattr(SulongTestSuite, '_haveRust'):
-            SulongTestSuite._haveRust = mx_sulong.checkRust()
-        return SulongTestSuite._haveRust
-
+    @cached
     def getTests(self):
-        if not hasattr(self, '_tests'):
-            self._tests = []
-            extensions = ['.c', '.cpp', '.rs']
-            root = os.path.join(self.dir, self.name)
-            for path, _, files in os.walk(root):
-                for f in files:
-                    absPath = os.path.join(path, f)
-                    relPath = os.path.relpath(absPath, root)
-                    test, ext = os.path.splitext(relPath)
-                    if ext in extensions:
-                        if ext == '.rs' and not SulongTestSuite.haveRust():
-                            mx.warn('Rust is not available, not building Rust test files')
-                            extensions.remove('.rs')
-                            continue
-                        self._tests.append(test)
-        return self._tests
+        tests = []
+        extensions = ['.c', '.cpp', '.rs']
+        root = os.path.join(self.dir, self.name)
+        for path, _, files in os.walk(root):
+            for f in files:
+                absPath = os.path.join(path, f)
+                relPath = os.path.relpath(absPath, root)
+                test, ext = os.path.splitext(relPath)
+                if ext in extensions:
+                    if ext == '.rs' and not Dependency.RUST.isFulfilled():
+                        mx.warn('Rust is not available, not building Rust test files')
+                        extensions.remove('.rs')
+                        continue
+                    tests.append(test)
+        return tests
 
+    @cached
     def getVariants(self):
-        if not hasattr(self, '_variants'):
-            self._variants = []
-            for v in self.variants:
-                if 'gcc' in v and not SulongTestSuite.haveDragonegg():
-                    mx.warn('Could not find dragonegg, not building test variant "%s"' % v)
-                    continue
-                self._variants.append(v)
-        return self._variants
+        variants = []
+        for v in self.variants:
+            if 'gcc' in v and not Dependency.DRAGONEGG.isFulfilled():
+                mx.warn('Could not find dragonegg, not building test variant "%s"' % v)
+                continue
+            variants.append(v)
+        return variants
 
+    @cached
+    def getLibEntries(self):
+        return [lib['lib'] for lib in self.libraries if all(getattr(Dependency, dep).isFulfilled() for dep in lib['dependencies'])]
+
+    @cached
+    def getLibsLocations(self):
+        if self.getLibEntries():
+            root = os.path.join(self.dir, self.name)
+            return [subdir for subdir in os.listdir(root) if os.path.isdir(os.path.join(root, subdir))]
+        return []
 
     def getBuildEnv(self, replaceVar=mx_subst.path_substitutions):
         env = super(SulongTestSuite, self).getBuildEnv(replaceVar=replaceVar)
@@ -341,8 +358,10 @@ class SulongTestSuite(mx.NativeProject):
         env['TESTS'] = ' '.join(self.getTests())
         env['VARIANTS'] = ' '.join(self.getVariants())
         env['BUILD_REF'] = '1' if self.buildRef else '0'
+        env['LIBS_LOCATIONS'] = ' '.join(self.getLibsLocations())
+        env['LIB_ENTRIES'] = ' '.join(self.getLibEntries())
         env['SULONG_MAKE_CLANG_IMPLICIT_ARGS'] = mx_sulong.getClangImplicitArgs()
-        if SulongTestSuite.haveDragonegg():
+        if Dependency.DRAGONEGG.isFulfilled():
             env['DRAGONEGG'] = mx_sulong.dragonEggPath()
             env['DRAGONEGG_GCC'] = mx_sulong.getGCC()
             env['DRAGONEGG_LLVMAS'] = mx_sulong.findLLVMProgramForDragonegg("llvm-as")
@@ -356,4 +375,6 @@ class SulongTestSuite(mx.NativeProject):
                     self.results.append(os.path.join(t, 'ref.out'))
                 for v in self.getVariants():
                     self.results.append(os.path.join(t, v + '.bc'))
+            for l in self.getLibsLocations():
+                self.results.append(os.path.join(l, 'libs'))
         return super(SulongTestSuite, self).getResults(replaceVar=replaceVar)
