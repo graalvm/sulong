@@ -113,19 +113,19 @@ clangFormatVersions = [
 
 def _unittest_config_participant(config):
     (vmArgs, mainClass, mainClassArgs) = config
-    libs = ['<path:SULONG_TEST_NATIVE>/<lib:sulongtest>']
     testSuitePath = mx_subst.path_substitutions.substitute('<path:SULONG_TEST_SUITES>')
-
-    # gather library dependencies
-    for libs_file in glob.glob(os.path.join(testSuitePath, '*', 'libs')):
-        with open(libs_file, 'r') as l:
-            libs += l.readline().split()
-
-    vmArgs = getCommonOptions(True, [mx_subst.path_substitutions.substitute(lib) for lib in libs]) + vmArgs
+    libs = [mx_subst.path_substitutions.substitute('<path:SULONG_TEST_NATIVE>/<lib:sulongtest>')] + getUnittestLibraryDependencies(testSuitePath)
+    vmArgs = getCommonOptions(True, libs) + vmArgs
     return (vmArgs, mainClass, mainClassArgs)
 
 add_config_participant(_unittest_config_participant)
 
+def getUnittestLibraryDependencies(libs_files_path):
+    libs = []
+    for libs_file in glob.glob(os.path.join(libs_files_path, '*', 'libs')):
+        with open(libs_file, 'r') as l:
+            libs += l.readline().split()
+    return [mx_subst.path_substitutions.substitute(lib) for lib in libs]
 
 def _sulong_gate_runner(args, tasks):
     with Task('CheckCopyright', tasks, tags=['style']) as t:
@@ -176,6 +176,9 @@ def testLLVMImage(image, imageArgs=None, testFilter=None, libPath=True, test=Non
     aotArgs = []
     if libPath:
         aotArgs += [mx_subst.path_substitutions.substitute('-Dllvm.home=<path:SULONG_LIBS>')]
+    libs = getUnittestLibraryDependencies(mx_subst.path_substitutions.substitute('<path:SULONG_TEST_SUITES>'))
+    if libs:
+        aotArgs += ['-Dpolyglot.llvm.libraries=' + ':'.join(libs)]
     if imageArgs is not None:
         aotArgs += imageArgs
     if aotArgs:
