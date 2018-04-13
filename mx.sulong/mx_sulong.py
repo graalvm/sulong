@@ -448,7 +448,7 @@ def extract_compiler_args(args, useDoubleDash=False):
 def runLLVM(args=None, out=None):
     """uses Sulong to execute a LLVM IR file"""
     vmArgs, sulongArgs = truffle_extract_VM_args(args)
-    return mx.run_java(getCommonOptions(False) + vmArgs + getClasspathOptions() + ["com.oracle.truffle.llvm.launcher.LLVMLauncher"] + sulongArgs, out=out)
+    return mx.run_java(getCommonOptions(False) + substituteLibAliases(vmArgs) + getClasspathOptions() + ["com.oracle.truffle.llvm.launcher.LLVMLauncher"] + sulongArgs, out=out)
 
 def getCommonOptions(withAssertion, lib_args=None):
     options = ['-Dgraal.TruffleCompilationExceptionsArePrinted=true',
@@ -463,6 +463,37 @@ def getCommonOptions(withAssertion, lib_args=None):
         options += ['-ea', '-esa']
 
     return options
+
+def substituteLibAliases(vmArgs):
+    librariesOption = '-Dpolyglot.llvm.libraries='
+    substitutedVmArgs = []
+    lib_args = None
+    for vmArg in vmArgs:
+        if vmArg.startswith(librariesOption):
+            lib_args = vmArg[len(librariesOption):].split(':')
+        else:
+            substitutedVmArgs.append(vmArg)
+    if lib_args is None:
+        return vmArgs
+
+    lib_aliases = {
+        'l(.*)rust' : '<rustlib:*>'
+    }
+
+    lib_aliases = {re.compile(k+'$'):v for k, v in lib_aliases.items()}
+    resolved_lib_args = []
+    for lib_arg in lib_args:
+        for lib_alias, lib_alias_value in lib_aliases.items():
+            match = lib_alias.match(lib_arg)
+            if match:
+                lib_arg = lib_alias_value
+                if match.lastindex is not None:
+                    lib_arg = lib_arg.replace('*', match.group(1))
+                lib_arg = mx_subst.path_substitutions.substitute(lib_arg)
+        resolved_lib_args.append(lib_arg)
+    substitutedVmArgs.append(librariesOption + ':'.join(resolved_lib_args))
+
+    return substitutedVmArgs
 
 def getLLVMRootOption():
     return "-Dsulongtest.projectRoot=" + _root
