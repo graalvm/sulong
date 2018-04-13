@@ -64,6 +64,7 @@ ProgrammingLanguage.register('FORTRAN', 'f90', 'f', 'f03')
 ProgrammingLanguage.register('C', 'c')
 ProgrammingLanguage.register('C_PLUS_PLUS', 'cpp', 'cc', 'C')
 ProgrammingLanguage.register('OBJECTIVE_C', 'm')
+ProgrammingLanguage.register('RUST', 'rs')
 ProgrammingLanguage.register('LLVMIR', 'll')
 ProgrammingLanguage.register('LLVMBC', 'bc')
 ProgrammingLanguage.register('LLVMSU', 'su')
@@ -192,6 +193,33 @@ class GCCCompiler(Tool):
         tool, toolFlags = self.getTool(inputFile, outputFile)
         return self.runTool([tool, '-o', outputFile] + toolFlags + flags + [inputFile], errorMsg='Cannot compile %s with %s' % (inputFile, tool))
 
+class RustCompiler(Tool):
+    def __init__(self, name=None, supportedLanguages=None):
+        if name is None:
+            self.name = 'rustc'
+        else:
+            self.name = name
+
+        if supportedLanguages is None:
+            self.supportedLanguages = [ProgrammingLanguage.RUST]
+        else:
+            self.supportedLanguages = supportedLanguages
+
+    def getTool(self, inputFile):
+        inputLanguage = ProgrammingLanguage.lookupFile(inputFile)
+        if inputLanguage == ProgrammingLanguage.RUST:
+            return 'rustc'
+        else:
+            raise Exception('Unsupported input language')
+
+    def run(self, inputFile, outputFile, flags):
+        tool = self.getTool(inputFile)
+        return self.runTool([tool, '--emit=llvm-bc', '-o', outputFile] + flags + [inputFile], errorMsg='Cannot compile %s with %s' % (inputFile, tool))
+
+    def compileReferenceFile(self, inputFile, outputFile, flags):
+        tool = self.getTool(inputFile)
+        return self.runTool([tool, '-o', outputFile] + flags + [inputFile], errorMsg='Cannot compile %s with %s' % (inputFile, tool))
+
 class Opt(Tool):
     def __init__(self, name, passes):
         self.name = name
@@ -207,6 +235,8 @@ Tool.CLANG_CPP = ClangCompiler('clangcpp', [ProgrammingLanguage.C_PLUS_PLUS])
 
 Tool.GCC = GCCCompiler()
 Tool.GFORTRAN = GCCCompiler('gfortran', [ProgrammingLanguage.FORTRAN])
+
+Tool.RUSTC = RustCompiler()
 
 Tool.MISC_OPTS = Opt('MISC_OPTS', ['-functionattrs', '-instcombine', '-always-inline', '-jump-threading', '-simplifycfg', '-mem2reg'])
 Tool.MEM2REG = Opt('MEM2REG', ['-mem2reg'])

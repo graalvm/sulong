@@ -299,16 +299,27 @@ class SulongTestSuite(mx.NativeProject):
             SulongTestSuite._haveDragonegg = mx_sulong.dragonEggPath() is not None and os.path.exists(mx_sulong.dragonEggPath()) and mx_sulong.getGCC(optional=True) is not None
         return SulongTestSuite._haveDragonegg
 
+    @staticmethod
+    def haveRust():
+        if not hasattr(SulongTestSuite, '_haveRust'):
+            SulongTestSuite._haveRust = mx_sulong.checkRust()
+        return SulongTestSuite._haveRust
+
     def getTests(self):
         if not hasattr(self, '_tests'):
             self._tests = []
+            extensions = ['.c', '.cpp', '.rs']
             root = os.path.join(self.dir, self.name)
             for path, _, files in os.walk(root):
                 for f in files:
                     absPath = os.path.join(path, f)
                     relPath = os.path.relpath(absPath, root)
                     test, ext = os.path.splitext(relPath)
-                    if ext in ['.c', '.cpp']:
+                    if ext in extensions:
+                        if ext == '.rs' and not SulongTestSuite.haveRust():
+                            mx.warn('Rust is not available, not building Rust test files')
+                            extensions.remove('.rs')
+                            continue
                         self._tests.append(test)
         return self._tests
 

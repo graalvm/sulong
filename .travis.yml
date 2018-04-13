@@ -6,6 +6,8 @@ cache:
 dist: trusty
 sudo: required
 language: generic
+language: rust
+  - 1.19.0
 install:
   - cd ..
   - gem install mdl

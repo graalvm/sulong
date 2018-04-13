@@ -47,10 +47,16 @@ BC_FILE=
 else
 EMBED_BC=
 BC_FILE=%/O0.bc.o
+endif
+
+AR_BC_FILE=%/O0.bc.a
+AR_BC_NAME=O0.bc
 
 %.bc.o: %.bc
 	$(QUIETLY) objcopy -I binary -O elf64-x86-64 -B i386:x86-64 --rename-section .data=.llvmbc $< $@
-endif
+
+%.bc.a: %.bc.o
+	$(QUIETLY) ar rcs $(@D)/lib$(@F) $<
 
 %/ref.out: %.c $(BC_FILE)
 	@mkdir -p $(shell dirname $@)
@@ -59,6 +65,10 @@ endif
 %/ref.out: %.cpp $(BC_FILE)
 	@mkdir -p $(shell dirname $@)
 	$(QUIETLY) clang++ $(EMBED_BC) -Wno-everything $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
+%/ref.out: %.rs $(AR_BC_FILE)
+	@mkdir -p $(shell dirname $@)
+	$(QUIETLY) rustc -L$(@D) -lstatic=$(AR_BC_NAME) -C link-dead-code -o $@ $<
 
 %.bc: %.ll
 	$(QUIETLY) $(DRAGONEGG_LLVMAS) -o $@ $<
@@ -71,6 +81,10 @@ define OPT_RULES
 %/$(1).bc: %.cpp
 	@mkdir -p $$(shell dirname $$@)
 	$(QUIETLY) clang++ -c -emit-llvm $(2) -Wno-everything $(CPPFLAGS) $(CXXFLAGS) -g -o $$@ $$<
+
+%/$(1).bc: %.rs
+	@mkdir -p $$(shell dirname $$@)
+	$(QUIETLY) rustc --emit=llvm-bc -o $$@ $$<
 
 %/gcc_$(1).ll: %.c
 	@mkdir -p $$(shell dirname $$@)

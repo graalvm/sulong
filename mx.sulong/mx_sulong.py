@@ -32,6 +32,7 @@ import os
 from os.path import join
 import shutil
 import subprocess
+import glob
 from argparse import ArgumentParser
 
 import mx
@@ -84,6 +85,7 @@ supportedLLVMVersions = [
 basicLLVMDependencies = [
     'clang',
     'clang++',
+    'rustc',
     'opt',
     'llc',
     'llvm-as'
@@ -112,6 +114,9 @@ clangFormatVersions = [
 def _unittest_config_participant(config):
     (vmArgs, mainClass, mainClassArgs) = config
     libs = [mx_subst.path_substitutions.substitute('<path:SULONG_TEST_NATIVE>/<lib:sulongtest>')]
+    rustStd = findRustLibrary('std', on_failure=lambda msg: None)
+    if rustStd is not None:
+        libs.append(rustStd)
     vmArgs = getCommonOptions(True, libs) + vmArgs
     return (vmArgs, mainClass, mainClassArgs)
 
@@ -283,6 +288,15 @@ def dragonEggGPP(args=None):
     """executes G++ with dragonegg"""
     executeCommand = [getGPP(), "-fplugin=" + dragonEggPath(), '-fplugin-arg-dragonegg-emit-ir']
     return mx.run(executeCommand + args)
+
+def checkRust():
+    """checks if a Rust installation is available; tries to install the active toolchain if it is missing"""
+    if not which('rustc'):
+        return False
+
+    rustc = subprocess.Popen(['rustc', '--version'], stdout=subprocess.PIPE)
+    rustc.communicate()
+    return rustc.returncode == 0
 
 def which(program, searchPath=None):
     def is_exe(fpath):
@@ -583,6 +597,23 @@ def findGCCProgram(gccProgram, optional=False):
     else:
         return installedProgram
 
+def findRustLibrary(name, on_failure=exit):
+    """looks up the path to the given Rust library for the active toolchain; tries to install the active toolchain if it is missing; exits if installation fails"""
+    if not checkRust():
+        on_failure('Rust is not available')
+        return None
+
+    rustc = subprocess.Popen(['rustc', '--print', 'sysroot'], stdout=subprocess.PIPE)
+    sysroot = rustc.communicate()[0].rstrip()
+    lib_paths = glob.glob(os.path.join(sysroot, 'lib', mx.add_lib_suffix('lib' + name + '-*')))
+    if len(lib_paths) == 0:
+        on_failure('could not find Rust library ' + name)
+        return None
+    else:
+        return lib_paths[0]
+
+mx_subst.path_substitutions.register_with_arg('rustlib', findRustLibrary)
+
 def getClasspathOptions():
     """gets the classpath of the Sulong distributions"""
     return mx.get_runtime_jvm_args(['SULONG', 'SULONG_LAUNCHER'])
@@ -605,8 +636,6 @@ def opt(args=None, version=None, out=None, err=None):
     return mx.run([findLLVMProgram('opt', version)] + args, out=out, err=err)
 
 # Project classes
-
-import glob
 
 class ArchiveProject(mx.ArchivableProject):
     def __init__(self, suite, name, deps, workingSets, theLicense, **args):
