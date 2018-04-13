@@ -114,7 +114,7 @@ clangFormatVersions = [
 def _unittest_config_participant(config):
     (vmArgs, mainClass, mainClassArgs) = config
     libs = ['<path:SULONG_TEST_NATIVE>/<lib:sulongtest>']
-    (testSuitePath,), _ = extract_arg_values(vmArgs, '-Dsulongtest.testSuitePath')
+    testSuitePath = mx_subst.path_substitutions.substitute('<path:SULONG_TEST_SUITES>')
 
     # gather library dependencies
     for libs_file in glob.glob(os.path.join(testSuitePath, '*', 'libs')):
