@@ -25,9 +25,9 @@ Please note that this command aborts as soon as one testsuite has failed.
 | callback      | CallbackTest        | Test calling native functions           |
 | type          | -                   | Test floating point arithmetic          |
 
-The test cases consist of LLVM IR, C, C++, and Fortran files. While
+The test cases consist of LLVM IR, C, C++, Fortran and Rust files. While
 Sulong's Truffle LLVM IR interpreter can directly execute the LLVM IR
-files it uses Clang and/or GCC to compile the other source files to LLVM IR
+files it uses a selection from amongst the tools Clang, GCC and rustc to compile the other source files to LLVM IR
 before executing them.
 
 ### Testgate
@@ -132,6 +132,12 @@ gcc libraries we use into a location where they can be found, as
 DYLD_LIBRARY_PATH cannot normally be set on the Mac.
 
     ln -s /usr/local/Cellar/gcc46/4.6.4/lib/gcc/4.6/libgfortran.3.dylib /usr/local/lib
+
+## Rust
+
+Some of our tests are Rust files. Make sure you have a recent version of the Rust toolchain installer `rustup` available. When doing a complete rebuild of Sulong, an attempt will be made to compile the Rust test files using the rustc of the currently active toolchain (default: specified in the `rust-toolchain` file). Note that this may automatically install a missing Rust toolchain if the Rust version specified in the `rust-toolchain` file is unavailable.
+
+For unittests Sulong automatically links the Rust standard library of the currently active toolchain. 
 
 ## Reference output
 

@@ -55,3 +55,21 @@ In Eclipse, set a breakpoint, navigate to
 of the debug configurations, e.g.,`truffle-attach-localhost-8000`.
 After clicking `Debug`, execution starts and the program should stop at
 the specified breakpoint.
+
+## Rust
+
+### How can I fix the following warning I get when building Sulong: `Rust is not available, not building Rust test files`
+
+Make sure that Rust is available on your system and that the `PATH` is configured to include the `.cargo/bin` directory of your Rust installation.
+
+### How can I override the Rust version specified in the `rust-toolchain` file?
+
+By default, Sulong uses the pinned Rust toolchain specified in the `rust-toolchain` file for compiling the Rust test cases and for linking the Rust standard library in the case that the library alias `lstdrust` is given. For instructions on how to override a `rust-toolchain` file, please refer to the `rustup` docs (-> [Directory overrides](https://github.com/rust-lang-nursery/rustup.rs/blob/master/README.md#directory-overrides)).
+
+Here is an example showing how to temporarily override the current toolchain setting:
+
+    rustup install nightly
+    rustup run nightly rustc --emit=llvm-bc test.rs
+    rustup run nightly mx lli -Dpolyglot.llvm.libraries=lstdrust test.bc
+
+  
