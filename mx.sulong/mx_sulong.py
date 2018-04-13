@@ -291,7 +291,7 @@ def dragonEggGPP(args=None):
 
 def checkRust():
     """checks if a Rust installation is available; tries to install the active toolchain if it is missing"""
-    if not which('rustc'):
+    if os.environ.get('SULONG_USE_RUSTC', 'true') == 'false' or not which('rustc'):
         return False
 
     rustc = subprocess.Popen(['rustc', '--version'], stdout=subprocess.PIPE)

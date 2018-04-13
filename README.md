@@ -103,7 +103,7 @@ Sulong also optionally depends on a Rust installation (refer to [Install Rust](h
 
     curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain none
 
-This will download the Rust toolchain installer `rustup`, which in turn will automatically install the correct Rust toolchain upon building Sulong.
+This will download the Rust toolchain installer `rustup`, which in turn will automatically install the correct Rust toolchain upon building Sulong. You can prohibit Sulong from using an available Rust installation by setting `SULONG_USE_RUSTC` to `false`.
 
 MacOS: Apple's default LLVM does not contain the `opt` tool, which a Sulong
 build needs. We recommend installing LLVM via `homebrew` and appending the
