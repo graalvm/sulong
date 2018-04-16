@@ -620,11 +620,10 @@ final class LLVMBitcodeInstructionVisitor implements SymbolVisitor {
         }
         final AggregateType sourceType = (AggregateType) insert.getAggregate().getType();
         final LLVMExpressionNode sourceAggregate = symbols.resolve(insert.getAggregate());
+        final LLVMExpressionNode resultAggregate = symbols.resolve(insert.getAggregate());
         final LLVMExpressionNode valueToInsert = symbols.resolve(insert.getValue());
         final Type valueType = insert.getValue().getType();
         final int targetIndex = insert.getIndex();
-
-        final LLVMExpressionNode resultAggregate = nodeFactory.createAlloca(runtime, sourceType);
 
         final long offset = runtime.getContext().getIndexOffset(targetIndex, sourceType);
         final LLVMExpressionNode result = nodeFactory.createInsertValue(runtime, resultAggregate, sourceAggregate,
