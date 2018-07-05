@@ -30,6 +30,8 @@
 package com.oracle.truffle.llvm.runtime.memory;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameUtil;
@@ -63,7 +65,7 @@ public final class LLVMStack {
     }
 
     public final class StackPointer implements AutoCloseable {
-        private long basePointer;
+        @CompilationFinal private long basePointer;
         private final long uniquesRegionBasePointer;
 
         private StackPointer(long basePointer, long uniquesRegionBasePointer) {
@@ -73,6 +75,7 @@ public final class LLVMStack {
 
         public long get(LLVMMemory memory) {
             if (basePointer == 0) {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
                 basePointer = getStackPointer(memory);
                 stackPointer = basePointer;
             }
