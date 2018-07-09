@@ -30,7 +30,9 @@
 package com.oracle.truffle.llvm.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +41,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.llvm.parser.LLVMLivenessAnalysis.LLVMLivenessAnalysisResult;
@@ -52,7 +55,14 @@ import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionParameter;
 import com.oracle.truffle.llvm.parser.model.functions.LazyFunctionParser;
 import com.oracle.truffle.llvm.parser.nodes.LLVMSymbolReadResolver;
+<<<<<<< 51e0785346ceb38b07e65ca2162bc09db8f570ee
 import com.oracle.truffle.llvm.runtime.GetStackSpaceFactory;
+=======
+import com.oracle.truffle.llvm.parser.util.LLVMControlFlowGraph;
+import com.oracle.truffle.llvm.parser.util.LLVMControlFlowGraph.CFGBlock;
+import com.oracle.truffle.llvm.parser.util.LLVMControlFlowGraph.CFGLoop;
+import com.oracle.truffle.llvm.runtime.except.LLVMUserException;
+>>>>>>> Fix integration of changed OSR nodes.
 import com.oracle.truffle.llvm.runtime.LLVMFunctionDescriptor.LazyToTruffleConverter;
 import com.oracle.truffle.llvm.runtime.debug.scope.LLVMSourceLocation;
 import com.oracle.truffle.llvm.runtime.debug.type.LLVMSourceFunctionType;
@@ -72,6 +82,7 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
     private final Source source;
     private final LazyFunctionParser parser;
     private final DebugInfoFunctionProcessor diProcessor;
+    private FrameSlot loopSuccessorSlot;
 
     LazyToTruffleConverterImpl(LLVMParserRuntime runtime, FunctionDefinition method, Source source, LazyFunctionParser parser,
                     DebugInfoFunctionProcessor diProcessor) {
@@ -110,21 +121,89 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
         LLVMBitcodeFunctionVisitor visitor = new LLVMBitcodeFunctionVisitor(runtime.getContext(), runtime.getLibrary(), frame, uniquesRegion, phis, method.getParameters().size(), symbols, method,
                         liveness, notNullable, dbgInfoHandler);
         method.accept(visitor);
+
+        LLVMControlFlowGraph cfg = new LLVMControlFlowGraph(method.getBlocks().toArray(new InstructionBlock[method.getBlocks().size()]));
+        try {
+            cfg.build();
+        } catch (Exception e) {
+            // typically do nothing and just bailout
+            // to the standard block-based dispatch without loop information
+            assert !cfg.isReducible();
+        }
+
         FrameSlot[][] nullableBeforeBlock = getNullableFrameSlots(frame, liveness.getNullableBeforeBlock(), notNullable);
         FrameSlot[][] nullableAfterBlock = getNullableFrameSlots(frame, liveness.getNullableAfterBlock(), notNullable);
         LLVMSourceLocation location = method.getLexicalScope();
-        visitor.patchLoops(nullableBeforeBlock, nullableAfterBlock); // TODO patches up loops by replacing first loop BasicBlockNode with LoopNode
 
         List<LLVMStatementNode> copyArgumentsToFrame = copyArgumentsToFrame(frame);
         LLVMStatementNode[] copyArgumentsToFrameArray = copyArgumentsToFrame.toArray(new LLVMStatementNode[copyArgumentsToFrame.size()]);
+<<<<<<< 51e0785346ceb38b07e65ca2162bc09db8f570ee
         LLVMExpressionNode body = runtime.getContext().getNodeFactory().createFunctionBlockNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), visitor.getBlocks(), uniquesRegion.build(),
                         nullableBeforeBlock, nullableAfterBlock, location, copyArgumentsToFrameArray);
 
         RootNode rootNode = runtime.getContext().getNodeFactory().createFunctionStartNode(body, frame, method.getName(), method.getSourceName(),
                         method.getParameters().size(), source, location);
+=======
+
+        // create function body node
+        LLVMExpressionNode body;
+        if (cfg.isReducible()) {
+            List<LLVMStatementNode> nodes = new ArrayList<>(visitor.getBlocks());
+            body = resolveLoops(nodes, cfg, frame, nullableBeforeBlock, nullableAfterBlock,
+                            location, copyArgumentsToFrameArray, uniquesRegion);
+        } else {
+            body = runtime.getNodeFactory().createFunctionBlockNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), visitor.getBlocks(), uniquesRegion.build(), nullableBeforeBlock,
+                            nullableAfterBlock, location, copyArgumentsToFrameArray, null);
+        }
+        RootNode rootNode = runtime.getNodeFactory().createFunctionStartNode(runtime.getContext(), body, method.getSourceSection(), frame, method, source, location);
+>>>>>>> Fix integration of changed OSR nodes.
         method.onAfterParse();
 
         return Truffle.getRuntime().createCallTarget(rootNode);
+    }
+
+    private LLVMExpressionNode resolveLoops(List<LLVMStatementNode> nodes, LLVMControlFlowGraph cfg, FrameDescriptor frame, FrameSlot[][] nullableBeforeBlock,
+                    FrameSlot[][] nullableAfterBlock, LLVMSourceLocation location, LLVMStatementNode[] copyArgumentsToFrameArray, UniquesRegion uniquesRegion) {
+
+        if (cfg.getCFGLoops().size() > 0) {
+            loopSuccessorSlot = frame.addFrameSlot("__LLVMLoopSuccessor", FrameSlotKind.Int);
+        }
+
+        LLVMStatementNode[] nodeArray = nodes.toArray(new LLVMStatementNode[0]);
+
+        for (CFGLoop l : cfg.getCFGLoops()) {
+
+            int headerId = l.getHeader().id;
+
+            Integer[] indexMapping = new Integer[nodes.size()];
+            Arrays.fill(indexMapping, -1);
+
+            List<LLVMStatementNode> bodyNodes = new ArrayList<>();
+
+            // add header to body nodes
+            bodyNodes.add(nodes.get(headerId));
+            indexMapping[headerId] = 0;
+
+            // add body nodes
+            int i = 1;
+            for (CFGBlock b : l.getBody()) {
+                bodyNodes.add(nodeArray[b.id]);
+                indexMapping[b.id] = i++;
+            }
+
+            LLVMExpressionNode loopBody = runtime.getNodeFactory().createLoopDispatchNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), Collections.unmodifiableList(bodyNodes),
+                            nullableBeforeBlock, nullableAfterBlock, headerId, indexMapping, l.getSuccessorIDs(), loopSuccessorSlot);
+
+            LLVMStatementNode loop = runtime.getNodeFactory().createLoop(loopBody, l.getSuccessorIDs());
+
+            // replace header block with loop node
+            nodes.remove(headerId);
+            nodes.add(headerId, loop);
+            nodeArray[headerId] = loop;
+        }
+
+        return runtime.getNodeFactory().createFunctionBlockNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), nodes, uniquesRegion.build(), nullableBeforeBlock, nullableAfterBlock,
+                        location, copyArgumentsToFrameArray, loopSuccessorSlot);
     }
 
     @Override

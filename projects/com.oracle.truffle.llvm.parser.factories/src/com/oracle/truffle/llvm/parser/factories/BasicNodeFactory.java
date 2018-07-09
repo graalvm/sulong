@@ -48,6 +48,7 @@ import com.oracle.truffle.llvm.nodes.control.LLVMBrUnconditionalNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMConditionalBranchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMDispatchBasicBlockNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMIndirectBranchNode;
+import com.oracle.truffle.llvm.nodes.control.LLVMLoopDispatchNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMLoopNode;
 import com.oracle.truffle.llvm.nodes.control.LLVMRetNodeFactory.LLVM80BitFloatRetNodeGen;
 import com.oracle.truffle.llvm.nodes.control.LLVMRetNodeFactory.LLVMAddressRetNodeGen;
@@ -328,7 +329,14 @@ import com.oracle.truffle.llvm.nodes.vector.LLVMShuffleVectorNodeFactory.LLVMShu
 import com.oracle.truffle.llvm.nodes.vector.LLVMShuffleVectorNodeFactory.LLVMShuffleI1VectorNodeGen;
 import com.oracle.truffle.llvm.nodes.vector.LLVMShuffleVectorNodeFactory.LLVMShuffleI32VectorNodeGen;
 import com.oracle.truffle.llvm.nodes.vector.LLVMShuffleVectorNodeFactory.LLVMShuffleI64VectorNodeGen;
-import com.oracle.truffle.llvm.nodes.vector.LLVMShuffleVectorNodeFactory.LLVMShuffleI8VectorNodeGen;
+import com.oracle.truffle.llvm.nodes.vector.LLVMShuffleVectorNodeFactory.LLVMShuffleI8VectorNodeGen;<<<<<<<51e0785346 ceb38b07e65ca2162bc09db8f570ee=======
+import com.oracle.truffle.llvm.nodes.vector.LLVMShuffleVectorNodeFactory.LLVMShufflePointerVectorNodeGen;
+import com.oracle.truffle.llvm.parser.GetStackSpaceFactory;
+import com.oracle.truffle.llvm.parser.LLVMParserRuntime;
+import com.oracle.truffle.llvm.parser.NodeFactory;
+import com.oracle.truffle.llvm.parser.instructions.LLVMArithmeticInstructionType;
+import com.oracle.truffle.llvm.parser.instructions.LLVMConversionType;
+import com.oracle.truffle.llvm.parser.instructions.LLVMLogicalInstructionKind;>>>>>>>Fix integration of changed OSR nodes.
 import com.oracle.truffle.llvm.parser.model.attributes.Attribute;
 import com.oracle.truffle.llvm.parser.model.attributes.Attribute.KnownAttribute;
 import com.oracle.truffle.llvm.parser.model.attributes.AttributesGroup;
@@ -1486,11 +1494,11 @@ public class BasicNodeFactory implements NodeFactory {
     @Override
     public LLVMExpressionNode createFunctionBlockNode(FrameSlot exceptionValueSlot, List<? extends LLVMStatementNode> allFunctionNodes, UniquesRegionAllocator uniquesRegionAllocator,
                     FrameSlot[][] beforeBlockNuller,
-                    FrameSlot[][] afterBlockNuller, LLVMSourceLocation location, LLVMStatementNode[] copyArgumentsToFrame) {
+                    FrameSlot[][] afterBlockNuller, LLVMSourceLocation location, LLVMStatementNode[] copyArgumentsToFrame, FrameSlot loopSuccessorSlot) {
         LLVMUniquesRegionAllocNode uniquesRegionAllocNode = LLVMUniquesRegionAllocNodeGen.create(uniquesRegionAllocator);
-        return new LLVMDispatchBasicBlockNode(exceptionValueSlot, allFunctionNodes.toArray(new LLVMBasicBlockNode[allFunctionNodes.size()]), uniquesRegionAllocNode, beforeBlockNuller,
+        return new LLVMDispatchBasicBlockNode(exceptionValueSlot, allFunctionNodes.toArray(new LLVMStatementNode[allFunctionNodes.size()]), uniquesRegionAllocNode, beforeBlockNuller,
                         afterBlockNuller, location,
-                        copyArgumentsToFrame);
+                        copyArgumentsToFrame, loopSuccessorSlot);
     }
 
     @Override
@@ -2252,5 +2260,16 @@ public class BasicNodeFactory implements NodeFactory {
             default:
                 throw new IllegalStateException("unexpected interop kind " + type.getKind());
         }
+    }
+
+    public LLVMStatementNode createLoop(LLVMExpressionNode body, Integer[] successorIDs) {
+        return new LLVMLoopNode(body, successorIDs);
+    }
+
+    @Override
+    public LLVMExpressionNode createLoopDispatchNode(FrameSlot exceptionValueSlot, List<LLVMStatementNode> bodyNodes, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller,
+                    int headerId, Integer[] indexMapping, Integer[] successors, FrameSlot successorSlot) {
+        return new LLVMLoopDispatchNode(exceptionValueSlot, bodyNodes.toArray(new LLVMStatementNode[bodyNodes.size()]), beforeBlockNuller, afterBlockNuller, headerId, indexMapping, successors,
+                        successorSlot);
     }
 }

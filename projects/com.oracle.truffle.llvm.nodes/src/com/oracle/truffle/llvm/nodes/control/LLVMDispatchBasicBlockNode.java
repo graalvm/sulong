@@ -33,6 +33,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -55,26 +56,26 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
 
     private final FrameSlot exceptionValueSlot;
 
-
     @Child private LLVMUniquesRegionAllocNode uniquesRegionAllocNode;
-    private final LLVMSourceLocation sourceSection;
+    private final LLVMSourceLocation source;
     @Children private final LLVMStatementNode[] bodyNodes;
 
     @CompilationFinal(dimensions = 2) private final FrameSlot[][] beforeBlockNuller;
     @CompilationFinal(dimensions = 2) private final FrameSlot[][] afterBlockNuller;
     @Children private final LLVMStatementNode[] copyArgumentsToFrame;
-
+    @CompilationFinal private final FrameSlot loopSuccessorSlot;
 
     public LLVMDispatchBasicBlockNode(FrameSlot exceptionValueSlot, LLVMStatementNode[] bodyNodes, LLVMUniquesRegionAllocNode uniquesRegionAllocNode, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller, LLVMSourceLocation source,
-                    LLVMStatementNode[] copyArgumentsToFrame) {
+                    LLVMStatementNode[] copyArgumentsToFrame, FrameSlot loopSuccessorSlot) {
 
         this.exceptionValueSlot = exceptionValueSlot;
         this.bodyNodes = bodyNodes;
         this.uniquesRegionAllocNode = uniquesRegionAllocNode;
         this.beforeBlockNuller = beforeBlockNuller;
         this.afterBlockNuller = afterBlockNuller;
-        this.sourceSection = source;
+        this.source = source;
         this.copyArgumentsToFrame = copyArgumentsToFrame;
+        this.loopSuccessorSlot = loopSuccessorSlot;
     }
 
     @ExplodeLoop
@@ -100,8 +101,23 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
 
             if(bodyNodes[basicBlockIndex] instanceof LLVMLoopNode) {
                 LLVMLoopNode loop = (LLVMLoopNode) bodyNodes[basicBlockIndex];
-                basicBlockIndex = loop.executeLoop(frame);
-                continue outer;
+                loop.execute(frame);
+
+                Integer[] successors = loop.getSuccessors();
+                for(int i = 0; i < successors.length; i++) {
+                    try {
+                        if(frame.getInt(loopSuccessorSlot) == successors[i]) {
+                            basicBlockIndex = successors[i];
+                            continue outer;
+                        }
+                    } catch (FrameSlotTypeException e) {
+                        CompilerDirectives.transferToInterpreter();
+                        throw new RuntimeException("Error while reading from loop successor frame slot - type mismatch!");
+                    }
+                }
+
+                CompilerDirectives.transferToInterpreter();
+                throw new IllegalStateException("Must not reach here!");
             }
 
             assert(bodyNodes[basicBlockIndex] instanceof LLVMBasicBlockNode);
