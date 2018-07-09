@@ -241,8 +241,8 @@ public interface NodeFactory extends InteropNodeFactory {
 
     LLVMExpressionNode createLoopNode(LLVMExpressionNode[] basicBlocks, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller);
 
-    LLVMStatementNode createLoop(LLVMExpressionNode body, Integer[] successorIDs);
+    LLVMStatementNode createLoop(LLVMExpressionNode body, int[] successorIDs);
 
     LLVMExpressionNode createLoopDispatchNode(FrameSlot exceptionValueSlot, List<LLVMStatementNode> list, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller,
-                    int headerId, Integer[] indexMapping, Integer[] successors, FrameSlot successorSlot);
+                    int headerId, int[] indexMapping, int[] successors, FrameSlot successorSlot);
 }

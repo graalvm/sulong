@@ -29,16 +29,14 @@
  */
 package com.oracle.truffle.llvm.nodes.control;
 
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-
-import java.util.Arrays;
-
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RepeatingNode;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStatementNode;
 
@@ -46,15 +44,15 @@ public class LLVMLoopNode extends LLVMStatementNode {
 
     @Child private LoopNode loop;
 
-    @CompilationFinal private final Integer[] successors;
+    @CompilationFinal(dimensions = 1) private final int[] successors;
 
-    public LLVMLoopNode(LLVMExpressionNode bodyNode, Integer[] successorIDs) {
+    public LLVMLoopNode(LLVMExpressionNode bodyNode, int[] successorIDs) {
         loop = Truffle.getRuntime().createLoopNode(new LLVMRepeatingNode(bodyNode));
 
-        successors = Arrays.copyOf(successorIDs, successorIDs.length);
+        successors = successorIDs;
     }
 
-    public Integer[] getSuccessors() {
+    public int[] getSuccessors() {
         return successors;
     }
 
@@ -68,15 +66,12 @@ public class LLVMLoopNode extends LLVMStatementNode {
 
         @Override
         public boolean executeRepeating(VirtualFrame frame) {
-            Object ret = null;
-
             try {
-                ret = bodyNode.executeGeneric(frame);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                return bodyNode.executeI1(frame);
+            } catch (UnexpectedResultException e) {
+                CompilerDirectives.transferToInterpreter();
+                throw new RuntimeException(e);
             }
-
-            return (boolean)ret;
         }
     }
 

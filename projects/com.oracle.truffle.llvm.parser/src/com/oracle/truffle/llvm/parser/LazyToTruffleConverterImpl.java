@@ -82,7 +82,8 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
     private final Source source;
     private final LazyFunctionParser parser;
     private final DebugInfoFunctionProcessor diProcessor;
-    private FrameSlot loopSuccessorSlot;
+
+    private static final String LOOP_SUCCESSOR_FRAME_ID = "<loop successor>";
 
     LazyToTruffleConverterImpl(LLVMParserRuntime runtime, FunctionDefinition method, Source source, LazyFunctionParser parser,
                     DebugInfoFunctionProcessor diProcessor) {
@@ -122,14 +123,8 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
                         liveness, notNullable, dbgInfoHandler);
         method.accept(visitor);
 
-        LLVMControlFlowGraph cfg = new LLVMControlFlowGraph(method.getBlocks().toArray(new InstructionBlock[method.getBlocks().size()]));
-        try {
-            cfg.build();
-        } catch (Exception e) {
-            // typically do nothing and just bailout
-            // to the standard block-based dispatch without loop information
-            assert !cfg.isReducible();
-        }
+        LLVMControlFlowGraph cfg = new LLVMControlFlowGraph(method.getBlocks().toArray(FunctionDefinition.EMPTY));
+        cfg.build();
 
         FrameSlot[][] nullableBeforeBlock = getNullableFrameSlots(frame, liveness.getNullableBeforeBlock(), notNullable);
         FrameSlot[][] nullableAfterBlock = getNullableFrameSlots(frame, liveness.getNullableAfterBlock(), notNullable);
@@ -145,16 +140,19 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
                         method.getParameters().size(), source, location);
 =======
 
-        // create function body node
-        LLVMExpressionNode body;
-        if (cfg.isReducible()) {
-            List<LLVMStatementNode> nodes = new ArrayList<>(visitor.getBlocks());
-            body = resolveLoops(nodes, cfg, frame, nullableBeforeBlock, nullableAfterBlock,
-                            location, copyArgumentsToFrameArray, uniquesRegion);
-        } else {
-            body = runtime.getNodeFactory().createFunctionBlockNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), visitor.getBlocks(), uniquesRegion.build(), nullableBeforeBlock,
-                            nullableAfterBlock, location, copyArgumentsToFrameArray, null);
+        List<LLVMStatementNode> nodes = visitor.getBlocks();
+        FrameSlot loopSuccessorSlot = null;
+
+        if (cfg.isReducible() && cfg.getCFGLoops().size() > 0) {
+            loopSuccessorSlot = frame.addFrameSlot(LOOP_SUCCESSOR_FRAME_ID, FrameSlotKind.Int);
+
+            nodes = resolveLoops(nodes, cfg, frame, nullableBeforeBlock, nullableAfterBlock, loopSuccessorSlot);
         }
+
+        // create function body node
+        LLVMExpressionNode body = runtime.getNodeFactory().createFunctionBlockNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), nodes, uniquesRegion.build(), nullableBeforeBlock,
+                        nullableAfterBlock, location, copyArgumentsToFrameArray, loopSuccessorSlot);
+
         RootNode rootNode = runtime.getNodeFactory().createFunctionStartNode(runtime.getContext(), body, method.getSourceSection(), frame, method, source, location);
 >>>>>>> Fix integration of changed OSR nodes.
         method.onAfterParse();
@@ -162,48 +160,43 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
         return Truffle.getRuntime().createCallTarget(rootNode);
     }
 
-    private LLVMExpressionNode resolveLoops(List<LLVMStatementNode> nodes, LLVMControlFlowGraph cfg, FrameDescriptor frame, FrameSlot[][] nullableBeforeBlock,
-                    FrameSlot[][] nullableAfterBlock, LLVMSourceLocation location, LLVMStatementNode[] copyArgumentsToFrameArray, UniquesRegion uniquesRegion) {
+    private List<LLVMStatementNode> resolveLoops(List<LLVMStatementNode> nodes, LLVMControlFlowGraph cfg, FrameDescriptor frame, FrameSlot[][] nullableBeforeBlock,
+                    FrameSlot[][] nullableAfterBlock, FrameSlot loopSuccessorSlot) {
 
-        if (cfg.getCFGLoops().size() > 0) {
-            loopSuccessorSlot = frame.addFrameSlot("__LLVMLoopSuccessor", FrameSlotKind.Int);
-        }
+        List<LLVMStatementNode> resolvedNodes = new ArrayList<>(nodes);
 
-        LLVMStatementNode[] nodeArray = nodes.toArray(new LLVMStatementNode[0]);
+        for (CFGLoop loop : cfg.getCFGLoops()) {
 
-        for (CFGLoop l : cfg.getCFGLoops()) {
+            int headerId = loop.getHeader().id;
 
-            int headerId = l.getHeader().id;
-
-            Integer[] indexMapping = new Integer[nodes.size()];
+            int[] indexMapping = new int[resolvedNodes.size()];
             Arrays.fill(indexMapping, -1);
 
             List<LLVMStatementNode> bodyNodes = new ArrayList<>();
 
             // add header to body nodes
-            bodyNodes.add(nodes.get(headerId));
+            bodyNodes.add(resolvedNodes.get(headerId));
             indexMapping[headerId] = 0;
 
             // add body nodes
             int i = 1;
-            for (CFGBlock b : l.getBody()) {
-                bodyNodes.add(nodeArray[b.id]);
-                indexMapping[b.id] = i++;
+            for (CFGBlock block : loop.getBody()) {
+                bodyNodes.add(resolvedNodes.get(block.id));
+                indexMapping[block.id] = i++;
             }
 
-            LLVMExpressionNode loopBody = runtime.getNodeFactory().createLoopDispatchNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), Collections.unmodifiableList(bodyNodes),
-                            nullableBeforeBlock, nullableAfterBlock, headerId, indexMapping, l.getSuccessorIDs(), loopSuccessorSlot);
+            int[] loopSuccessors = loop.getSuccessorIDs();
 
-            LLVMStatementNode loop = runtime.getNodeFactory().createLoop(loopBody, l.getSuccessorIDs());
+            LLVMExpressionNode loopBody = runtime.getNodeFactory().createLoopDispatchNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), Collections.unmodifiableList(bodyNodes),
+                            nullableBeforeBlock, nullableAfterBlock, headerId, indexMapping, loopSuccessors, loopSuccessorSlot);
+
+            LLVMStatementNode loopNode = runtime.getNodeFactory().createLoop(loopBody, loopSuccessors);
 
             // replace header block with loop node
-            nodes.remove(headerId);
-            nodes.add(headerId, loop);
-            nodeArray[headerId] = loop;
+            resolvedNodes.set(headerId, loopNode);
         }
 
-        return runtime.getNodeFactory().createFunctionBlockNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), nodes, uniquesRegion.build(), nullableBeforeBlock, nullableAfterBlock,
-                        location, copyArgumentsToFrameArray, loopSuccessorSlot);
+        return resolvedNodes;
     }
 
     @Override

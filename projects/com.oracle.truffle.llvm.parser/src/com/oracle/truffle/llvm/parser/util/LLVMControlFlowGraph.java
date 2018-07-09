@@ -30,7 +30,6 @@
 package com.oracle.truffle.llvm.parser.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -41,11 +40,8 @@ import com.oracle.truffle.llvm.parser.model.symbols.instructions.TerminatingInst
 
 public final class LLVMControlFlowGraph {
 
-    private static final int LOOP_CONTAINER_MAX_CAPACITY = Long.SIZE;
-    private static final int LOOP_HEADER_INITIAL_CAPACITY = 4;
-
     private CFGBlock[] blocks;
-    private CFGLoop[] cfgLoops = new CFGLoop[LOOP_HEADER_INITIAL_CAPACITY];
+    private List<CFGLoop> cfgLoops;
 
     private int nextLoop = 0;
 
@@ -62,7 +58,7 @@ public final class LLVMControlFlowGraph {
         public boolean visited = false;
         public boolean active = false;
         public boolean isLoopHeader = false;
-        public long loops;  // TODO could use bitmap instead
+        public long loops;  // could use bitmap instead
         public int loopId;
 
         public CFGBlock(InstructionBlock block) {
@@ -93,7 +89,7 @@ public final class LLVMControlFlowGraph {
         }
 
         public List<CFGBlock> getBody() {
-            return body;    // TODO maybe copy
+            return body;
         }
 
         public Set<CFGBlock> getSuccessors() {
@@ -120,7 +116,6 @@ public final class LLVMControlFlowGraph {
             for (CFGBlock b : body) {
                 // for each inner loop, add all successors which are not in the outer loop
                 // to the successors of the outer loop
-                // TODO simplify
                 if (b.isLoopHeader) {
                     for (CFGLoop l : innerLoops) {
                         if (l.getHeader().equals(b)) {
@@ -142,12 +137,12 @@ public final class LLVMControlFlowGraph {
 
         }
 
-        public Integer[] getSuccessorIDs() {
+        public int[] getSuccessorIDs() {
             if (successors == null) {
                 calculateSuccessors();
             }
 
-            Integer[] sucIDs = new Integer[successors.size()];
+            int[] sucIDs = new int[successors.size()];
             int i = 0;
             for (CFGBlock b : successors) {
                 sucIDs[i++] = b.id;
@@ -176,6 +171,7 @@ public final class LLVMControlFlowGraph {
         for (int i = 0; i < blocks.length; i++) {
             this.blocks[i] = new CFGBlock(blocks[i]);
         }
+        cfgLoops = new ArrayList<>();
     }
 
     private void resolveEdges() {
@@ -192,14 +188,7 @@ public final class LLVMControlFlowGraph {
     }
 
     public List<CFGLoop> getCFGLoops() {
-        List<CFGLoop> loops = new ArrayList<>();
-
-        for (CFGLoop l : cfgLoops) {
-            if (l != null)
-                loops.add(l);
-        }
-        loops.removeIf(l -> l == null);
-        return loops;
+        return cfgLoops;
     }
 
     public boolean isReducible() {
@@ -207,23 +196,30 @@ public final class LLVMControlFlowGraph {
     }
 
     public void build() {
-// System.out.println("Start: " + System.currentTimeMillis());
-// set successors and predecessors
+        reducible = true;
+
+        // set successors and predecessors
         resolveEdges();
+
         long openLoops = openLoops(blocks[0]);
         if (openLoops != 0) {
             reducible = false;
-            throw new RuntimeException("Irreducible control flow!"); // TODO bailout -> use dispatch approach
+            return;
         }
-        sortLoops();
-// System.out.println("Successors: " + System.currentTimeMillis());
+
+        try {
+            sortLoops();
+        } catch (ControlFlowBailoutException e) {
+            reducible = false;
+            return;
+        }
+
         for (CFGLoop l : getCFGLoops()) {
             l.calculateSuccessors();
         }
-// System.out.println("End: " + System.currentTimeMillis());
     }
 
-    private boolean sortLoops() {
+    private boolean sortLoops() throws ControlFlowBailoutException {
         List<CFGLoop> sorted = new ArrayList<>();
         List<CFGLoop> active = new ArrayList<>();
 
@@ -231,22 +227,22 @@ public final class LLVMControlFlowGraph {
             sortLoop(sorted, active, l);
         }
 
-        cfgLoops = sorted.toArray(new CFGLoop[cfgLoops.length]);
+        cfgLoops = sorted;
         return true;
     }
 
-    private void sortLoop(List<CFGLoop> sorted, List<CFGLoop> active, CFGLoop loop) {
+    private void sortLoop(List<CFGLoop> sorted, List<CFGLoop> active, CFGLoop loop) throws ControlFlowBailoutException {
         if (sorted.contains(loop))
             return;
 
         active.add(loop);
         for (CFGBlock b : loop.body) {
             if (b.isLoopHeader) {
-                CFGLoop inner = cfgLoops[b.loopId];
+                CFGLoop inner = cfgLoops.get(b.loopId);
                 if (active.contains(inner)) {
                     // catches case that there is a stack overflow because two loop nodes are being called iteratively
                     // from one another, without one being left beforehand
-                    throw new RuntimeException("Irreducible nestedness!");
+                    throw new ControlFlowBailoutException("Irreducible nestedness!");
                 }
                 sortLoop(sorted, active, inner);
                 loop.innerLoops.add(inner);
@@ -289,7 +285,7 @@ public final class LLVMControlFlowGraph {
             loops |= openLoops(successor);
             if (successor.active) {
                 // Reached block via backward branch.
-                loops |= (1L << successor.loopId);  // TODO why?
+                loops |= (1L << successor.loopId);
             }
         }
 
@@ -307,7 +303,7 @@ public final class LLVMControlFlowGraph {
         while (loopsToProcess > 0) {
             inLoop = 64 - Long.numberOfLeadingZeros(loopsToProcess);
             loopsToProcess &= ~(1 << inLoop - 1);
-            this.cfgLoops[inLoop - 1].body.add(block);
+            this.cfgLoops.get(inLoop - 1).body.add(block);
         }
 
         return loops;
@@ -317,20 +313,21 @@ public final class LLVMControlFlowGraph {
         if (!block.isLoopHeader) {
             block.isLoopHeader = true;
 
-            if (nextLoop >= LOOP_CONTAINER_MAX_CAPACITY) {
-                throw new RuntimeException("Too many loops!"); // TODO bailout
-            }
-
             assert block.loops == 0;
             block.loops = 1L << nextLoop;
 
-            if (nextLoop >= cfgLoops.length) {
-                cfgLoops = Arrays.copyOf(cfgLoops, LOOP_CONTAINER_MAX_CAPACITY);
-            }
-            cfgLoops[nextLoop] = new CFGLoop(nextLoop);
-            cfgLoops[nextLoop].loopHeader = block;
+            cfgLoops.add(new CFGLoop(nextLoop));
+            cfgLoops.get(nextLoop).loopHeader = block;
             block.loopId = nextLoop++;
         }
         assert Long.bitCount(block.loops) == 1;
+    }
+
+    private class ControlFlowBailoutException extends Exception {
+
+        public ControlFlowBailoutException(String string) {
+            super(string);
+        }
+
     }
 }

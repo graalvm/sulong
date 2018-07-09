@@ -33,7 +33,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotTypeException;
+import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -99,25 +99,25 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
         outer: while (basicBlockIndex != LLVMBasicBlockNode.RETURN_FROM_FUNCTION) {
             CompilerAsserts.partialEvaluationConstant(basicBlockIndex);
 
+            // TODO restructure, to have LoopNode fit into LLVMControlFlowNode structure
             if(bodyNodes[basicBlockIndex] instanceof LLVMLoopNode) {
                 LLVMLoopNode loop = (LLVMLoopNode) bodyNodes[basicBlockIndex];
                 loop.execute(frame);
+                int successorBasicBlockIndex = FrameUtil.getIntSafe(frame, loopSuccessorSlot);
 
-                Integer[] successors = loop.getSuccessors();
-                for(int i = 0; i < successors.length; i++) {
-                    try {
-                        if(frame.getInt(loopSuccessorSlot) == successors[i]) {
-                            basicBlockIndex = successors[i];
-                            continue outer;
-                        }
-                    } catch (FrameSlotTypeException e) {
-                        CompilerDirectives.transferToInterpreter();
-                        throw new RuntimeException("Error while reading from loop successor frame slot - type mismatch!");
+                int[] successors = loop.getSuccessors();
+                for(int i = 0; i < successors.length-1; i++) {
+                    if(successorBasicBlockIndex == successors[i]) {
+                        basicBlockIndex = successors[i];
+                        continue outer;
                     }
                 }
 
-                CompilerDirectives.transferToInterpreter();
-                throw new IllegalStateException("Must not reach here!");
+                int i = successors.length - 1;
+                assert successors[i] == successorBasicBlockIndex : "Could not find loop successor!";
+                basicBlockIndex = successors[i];
+
+                continue outer;
             }
 
             assert(bodyNodes[basicBlockIndex] instanceof LLVMBasicBlockNode);
@@ -125,8 +125,6 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
 
             // execute all statements
             bb.execute(frame);
-
-
 
             // execute control flow node, write phis, null stack frame slots, and dispatch to
             // the correct successor block
@@ -299,7 +297,7 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
     }
 
     @ExplodeLoop
-    private static void executePhis(VirtualFrame frame, LLVMControlFlowNode controlFlowNode, int successorIndex) {
+    public static void executePhis(VirtualFrame frame, LLVMControlFlowNode controlFlowNode, int successorIndex) {
         LLVMStatementNode phi = controlFlowNode.getPhiNode(successorIndex);
         if (phi != null) {
             phi.execute(frame);
@@ -307,7 +305,7 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
     }
 
     @ExplodeLoop
-    private static void nullDeadSlots(VirtualFrame frame, int bci, FrameSlot[][] blockNullers) {
+    public static void nullDeadSlots(VirtualFrame frame, int bci, FrameSlot[][] blockNullers) {
         FrameSlot[] frameSlotsToNull = blockNullers[bci];
         if (frameSlotsToNull != null) {
             assert frameSlotsToNull.length > 0;

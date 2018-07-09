@@ -31,7 +31,6 @@ package com.oracle.truffle.llvm.parser.model.functions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +57,7 @@ import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 
 public final class FunctionDefinition implements Constant, FunctionSymbol, MetadataAttachmentHolder {
 
-    private static final InstructionBlock[] EMPTY = new InstructionBlock[0];
+    public static final InstructionBlock[] EMPTY = new InstructionBlock[0];
 
     private final List<FunctionParameter> parameters = new ArrayList<>();
     private final FunctionType type;
@@ -79,7 +78,6 @@ public final class FunctionDefinition implements Constant, FunctionSymbol, Metad
         this.paramAttr = paramAttr;
         this.linkage = linkage;
         this.visibility = visibility;
-
     }
 
     public FunctionDefinition(FunctionType type, Linkage linkage, Visibility visibility, AttributesCodeEntry paramAttr) {
