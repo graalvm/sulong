@@ -178,7 +178,7 @@ def testLLVMImage(image, imageArgs=None, testFilter=None, libPath=True, test=Non
         aotArgs += [mx_subst.path_substitutions.substitute('-Dllvm.home=<path:SULONG_LIBS>')]
     libs = getUnittestLibraryDependencies(mx_subst.path_substitutions.substitute('<path:SULONG_TEST_SUITES>'))
     if libs:
-        aotArgs += ['-Dpolyglot.llvm.libraries=' + ':'.join(libs)]
+        aotArgs += ['--llvm.libraries=' + ':'.join(libs)]
     if imageArgs is not None:
         aotArgs += imageArgs
     if aotArgs:
