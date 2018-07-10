@@ -373,6 +373,7 @@ suite = {
       "buildEnv" : {
         "OS" : "<os>",
       },
+      "testProject" : True,
     },
     "com.oracle.truffle.llvm.tests.libc" : {
       "subDir" : "tests",
