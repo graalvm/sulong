@@ -6,8 +6,6 @@ cache:
 dist: trusty
 sudo: required
 language: generic
-language: rust
-  - 1.19.0
 install:
   - cd ..
   - gem install mdl
@@ -48,6 +46,8 @@ matrix:
   fast_finish: true
   include:
   - env: LLVM_VER=3.8 GATE_TAGS='sulongBasic' COMPILE_COMMAND='mx build'
+    language: rust
+    rust: 1.19.0
     addons:
       apt:
         packages:
@@ -121,6 +121,8 @@ matrix:
           - libc++1
           - libc++-dev
   - env: LLVM_VER=3.8 GATE_TAGS='fullbuild'
+    language: rust
+    rust: 1.19.0
     addons:
       apt:
         packages:
@@ -191,6 +193,8 @@ matrix:
           - libc++1
           - libc++-dev
   - env: LLVM_VER=3.8 DOWNSTREAM_REPO='https://github.com/graalvm/graal.git' DOWNSTREAM_SUITE='vm' DYNAMIC_IMPORTS='sulong,/substratevm' NATIVE_IMAGE_TESTING='True' DOWNSTREAM_COMMAND='--disable-polyglot --disable-libpolyglot gate -B=--force-deprecation-as-warning --tags build,sulong'
+    language: rust
+    rust: 1.19.0
     addons:
       apt:
         packages:
