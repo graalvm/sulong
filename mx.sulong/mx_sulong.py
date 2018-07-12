@@ -297,8 +297,8 @@ def dragonEggGPP(args=None):
     return mx.run(executeCommand + args)
 
 def checkRust():
-    """checks if a Rust installation is available; tries to install the active toolchain if it is missing"""
-    if os.environ.get('SULONG_USE_RUSTC', 'true') == 'false' or not which('rustc'):
+    """checks if a Rust installation is available; may try to install the active toolchain if it is missing"""
+    if os.environ.get('SULONG_USE_RUSTC', 'true') == 'false' or which('rustc') is None:
         return False
 
     rustc = subprocess.Popen(['rustc', '--version'], stdout=subprocess.PIPE)
@@ -639,13 +639,12 @@ def findGCCProgram(gccProgram, optional=False):
         return installedProgram
 
 def findRustLibrary(name, on_failure=exit):
-    """looks up the path to the given Rust library for the active toolchain; tries to install the active toolchain if it is missing; exits if installation fails"""
+    """looks up the path to the given Rust library for the active toolchain; may try to install the active toolchain if it is missing; exits by default if installation fails"""
     if not checkRust():
         on_failure('Rust is not available')
         return None
 
-    rustc = subprocess.Popen(['rustc', '--print', 'sysroot'], stdout=subprocess.PIPE)
-    sysroot = rustc.communicate()[0].rstrip()
+    sysroot = subprocess.check_output(['rustc', '--print', 'sysroot']).rstrip()
     lib_paths = glob.glob(os.path.join(sysroot, 'lib', mx.add_lib_suffix('lib' + name + '-*')))
     if len(lib_paths) == 0:
         on_failure('could not find Rust library ' + name)
