@@ -6,6 +6,9 @@ cache:
 dist: trusty
 sudo: required
 language: generic
+before_install:
+# Travis does not auto-delete the rust-toolchain file
+  - rm rust-toolchain
 install:
   - cd ..
   - gem install mdl
@@ -31,6 +34,7 @@ install:
   - mx sforceimports
 # the style gate needs the full commit history for checking copyright years
   - test "$GATE_TAGS" != "style" || git fetch --unshallow
+  - test "$GATE_TAGS" != "style" || rustup component add rustfmt-preview --toolchain=$TRAVIS_RUST_VERSION
 script:
   - cd ../llvmDir
   - ln -s /usr/bin/clang-$LLVM_VER clang
@@ -110,6 +114,8 @@ matrix:
           - libc++1
           - libc++-dev
   - env: LLVM_VER=3.8 GATE_TAGS='style'
+    language: rust
+    rust: nightly
     addons:
       apt:
         packages:

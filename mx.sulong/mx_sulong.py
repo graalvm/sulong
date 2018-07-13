@@ -111,6 +111,11 @@ clangFormatVersions = [
     '4.0',
 ]
 
+# the file paths that we want to check with rustfmt
+rustfmtCheckPaths = [
+    join(_testDir, "com.oracle.truffle.llvm.tests.sulongrust")
+]
+
 def _unittest_config_participant(config):
     (vmArgs, mainClass, mainClassArgs) = config
     testSuitePath = mx_subst.path_substitutions.substitute('<path:SULONG_TEST_SUITES>')
@@ -134,6 +139,8 @@ def _sulong_gate_runner(args, tasks):
                 t.abort('Copyright errors found. Please run "mx checkcopyrights --primary -- --fix" to fix them.')
     with Task('ClangFormat', tasks, tags=['style', 'clangformat']) as t:
         if t: clangformatcheck()
+    with Task('Rustfmt', tasks, tags=['style', 'rustfmt']) as t:
+        if t: rustfmtcheck()
     with Task('TestBenchmarks', tasks, tags=['benchmarks', 'sulongMisc']) as t:
         if t: mx_testsuites.runSuite('shootout')
     with Task('TestTypes', tasks, tags=['type', 'sulongMisc']) as t:
@@ -217,14 +224,22 @@ def runLLVMUnittests(unittest_runner):
 def clangformatcheck(args=None):
     """ Performs a format check on the include/truffle.h file """
     for f in clangFormatCheckPaths:
-        checkCFiles(f)
+        checkFiles(f, checkCFile, ['.c', '.cpp', '.h', '.hpp'])
 
-def checkCFiles(targetDir):
+def rustfmtcheck(args=None):
+    """ Performs a format check on the Rust test files """
+    if not checkRustComponent('rustfmt'):
+        mx.warn("'rustfmt' is not available")
+        return
+    for f in rustfmtCheckPaths:
+        checkFiles(f, checkRustFile, ['rs'])
+
+def checkFiles(targetDir, fileChecker, exts):
     error = False
     for path, _, files in os.walk(targetDir):
         for f in files:
-            if f.endswith('.c') or f.endswith('.cpp') or f.endswith('.h') or f.endswith('.hpp'):
-                if not checkCFile(path + '/' + f):
+            if f.endswith(tuple(exts)):
+                if not fileChecker(path + '/' + f):
                     error = True
     if error:
         mx.log_error("found formatting errors!")
@@ -246,6 +261,22 @@ def checkCFile(targetFile):
         mx.log('\nmodified formatting in {0} to the format above'.format(targetFile))
         return False
     return True
+
+def checkRustFile(targetFile):
+    """ Checks the formatting of a Rust file and returns True if the formatting is okay """
+    if not checkRustComponent('rustfmt'):
+        exit("Unable to find 'rustfmt' executable")
+    returncode_check = mx.run(['rustfmt', '--check', targetFile], nonZeroIsFatal=False)
+    if returncode_check == 1:
+        # formatted code differs from existing code or error occured; try to modify the file to the right format
+        returncode_replace = mx.run(['rustfmt', targetFile], nonZeroIsFatal=False)
+        if returncode_replace == 0:
+            mx.log('modified formatting in {0}'.format(targetFile))
+            return False
+    elif returncode_check == 0:
+        return True
+    mx.log_error('encountered parsing errors or operational errors when trying to format {0}'.format(targetFile))
+    return False
 
 # platform dependent
 def pullLLVMBinaries(args=None):
@@ -296,14 +327,14 @@ def dragonEggGPP(args=None):
     executeCommand = [getGPP(), "-fplugin=" + dragonEggPath(), '-fplugin-arg-dragonegg-emit-ir']
     return mx.run(executeCommand + args)
 
-def checkRust():
-    """checks if a Rust installation is available; may try to install the active toolchain if it is missing"""
-    if os.environ.get('SULONG_USE_RUSTC', 'true') == 'false' or which('rustc') is None:
+def checkRustComponent(componentName):
+    """checks if a Rust component is available; may try to install the active toolchain if it is missing"""
+    if (componentName == 'rustc' and os.environ.get('SULONG_USE_RUSTC', 'true') == 'false') or which(componentName) is None:
         return False
 
-    rustc = subprocess.Popen(['rustc', '--version'], stdout=subprocess.PIPE)
-    rustc.communicate()
-    return rustc.returncode == 0
+    component = subprocess.Popen([componentName, '--version'], stdout=subprocess.PIPE)
+    component.communicate()
+    return component.returncode == 0
 
 def which(program, searchPath=None):
     def is_exe(fpath):
@@ -640,7 +671,7 @@ def findGCCProgram(gccProgram, optional=False):
 
 def findRustLibrary(name, on_failure=exit):
     """looks up the path to the given Rust library for the active toolchain; may try to install the active toolchain if it is missing; exits by default if installation fails"""
-    if not checkRust():
+    if not checkRustComponent('rustc'):
         on_failure('Rust is not available')
         return None
 

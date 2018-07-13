@@ -301,7 +301,7 @@ class Dependency(object):
     def isFulfilled(self):
         return self._isFulfilled()
 
-Dependency.RUST = Dependency(lambda: mx_sulong.checkRust()) # pylint: disable=W0108
+Dependency.RUST = Dependency(lambda: mx_sulong.checkRustComponent('rustc')) # pylint: disable=W0108
 Dependency.DRAGONEGG = Dependency(lambda: mx_sulong.dragonEggPath() is not None and os.path.exists(mx_sulong.dragonEggPath()) and mx_sulong.getGCC(optional=True) is not None)
 
 class SulongTestSuite(mx.NativeProject):
