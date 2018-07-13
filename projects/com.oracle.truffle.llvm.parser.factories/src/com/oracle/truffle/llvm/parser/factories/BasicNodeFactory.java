@@ -364,8 +364,8 @@ import com.oracle.truffle.llvm.runtime.memory.LLVMAllocateStructNode;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemMoveNode;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemSetNode;
 import com.oracle.truffle.llvm.runtime.memory.LLVMStack.UniquesRegion;
-import com.oracle.truffle.llvm.runtime.memory.LLVMStack.UniquesRegion.UniquesRegionAllocator;
 import com.oracle.truffle.llvm.runtime.memory.LLVMStack.UniquesRegion.UniqueSlot;
+import com.oracle.truffle.llvm.runtime.memory.LLVMStack.UniquesRegion.UniquesRegionAllocator;
 import com.oracle.truffle.llvm.runtime.memory.LLVMUniquesRegionAllocNode;
 import com.oracle.truffle.llvm.runtime.memory.LLVMUniquesRegionAllocNodeGen;
 import com.oracle.truffle.llvm.runtime.memory.VarargsAreaStackAllocationNode;
@@ -374,7 +374,6 @@ import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMLoadNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStatementNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStoreNode;
-import com.oracle.truffle.llvm.runtime.nodes.api.LLVMToNativeNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMTypesGen;
 import com.oracle.truffle.llvm.runtime.pointer.LLVMManagedPointer;
 import com.oracle.truffle.llvm.runtime.pointer.LLVMNativePointer;
@@ -1519,7 +1518,7 @@ public class BasicNodeFactory implements NodeFactory {
 
     private static LLVMLandingpadNode.LandingpadEntryNode getLandingpadFilterEntry(LLVMExpressionNode exp) {
         LLVMPointerArrayLiteralNode array = (LLVMPointerArrayLiteralNode) exp;
-        LLVMToNativeNode[] types = array == null ? new LLVMToNativeNode[]{} : array.getNativeValues();
+        LLVMExpressionNode[] types = array == null ? LLVMExpressionNode.NO_EXPRESSIONS : array.getValues();
         return new LLVMLandingpadNode.LandingpadFilterEntryNode(types);
     }
 
@@ -1655,9 +1654,9 @@ public class BasicNodeFactory implements NodeFactory {
             case "@llvm.invariant.end.p0i8":
                 return LLVMInvariantEndNodeGen.create(args[1], args[2], sourceSection);
             case "@llvm.stacksave":
-                return LLVMStackSaveNodeGen.create(sourceSection);
+                return createStackSave(context, sourceSection);
             case "@llvm.stackrestore":
-                return LLVMStackRestoreNodeGen.create(args[1], sourceSection);
+                return createStackRestore(context, args[1], sourceSection);
             case "@llvm.frameaddress":
                 return LLVMFrameAddressNodeGen.create(args[1], sourceSection);
             case "@llvm.va_start":
@@ -1773,6 +1772,16 @@ public class BasicNodeFactory implements NodeFactory {
             default:
                 throw new IllegalStateException("Missing LLVM builtin: " + declaration.getName());
         }
+    }
+
+    @Override
+    public LLVMExpressionNode createStackSave(LLVMContext context, LLVMSourceLocation sourceSection) {
+        return LLVMStackSaveNodeGen.create(sourceSection);
+    }
+
+    @Override
+    public LLVMExpressionNode createStackRestore(LLVMContext context, LLVMExpressionNode stackPointer, LLVMSourceLocation sourceSection) {
+        return LLVMStackRestoreNodeGen.create(stackPointer, sourceSection);
     }
 
     private static long getOverflowFieldOffset(LLVMContext context, FunctionDeclaration declaration) {
@@ -1892,20 +1901,16 @@ public class BasicNodeFactory implements NodeFactory {
     public LLVMDebugObjectBuilder createDebugStaticValue(LLVMExpressionNode valueNode, boolean isGlobal) {
         LLVMDebugValue.Builder toDebugNode = LLVMToDebugValueNodeGen.create();
 
-        Object value;
+        Object value = null;
         if (isGlobal) {
             assert valueNode instanceof LLVMAccessGlobalVariableStorageNode;
             LLVMAccessGlobalVariableStorageNode node = (LLVMAccessGlobalVariableStorageNode) valueNode;
             value = new LLVMDebugGlobalVariable(node.getDescriptor());
         } else {
-            if (valueNode == null) {
-                return LLVMDebugObjectBuilder.UNAVAILABLE;
-            }
             try {
                 value = valueNode.executeGeneric(null);
-            } catch (Throwable t) {
+            } catch (Throwable ignored) {
                 // constant values should not need frame access
-                value = null;
             }
         }
 
