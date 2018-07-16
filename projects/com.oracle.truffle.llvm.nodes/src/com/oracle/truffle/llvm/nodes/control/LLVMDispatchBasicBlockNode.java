@@ -65,7 +65,7 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
     @Children private final LLVMStatementNode[] copyArgumentsToFrame;
     @CompilationFinal private final FrameSlot loopSuccessorSlot;
 
-    public LLVMDispatchBasicBlockNode(FrameSlot exceptionValueSlot, LLVMStatementNode[] bodyNodes, LLVMUniquesRegionAllocNode uniquesRegionAllocNode, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller, LLVMSourceLocation source,
+    public LLVMDispatchBasicBlockNode(FrameSlot exceptionValueSlot, LLVMBasicBlockNode[] bodyNodes, LLVMUniquesRegionAllocNode uniquesRegionAllocNode, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller, LLVMSourceLocation source,
                     LLVMStatementNode[] copyArgumentsToFrame, FrameSlot loopSuccessorSlot) {
 
         this.exceptionValueSlot = exceptionValueSlot;
@@ -99,28 +99,6 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
         outer: while (basicBlockIndex != LLVMBasicBlockNode.RETURN_FROM_FUNCTION) {
             CompilerAsserts.partialEvaluationConstant(basicBlockIndex);
 
-            // TODO restructure, to have LoopNode fit into LLVMControlFlowNode structure
-            if(bodyNodes[basicBlockIndex] instanceof LLVMLoopNode) {
-                LLVMLoopNode loop = (LLVMLoopNode) bodyNodes[basicBlockIndex];
-                loop.execute(frame);
-                int successorBasicBlockIndex = FrameUtil.getIntSafe(frame, loopSuccessorSlot);
-
-                int[] successors = loop.getSuccessors();
-                for(int i = 0; i < successors.length-1; i++) {
-                    if(successorBasicBlockIndex == successors[i]) {
-                        basicBlockIndex = successors[i];
-                        continue outer;
-                    }
-                }
-
-                int i = successors.length - 1;
-                assert successors[i] == successorBasicBlockIndex : "Could not find loop successor!";
-                basicBlockIndex = successors[i];
-
-                continue outer;
-            }
-
-            assert(bodyNodes[basicBlockIndex] instanceof LLVMBasicBlockNode);
             LLVMBasicBlockNode bb = (LLVMBasicBlockNode) bodyNodes[basicBlockIndex];
 
             // execute all statements
@@ -190,6 +168,34 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
                 nullDeadSlots(frame, basicBlockIndex, afterBlockNuller);
                 basicBlockIndex = successors[i];
                 nullDeadSlots(frame, basicBlockIndex, beforeBlockNuller);
+                continue outer;
+            } else if (controlFlowNode instanceof LLVMLoopNode) {
+                LLVMLoopNode loop = (LLVMLoopNode) controlFlowNode;
+                loop.executeLoop(frame);
+                int successorBasicBlockIndex = FrameUtil.getIntSafe(frame, loopSuccessorSlot);
+
+                int[] successors = loop.getSuccessors();
+                for(int i = 0; i < successors.length-1; i++) {
+                    if(successorBasicBlockIndex == successors[i]) {
+                        if (CompilerDirectives.inInterpreter()) {
+                            if (successors[i] <= basicBlockIndex) {
+                                backEdgeCounter++;
+                            }
+                        }
+                        basicBlockIndex = successors[i];
+                        continue outer;
+                    }
+                }
+
+                int i = successors.length - 1;
+                assert successors[i] == successorBasicBlockIndex : "Could not find loop successor!";
+                if (CompilerDirectives.inInterpreter()) {
+                    if (successors[i] <= basicBlockIndex) {
+                        backEdgeCounter++;
+                    }
+                }
+                basicBlockIndex = successors[i];
+
                 continue outer;
             } else if (controlFlowNode instanceof LLVMIndirectBranchNode) {
                 // TODO (chaeubl): we need a different approach here - this is awfully

@@ -239,10 +239,8 @@ public interface NodeFactory extends InteropNodeFactory {
 
     ForeignToLLVM createForeignToLLVM(ForeignToLLVMType type);
 
-    LLVMExpressionNode createLoopNode(LLVMExpressionNode[] basicBlocks, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller);
+    LLVMControlFlowNode createLoop(LLVMExpressionNode body, int[] successorIDs);
 
-    LLVMStatementNode createLoop(LLVMExpressionNode body, int[] successorIDs);
-
-    LLVMExpressionNode createLoopDispatchNode(FrameSlot exceptionValueSlot, List<LLVMStatementNode> list, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller,
+    LLVMExpressionNode createLoopDispatchNode(FrameSlot exceptionValueSlot, List<? extends LLVMStatementNode> list, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller,
                     int headerId, int[] indexMapping, int[] successors, FrameSlot successorSlot);
 }

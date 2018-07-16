@@ -93,27 +93,6 @@ public final class LLVMLoopDispatchNode extends LLVMExpressionNode {
 
             firstIteration = false;
 
-            if(bodyNodes[indexMapping[basicBlockIndex]] instanceof LLVMLoopNode) {
-                LLVMLoopNode loop = (LLVMLoopNode) bodyNodes[indexMapping[basicBlockIndex]];
-                loop.execute(frame);
-                int successorBasicBlockIndex = FrameUtil.getIntSafe(frame, successorSlot);
-
-                int[] successors = loop.getSuccessors();
-                for(int i = 0; i < successors.length-1; i++) {
-                    if(successorBasicBlockIndex == successors[i]) {
-                        basicBlockIndex = successors[i];
-                        continue outer;
-                    }
-                }
-
-                int i = successors.length - 1;
-                assert successors[i] == successorBasicBlockIndex : "Could not find loop successor";
-                basicBlockIndex = successors[i];
-
-                continue outer;
-            }
-
-            assert(bodyNodes[indexMapping[basicBlockIndex]] instanceof LLVMBasicBlockNode);
             LLVMBasicBlockNode bb = (LLVMBasicBlockNode) bodyNodes[indexMapping[basicBlockIndex]];
 
             // execute all statements
@@ -171,6 +150,24 @@ public final class LLVMLoopDispatchNode extends LLVMExpressionNode {
                 LLVMDispatchBasicBlockNode.nullDeadSlots(frame, basicBlockIndex, afterBlockNuller);
                 basicBlockIndex = successors[i];
                 LLVMDispatchBasicBlockNode.nullDeadSlots(frame, basicBlockIndex, beforeBlockNuller);
+                continue outer;
+            } else if (controlFlowNode instanceof LLVMLoopNode) {
+                LLVMLoopNode loop = (LLVMLoopNode) controlFlowNode;
+                loop.executeLoop(frame);
+                int successorBasicBlockIndex = FrameUtil.getIntSafe(frame, successorSlot);
+
+                int[] successors = loop.getSuccessors();
+                for(int i = 0; i < successors.length-1; i++) {
+                    if(successorBasicBlockIndex == successors[i]) {
+                        basicBlockIndex = successors[i];
+                        continue outer;
+                    }
+                }
+
+                int i = successors.length - 1;
+                assert successors[i] == successorBasicBlockIndex : "Could not find loop successor!";
+                basicBlockIndex = successors[i];
+
                 continue outer;
             } else if (controlFlowNode instanceof LLVMIndirectBranchNode) {
                 // TODO (chaeubl): we need a different approach here - this is awfully

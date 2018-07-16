@@ -37,47 +37,80 @@ import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RepeatingNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
+import com.oracle.truffle.llvm.runtime.debug.scope.LLVMSourceLocation;
+import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStatementNode;
 
-public class LLVMLoopNode extends LLVMStatementNode {
+public abstract class LLVMLoopNode extends LLVMControlFlowNode {
 
-    @Child private LoopNode loop;
-
-    @CompilationFinal(dimensions = 1) private final int[] successors;
-
-    public LLVMLoopNode(LLVMExpressionNode bodyNode, int[] successorIDs) {
-        loop = Truffle.getRuntime().createLoopNode(new LLVMRepeatingNode(bodyNode));
-
-        successors = successorIDs;
+    public static LLVMLoopNode create(LLVMExpressionNode bodyNode, int[] successorIDs) {
+        return new LLVMLoopNodeImpl(bodyNode, successorIDs, null);  // TODO source section
     }
 
-    public int[] getSuccessors() {
-        return successors;
+    public LLVMLoopNode(LLVMSourceLocation source) {
+        super(source);
     }
 
-    private static class LLVMRepeatingNode extends Node implements RepeatingNode {
+    protected LLVMLoopNode(LLVMLoopNode delegate) {
+        super(delegate.getSourceLocation());
+    }
 
-        @Child private LLVMExpressionNode bodyNode;
+    public abstract void executeLoop(VirtualFrame frame);
 
-        public LLVMRepeatingNode(LLVMExpressionNode bodyNode) {
-            this.bodyNode = bodyNode;
+    public abstract int[] getSuccessors();
+
+    private static final class LLVMLoopNodeImpl extends LLVMLoopNode {
+
+        @Child private LoopNode loop;
+
+        @CompilationFinal(dimensions = 1) private final int[] successors;
+
+        private LLVMLoopNodeImpl(LLVMExpressionNode bodyNode, int[] successorIDs, LLVMSourceLocation sourceSection) {
+            super(sourceSection);
+            loop = Truffle.getRuntime().createLoopNode(new LLVMRepeatingNode(bodyNode));
+
+            successors = successorIDs;
         }
 
         @Override
-        public boolean executeRepeating(VirtualFrame frame) {
-            try {
-                return bodyNode.executeI1(frame);
-            } catch (UnexpectedResultException e) {
-                CompilerDirectives.transferToInterpreter();
-                throw new RuntimeException(e);
+        public int[] getSuccessors() {
+            return successors;
+        }
+
+        private static class LLVMRepeatingNode extends Node implements RepeatingNode {
+
+            @Child private LLVMExpressionNode bodyNode;
+
+            public LLVMRepeatingNode(LLVMExpressionNode bodyNode) {
+                this.bodyNode = bodyNode;
+            }
+
+            @Override
+            public boolean executeRepeating(VirtualFrame frame) {
+                try {
+                    return bodyNode.executeI1(frame);
+                } catch (UnexpectedResultException e) {
+                    CompilerDirectives.transferToInterpreter();
+                    throw new RuntimeException(e);
+                }
             }
         }
-    }
 
-    @Override
-    public void execute(VirtualFrame frame) {
-        loop.executeLoop(frame);
-    }
+        @Override
+        public void executeLoop(VirtualFrame frame) {
+            loop.executeLoop(frame);
+        }
 
+        @Override
+        public int getSuccessorCount() {
+            return successors.length;
+        }
+
+        @Override
+        public LLVMStatementNode getPhiNode(int successorIndex) {
+            return null;
+        }
+
+    }
 }

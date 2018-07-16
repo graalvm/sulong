@@ -69,6 +69,7 @@ import com.oracle.truffle.llvm.runtime.debug.type.LLVMSourceFunctionType;
 import com.oracle.truffle.llvm.runtime.except.LLVMUserException;
 import com.oracle.truffle.llvm.runtime.memory.LLVMStack;
 import com.oracle.truffle.llvm.runtime.memory.LLVMStack.UniquesRegion;
+import com.oracle.truffle.llvm.runtime.nodes.api.LLVMControlFlowNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStatementNode;
 import com.oracle.truffle.llvm.runtime.types.PointerType;
@@ -190,10 +191,10 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
             LLVMExpressionNode loopBody = runtime.getNodeFactory().createLoopDispatchNode(frame.findFrameSlot(LLVMUserException.FRAME_SLOT_ID), Collections.unmodifiableList(bodyNodes),
                             nullableBeforeBlock, nullableAfterBlock, headerId, indexMapping, loopSuccessors, loopSuccessorSlot);
 
-            LLVMStatementNode loopNode = runtime.getNodeFactory().createLoop(loopBody, loopSuccessors);
+            LLVMControlFlowNode loopNode = runtime.getNodeFactory().createLoop(loopBody, loopSuccessors);
 
             // replace header block with loop node
-            resolvedNodes.set(headerId, loopNode);
+            resolvedNodes.set(headerId, runtime.getNodeFactory().createBasicBlockNode(new LLVMStatementNode[0], loopNode, headerId, ("loopAt" + headerId)));
         }
 
         return resolvedNodes;

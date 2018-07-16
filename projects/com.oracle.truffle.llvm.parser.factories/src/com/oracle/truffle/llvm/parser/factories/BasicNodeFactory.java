@@ -1292,11 +1292,6 @@ public class BasicNodeFactory implements NodeFactory {
     }
 
     @Override
-    public LLVMExpressionNode createLoopNode(LLVMExpressionNode[] basicBlocks, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller) {
-        return LLVMLoopNode.create(Arrays.copyOf(basicBlocks, basicBlocks.length, LLVMExpressionNode[].class), beforeBlockNuller, afterBlockNuller);
-    }
-
-    @Override
     public LLVMExpressionNode createArrayLiteral(List<LLVMExpressionNode> arrayValues, ArrayType arrayType, GetStackSpaceFactory arrayGetStackSpaceFactory) {
         assert arrayType.getNumberOfElements() == arrayValues.size();
         LLVMExpressionNode arrayGetStackSpace = arrayGetStackSpaceFactory.createGetStackSpace(context, arrayType);
@@ -1496,7 +1491,7 @@ public class BasicNodeFactory implements NodeFactory {
                     FrameSlot[][] beforeBlockNuller,
                     FrameSlot[][] afterBlockNuller, LLVMSourceLocation location, LLVMStatementNode[] copyArgumentsToFrame, FrameSlot loopSuccessorSlot) {
         LLVMUniquesRegionAllocNode uniquesRegionAllocNode = LLVMUniquesRegionAllocNodeGen.create(uniquesRegionAllocator);
-        return new LLVMDispatchBasicBlockNode(exceptionValueSlot, allFunctionNodes.toArray(new LLVMStatementNode[allFunctionNodes.size()]), uniquesRegionAllocNode, beforeBlockNuller,
+        return new LLVMDispatchBasicBlockNode(exceptionValueSlot, allFunctionNodes.toArray(new LLVMBasicBlockNode[allFunctionNodes.size()]), uniquesRegionAllocNode, beforeBlockNuller,
                         afterBlockNuller, location,
                         copyArgumentsToFrame, loopSuccessorSlot);
     }
@@ -2263,14 +2258,14 @@ public class BasicNodeFactory implements NodeFactory {
     }
 
     @Override
-    public LLVMStatementNode createLoop(LLVMExpressionNode body, int[] successorIDs) {
-        return new LLVMLoopNode(body, successorIDs);
+    public LLVMControlFlowNode createLoop(LLVMExpressionNode body, int[] successorIDs) {
+        return LLVMLoopNode.create(body, successorIDs);
     }
 
     @Override
-    public LLVMExpressionNode createLoopDispatchNode(FrameSlot exceptionValueSlot, List<LLVMStatementNode> bodyNodes, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller,
+    public LLVMExpressionNode createLoopDispatchNode(FrameSlot exceptionValueSlot, List<? extends LLVMStatementNode> bodyNodes, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller,
                     int headerId, int[] indexMapping, int[] successors, FrameSlot successorSlot) {
-        return new LLVMLoopDispatchNode(exceptionValueSlot, bodyNodes.toArray(new LLVMStatementNode[bodyNodes.size()]), beforeBlockNuller, afterBlockNuller, headerId, indexMapping, successors,
+        return new LLVMLoopDispatchNode(exceptionValueSlot, bodyNodes.toArray(new LLVMBasicBlockNode[bodyNodes.size()]), beforeBlockNuller, afterBlockNuller, headerId, indexMapping, successors,
                         successorSlot);
     }
 }
