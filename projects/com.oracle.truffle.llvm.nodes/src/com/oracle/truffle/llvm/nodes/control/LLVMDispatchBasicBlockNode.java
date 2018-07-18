@@ -173,6 +173,7 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
                 LLVMLoopNode loop = (LLVMLoopNode) controlFlowNode;
                 loop.executeLoop(frame);
                 int successorBasicBlockIndex = FrameUtil.getIntSafe(frame, loopSuccessorSlot);
+                frame.setInt(loopSuccessorSlot, 0); // null frame
 
                 int[] successors = loop.getSuccessors();
                 for(int i = 0; i < successors.length-1; i++) {

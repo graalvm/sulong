@@ -92,6 +92,10 @@ public final class LLVMControlFlowGraph {
             return body;
         }
 
+        public List<CFGLoop> getInnerLoops() {
+            return innerLoops;
+        }
+
         public Set<CFGBlock> getSuccessors() {
             if (successors == null) {
                 calculateSuccessors();

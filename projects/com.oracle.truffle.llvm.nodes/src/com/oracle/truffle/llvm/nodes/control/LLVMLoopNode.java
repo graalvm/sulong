@@ -111,6 +111,5 @@ public abstract class LLVMLoopNode extends LLVMControlFlowNode {
         public LLVMStatementNode getPhiNode(int successorIndex) {
             return null;
         }
-
     }
 }
