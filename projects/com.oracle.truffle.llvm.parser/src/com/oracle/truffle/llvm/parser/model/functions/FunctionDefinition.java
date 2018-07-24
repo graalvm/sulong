@@ -265,7 +265,9 @@ public final class FunctionDefinition implements Constant, FunctionSymbol, Metad
 
     @Override
     public boolean isExported() {
-        return Linkage.isExported(linkage, visibility);
+        return Linkage.isExported(linkage, visibility) || /*
+                                                           * Swift compiler generates protected main
+                                                           */(name.equals("@main") && visibility == Visibility.PROTECTED);
     }
 
     @Override
