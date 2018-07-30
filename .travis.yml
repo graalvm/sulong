@@ -62,6 +62,8 @@ matrix:
           - libc++1
           - libc++-dev
   - env: LLVM_VER=3.9 GATE_TAGS='sulongBasic' COMPILE_COMMAND='mx build'
+    language: rust 
+    rust: 1.27.1 
     addons:
       apt:
         sources:
