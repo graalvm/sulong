@@ -32,6 +32,7 @@ import os
 from os.path import join
 import shutil
 import subprocess
+import glob
 from argparse import ArgumentParser
 
 import mx
@@ -82,6 +83,7 @@ supportedLLVMVersions = [
 basicLLVMDependencies = [
     'clang',
     'clang++',
+    'rustc',
     'opt',
     'llc',
     'llvm-as'
@@ -107,13 +109,26 @@ clangFormatVersions = [
     '4.0',
 ]
 
+# the file paths that we want to check with rustfmt
+rustfmtCheckPaths = [
+    join(_testDir, "com.oracle.truffle.llvm.tests.sulongrust")
+]
+
 def _unittest_config_participant(config):
     (vmArgs, mainClass, mainClassArgs) = config
-    libs = [mx_subst.path_substitutions.substitute('<path:SULONG_TEST_NATIVE>/<lib:sulongtest>')]
+    testSuitePath = mx_subst.path_substitutions.substitute('<path:SULONG_TEST_SUITES>')
+    libs = [mx_subst.path_substitutions.substitute('<path:SULONG_TEST_NATIVE>/<lib:sulongtest>')] + getUnittestLibraryDependencies(testSuitePath)
     vmArgs = getCommonOptions(True, libs) + vmArgs
     return (vmArgs, mainClass, mainClassArgs)
 
 add_config_participant(_unittest_config_participant)
+
+def getUnittestLibraryDependencies(libs_files_path):
+    libs = []
+    for libs_file in glob.glob(os.path.join(libs_files_path, '*', 'libs')):
+        with open(libs_file, 'r') as l:
+            libs += l.readline().split()
+    return [mx_subst.path_substitutions.substitute(lib) for lib in libs]
 
 class TemporaryEnv(object):
     def __init__(self, key, value):
@@ -139,6 +154,8 @@ def _sulong_gate_runner(args, tasks):
                     t.abort('Copyright errors found. Please run "mx checkcopyrights --primary -- --fix" to fix them.')
         with Task('ClangFormat', tasks, tags=['style', 'clangformat']) as t:
             if t: clangformatcheck()
+        with Task('Rustfmt', tasks, tags=['style', 'rustfmt']) as t:
+            if t: rustfmtcheck()
         with Task('TestBenchmarks', tasks, tags=['benchmarks', 'sulongMisc']) as t:
             if t: mx_testsuites.runSuite('shootout')
         with Task('TestTypes', tasks, tags=['type', 'sulongMisc']) as t:
@@ -181,6 +198,9 @@ def testLLVMImage(image, imageArgs=None, testFilter=None, libPath=True, test=Non
     aotArgs = []
     if libPath:
         aotArgs += [mx_subst.path_substitutions.substitute('-Dllvm.home=<path:SULONG_LIBS>')]
+    libs = getUnittestLibraryDependencies(mx_subst.path_substitutions.substitute('<path:SULONG_TEST_SUITES>'))
+    if libs:
+        aotArgs += ['--llvm.libraries=' + ':'.join(libs)]
     if imageArgs is not None:
         aotArgs += imageArgs
     if aotArgs:
@@ -219,14 +239,22 @@ def runLLVMUnittests(unittest_runner):
 def clangformatcheck(args=None):
     """ Performs a format check on the include/truffle.h file """
     for f in clangFormatCheckPaths:
-        checkCFiles(f)
+        checkFiles(f, checkCFile, ['.c', '.cpp', '.h', '.hpp'])
 
-def checkCFiles(targetDir):
+def rustfmtcheck(args=None):
+    """ Performs a format check on the Rust test files """
+    if not checkRustComponent('rustfmt'):
+        mx.warn("'rustfmt' is not available")
+        return
+    for f in rustfmtCheckPaths:
+        checkFiles(f, checkRustFile, ['rs'])
+
+def checkFiles(targetDir, fileChecker, exts):
     error = False
     for path, _, files in os.walk(targetDir):
         for f in files:
-            if f.endswith('.c') or f.endswith('.cpp') or f.endswith('.h') or f.endswith('.hpp'):
-                if not checkCFile(path + '/' + f):
+            if f.endswith(tuple(exts)):
+                if not fileChecker(path + '/' + f):
                     error = True
     if error:
         mx.log_error("found formatting errors!")
@@ -248,6 +276,22 @@ def checkCFile(targetFile):
         mx.log('\nmodified formatting in {0} to the format above'.format(targetFile))
         return False
     return True
+
+def checkRustFile(targetFile):
+    """ Checks the formatting of a Rust file and returns True if the formatting is okay """
+    if not checkRustComponent('rustfmt'):
+        exit("Unable to find 'rustfmt' executable")
+    returncode_check = mx.run(['rustfmt', '--check', targetFile], nonZeroIsFatal=False)
+    if returncode_check == 1:
+        # formatted code differs from existing code or error occured; try to modify the file to the right format
+        returncode_replace = mx.run(['rustfmt', targetFile], nonZeroIsFatal=False)
+        if returncode_replace == 0:
+            mx.log('modified formatting in {0}'.format(targetFile))
+            return False
+    elif returncode_check == 0:
+        return True
+    mx.log_error('encountered parsing errors or operational errors when trying to format {0}'.format(targetFile))
+    return False
 
 # platform dependent
 def pullLLVMBinaries(args=None):
@@ -297,6 +341,15 @@ def dragonEggGPP(args=None):
     """executes G++ with dragonegg"""
     executeCommand = [getGPP(), "-fplugin=" + dragonEggPath(), '-fplugin-arg-dragonegg-emit-ir']
     return mx.run(executeCommand + args)
+
+def checkRustComponent(componentName):
+    """checks if a Rust component is available; may try to install the active toolchain if it is missing"""
+    if (componentName == 'rustc' and os.environ.get('SULONG_USE_RUSTC', 'true') == 'false') or which(componentName) is None:
+        return False
+
+    component = subprocess.Popen([componentName, '--version'], stdout=subprocess.PIPE)
+    component.communicate()
+    return component.returncode == 0
 
 def which(program, searchPath=None):
     def is_exe(fpath):
@@ -445,10 +498,19 @@ def extract_compiler_args(args, useDoubleDash=False):
                 remainder += [arg]
     return compilerArgs, remainder
 
+def extract_arg_values(vmArgs, argKey):
+    values, remainder = [], []
+    for arg in vmArgs:
+        if arg.startswith(argKey + '='):
+            values += arg[(len(argKey)+1):].split(':')
+        else:
+            remainder += [arg]
+    return values, remainder
+
 def runLLVM(args=None, out=None):
     """uses Sulong to execute a LLVM IR file"""
     vmArgs, sulongArgs = truffle_extract_VM_args(args)
-    return mx.run_java(getCommonOptions(False) + vmArgs + getClasspathOptions() + ["com.oracle.truffle.llvm.launcher.LLVMLauncher"] + sulongArgs, out=out)
+    return mx.run_java(getCommonOptions(False) + substituteLibAliases(vmArgs) + getClasspathOptions() + ["com.oracle.truffle.llvm.launcher.LLVMLauncher"] + sulongArgs, out=out)
 
 def getCommonOptions(withAssertion, lib_args=None):
     options = ['-Dgraal.TruffleCompilationExceptionsArePrinted=true',
@@ -463,6 +525,31 @@ def getCommonOptions(withAssertion, lib_args=None):
         options += ['-ea', '-esa']
 
     return options
+
+def substituteLibAliases(vmArgs):
+    librariesOption = '-Dpolyglot.llvm.libraries'
+    lib_args, substitutedVmArgs = extract_arg_values(vmArgs, librariesOption)
+    if len(lib_args) == 0:
+        return vmArgs
+
+    lib_aliases = {
+        'l(.*)rust' : '<rustlib:*>'
+    }
+
+    lib_aliases = {re.compile(k+'$'):v for k, v in lib_aliases.items()}
+    resolved_lib_args = []
+    for lib_arg in lib_args:
+        for lib_alias, lib_alias_value in lib_aliases.items():
+            match = lib_alias.match(lib_arg)
+            if match:
+                lib_arg = lib_alias_value
+                if match.lastindex is not None:
+                    lib_arg = lib_arg.replace('*', match.group(1))
+                lib_arg = mx_subst.path_substitutions.substitute(lib_arg)
+        resolved_lib_args.append(lib_arg)
+    substitutedVmArgs.append(librariesOption + '=' + ':'.join(resolved_lib_args))
+
+    return substitutedVmArgs
 
 def getLLVMRootOption():
     return "-Dsulongtest.projectRoot=" + _root
@@ -597,6 +684,22 @@ def findGCCProgram(gccProgram, optional=False):
     else:
         return installedProgram
 
+def findRustLibrary(name, on_failure=exit):
+    """looks up the path to the given Rust library for the active toolchain; may try to install the active toolchain if it is missing; exits by default if installation fails"""
+    if not checkRustComponent('rustc'):
+        on_failure('Rust is not available')
+        return None
+
+    sysroot = subprocess.check_output(['rustc', '--print', 'sysroot']).rstrip()
+    lib_paths = glob.glob(os.path.join(sysroot, 'lib', mx.add_lib_suffix('lib' + name + '-*')))
+    if len(lib_paths) == 0:
+        on_failure('could not find Rust library ' + name)
+        return None
+    else:
+        return lib_paths[0]
+
+mx_subst.path_substitutions.register_with_arg('rustlib', findRustLibrary)
+
 def getClasspathOptions():
     """gets the classpath of the Sulong distributions"""
     return mx.get_runtime_jvm_args(['SULONG', 'SULONG_LAUNCHER'])
@@ -619,8 +722,6 @@ def opt(args=None, version=None, out=None, err=None):
     return mx.run([findLLVMProgram('opt', version)] + args, out=out, err=err)
 
 # Project classes
-
-import glob
 
 class ArchiveProject(mx.ArchivableProject):
     def __init__(self, suite, name, deps, workingSets, theLicense, **args):
