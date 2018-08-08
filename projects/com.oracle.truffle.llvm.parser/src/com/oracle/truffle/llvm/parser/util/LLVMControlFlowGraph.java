@@ -306,7 +306,7 @@ public final class LLVMControlFlowGraph {
         long loopsToProcess = loops;
         while (loopsToProcess > 0) {
             inLoop = 64 - Long.numberOfLeadingZeros(loopsToProcess);
-            loopsToProcess &= ~(1 << inLoop - 1);
+            loopsToProcess &= ~(1L << (inLoop - 1));
             this.cfgLoops.get(inLoop - 1).body.add(block);
         }
 
@@ -319,6 +319,8 @@ public final class LLVMControlFlowGraph {
 
             assert block.loops == 0;
             block.loops = 1L << nextLoop;
+
+            assert block.loops > 0 : "Too many loops!";
 
             cfgLoops.add(new CFGLoop(nextLoop));
             cfgLoops.get(nextLoop).loopHeader = block;
