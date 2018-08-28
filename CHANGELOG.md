@@ -1,8 +1,16 @@
+# Version 1.0.0 RC6
+
+New features:
+
+* Support for IR-level debugging
+* New polyglot cast functions for primitive array types.
+* Support for function pointer members in `polyglot_as_typed`.
+
 # Version 1.0.0 RC5
 
 New features:
 
-* Support the `__builtin_debugtrap` function based on LLVM's `@llvmn.debugtrap`
+* Support the `__builtin_debugtrap` function based on LLVM's `@llvm.debugtrap`
   intrinsic
 
 Improvements:

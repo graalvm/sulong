@@ -29,14 +29,12 @@
  */
 package com.oracle.truffle.llvm.runtime.vector;
 
-import java.util.Arrays;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
+import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
+import com.oracle.truffle.llvm.runtime.types.Type;
 
 @ValueType
-public final class LLVMDoubleVector {
+public final class LLVMDoubleVector extends LLVMVector {
 
     private final double[] vector;
 
@@ -48,105 +46,22 @@ public final class LLVMDoubleVector {
         this.vector = vector;
     }
 
-    // We do not want to use lambdas because of bad startup
-    private interface Operation {
-        double eval(double a, double b);
-    }
-
-    private static LLVMDoubleVector doOperation(LLVMDoubleVector lhs, LLVMDoubleVector rhs, Operation op) {
-        double[] left = lhs.vector;
-        double[] right = rhs.vector;
-
-        // not sure if this assert is true for llvm ir in general
-        // this implementation however assumes it
-        assert left.length == right.length;
-
-        double[] result = new double[left.length];
-
-        for (int i = 0; i < left.length; i++) {
-            result[i] = op.eval(left[i], right[i]);
-        }
-        return create(result);
-    }
-
-    public static LLVMI1Vector compare(LLVMDoubleVector a, LLVMDoubleVector b, BiFunction<Double, Double, Boolean> function) {
-        boolean[] result = new boolean[a.vector.length];
-
-        for (int i = 0; i < a.vector.length; i++) {
-            result[i] = function.apply(a.vector[i], b.vector[i]);
-        }
-        return LLVMI1Vector.create(result);
-    }
-
-    public LLVMDoubleVector apply(Function<Double, Double> function) {
-        double[] result = new double[vector.length];
-
-        for (int i = 0; i < vector.length; i++) {
-            result[i] = function.apply(vector[i]);
-        }
-        return create(result);
-    }
-
-    public LLVMDoubleVector add(LLVMDoubleVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public double eval(double a, double b) {
-                return a + b;
-            }
-        });
-    }
-
-    public LLVMDoubleVector mul(LLVMDoubleVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public double eval(double a, double b) {
-                return a * b;
-            }
-        });
-    }
-
-    public LLVMDoubleVector sub(LLVMDoubleVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public double eval(double a, double b) {
-                return a - b;
-            }
-        });
-    }
-
-    public LLVMDoubleVector div(LLVMDoubleVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public double eval(double a, double b) {
-                return a / b;
-            }
-        });
-    }
-
-    public LLVMDoubleVector rem(LLVMDoubleVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public double eval(double a, double b) {
-                return a % b;
-            }
-        });
-    }
-
-    public double[] getValues() {
-        return vector;
-    }
-
     public double getValue(int index) {
         return vector[index];
     }
 
-    public LLVMDoubleVector insert(double element, int index) {
-        double[] copyOf = Arrays.copyOf(vector, vector.length);
-        copyOf[index] = element;
-        return create(copyOf);
-    }
-
+    @Override
     public int getLength() {
         return vector.length;
+    }
+
+    @Override
+    public Type getElementType() {
+        return PrimitiveType.DOUBLE;
+    }
+
+    @Override
+    public Object getElement(int index) {
+        return index >= 0 && index < vector.length ? vector[index] : null;
     }
 }

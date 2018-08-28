@@ -29,6 +29,8 @@
  */
 package com.oracle.truffle.llvm.runtime.pointer;
 
+import java.util.Objects;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
@@ -61,14 +63,14 @@ class LLVMPointerImpl implements LLVMManagedPointer, LLVMNativePointer, LLVMObje
             return false;
         }
         LLVMPointerImpl other = (LLVMPointerImpl) obj;
-        return this.object == other.object && this.offset == other.offset;
+        return Objects.equals(this.object, other.object) && this.offset == other.offset;
     }
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = 31 * result + (object == null ? 0 : System.identityHashCode(object));
-        result = 31 * result + (int) offset;
+        result = 31 * result + Objects.hashCode(object);
+        result = 31 * result + Long.hashCode(offset);
         return result;
     }
 

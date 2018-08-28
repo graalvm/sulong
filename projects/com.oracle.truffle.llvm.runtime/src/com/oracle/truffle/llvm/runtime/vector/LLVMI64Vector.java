@@ -29,13 +29,12 @@
  */
 package com.oracle.truffle.llvm.runtime.vector;
 
-import java.util.Arrays;
-import java.util.function.BiFunction;
-
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
+import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
+import com.oracle.truffle.llvm.runtime.types.Type;
 
 @ValueType
-public final class LLVMI64Vector {
+public final class LLVMI64Vector extends LLVMVector {
 
     private final long[] vector;
 
@@ -47,170 +46,22 @@ public final class LLVMI64Vector {
         this.vector = vector;
     }
 
-    // We do not want to use lambdas because of bad startup
-    private interface Operation {
-        long eval(long a, long b);
-    }
-
-    private static LLVMI64Vector doOperation(LLVMI64Vector lhs, LLVMI64Vector rhs, Operation op) {
-        long[] left = lhs.vector;
-        long[] right = rhs.vector;
-
-        // not sure if this assert is true for llvm ir in general
-        // this implementation however assumes it
-        assert left.length == right.length;
-
-        long[] result = new long[left.length];
-
-        for (int i = 0; i < left.length; i++) {
-            result[i] = op.eval(left[i], right[i]);
-        }
-        return create(result);
-    }
-
-    public LLVMI64Vector add(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a + b;
-            }
-        });
-    }
-
-    public LLVMI64Vector mul(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a * b;
-            }
-        });
-    }
-
-    public LLVMI64Vector sub(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a - b;
-            }
-        });
-    }
-
-    public LLVMI64Vector div(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a / b;
-            }
-        });
-    }
-
-    public LLVMI64Vector divUnsigned(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return Long.divideUnsigned(a, b);
-            }
-        });
-    }
-
-    public LLVMI64Vector rem(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a % b;
-            }
-        });
-    }
-
-    public LLVMI64Vector remUnsigned(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return Long.remainderUnsigned(a, b);
-            }
-        });
-    }
-
-    public LLVMI64Vector and(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a & b;
-            }
-        });
-    }
-
-    public LLVMI64Vector or(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a | b;
-            }
-        });
-    }
-
-    public LLVMI64Vector leftShift(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a << b;
-            }
-        });
-    }
-
-    public LLVMI64Vector logicalRightShift(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a >>> b;
-            }
-        });
-    }
-
-    public LLVMI64Vector arithmeticRightShift(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a >> b;
-            }
-        });
-    }
-
-    public LLVMI64Vector xor(LLVMI64Vector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public long eval(long a, long b) {
-                return a ^ b;
-            }
-        });
-    }
-
-    public long[] getValues() {
-        return vector;
-    }
-
     public long getValue(int index) {
         return vector[index];
     }
 
-    public LLVMI64Vector insert(long element, int index) {
-        long[] copyOf = Arrays.copyOf(vector, vector.length);
-        copyOf[index] = element;
-        return create(copyOf);
-    }
-
+    @Override
     public int getLength() {
         return vector.length;
     }
 
-    public LLVMI1Vector doCompare(LLVMI64Vector other, BiFunction<Long, Long, Boolean> comparison) {
-        int length = getLength();
-        boolean[] values = new boolean[length];
+    @Override
+    public Type getElementType() {
+        return PrimitiveType.I64;
+    }
 
-        for (int i = 0; i < length; i++) {
-            values[i] = comparison.apply(getValue(i), other.getValue(i));
-        }
-
-        return LLVMI1Vector.create(values);
+    @Override
+    public Object getElement(int index) {
+        return index >= 0 && index < vector.length ? vector[index] : null;
     }
 }

@@ -27,9 +27,12 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+QUIETLY$(MX_VERBOSE) = @
 
 .PHONY: default
 default: bin/${LIBSULONG}
+
+CLANG?=clang
 
 ifeq ($(OS), darwin)
 LDFLAGS=-dynamiclib -g
@@ -40,8 +43,8 @@ endif
 CFLAGS=-g -fPIC -DPIC -O3
 
 bin/${LIBSULONG}: bin/misc.o bin/posix.o bin/fp80.o
-	clang ${LDFLAGS} -lm -o $@ $+
+	$(QUIETLY) $(CLANG) ${LDFLAGS} -lm -o $@ $+
 
 bin/%.o: src/%.c
 	@mkdir -p bin
-	clang ${CPPFLAGS} ${CFLAGS} -c $< -o $@
+	$(QUIETLY) $(CLANG) ${CPPFLAGS} ${CFLAGS} -c $< -o $@

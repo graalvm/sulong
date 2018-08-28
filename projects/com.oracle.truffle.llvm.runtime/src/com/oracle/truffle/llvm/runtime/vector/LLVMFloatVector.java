@@ -29,13 +29,12 @@
  */
 package com.oracle.truffle.llvm.runtime.vector;
 
-import java.util.Arrays;
-import java.util.function.BiFunction;
-
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
+import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
+import com.oracle.truffle.llvm.runtime.types.Type;
 
 @ValueType
-public final class LLVMFloatVector {
+public final class LLVMFloatVector extends LLVMVector {
 
     private final float[] vector;
 
@@ -47,96 +46,22 @@ public final class LLVMFloatVector {
         this.vector = vector;
     }
 
-    // We do not want to use lambdas because of bad startup
-    private interface Operation {
-        float eval(float a, float b);
-    }
-
-    private static LLVMFloatVector doOperation(LLVMFloatVector lhs, LLVMFloatVector rhs, Operation op) {
-        float[] left = lhs.vector;
-        float[] right = rhs.vector;
-
-        // not sure if this assert is true for llvm ir in general
-        // this implementation however assumes it
-        assert left.length == right.length;
-
-        float[] result = new float[left.length];
-
-        for (int i = 0; i < left.length; i++) {
-            result[i] = op.eval(left[i], right[i]);
-        }
-        return create(result);
-    }
-
-    public static LLVMI1Vector compare(LLVMFloatVector a, LLVMFloatVector b, BiFunction<Float, Float, Boolean> function) {
-        boolean[] result = new boolean[a.vector.length];
-
-        for (int i = 0; i < a.vector.length; i++) {
-            result[i] = function.apply(a.vector[i], b.vector[i]);
-        }
-        return LLVMI1Vector.create(result);
-    }
-
-    public LLVMFloatVector add(LLVMFloatVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public float eval(float a, float b) {
-                return a + b;
-            }
-        });
-    }
-
-    public LLVMFloatVector mul(LLVMFloatVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public float eval(float a, float b) {
-                return a * b;
-            }
-        });
-    }
-
-    public LLVMFloatVector sub(LLVMFloatVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public float eval(float a, float b) {
-                return a - b;
-            }
-        });
-    }
-
-    public LLVMFloatVector div(LLVMFloatVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public float eval(float a, float b) {
-                return a / b;
-            }
-        });
-    }
-
-    public LLVMFloatVector rem(LLVMFloatVector rightValue) {
-        return doOperation(this, rightValue, new Operation() {
-            @Override
-            public float eval(float a, float b) {
-                return a % b;
-            }
-        });
-    }
-
-    public float[] getValues() {
-        return vector;
-    }
-
     public float getValue(int index) {
         return vector[index];
     }
 
-    public LLVMFloatVector insert(float element, int index) {
-        float[] copyOf = Arrays.copyOf(vector, vector.length);
-        copyOf[index] = element;
-        return create(copyOf);
-    }
-
+    @Override
     public int getLength() {
         return vector.length;
+    }
+
+    @Override
+    public Type getElementType() {
+        return PrimitiveType.FLOAT;
+    }
+
+    @Override
+    public Object getElement(int index) {
+        return index >= 0 && index < vector.length ? vector[index] : null;
     }
 }

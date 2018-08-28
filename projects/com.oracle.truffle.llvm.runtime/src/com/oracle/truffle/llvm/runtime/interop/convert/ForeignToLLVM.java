@@ -184,61 +184,6 @@ public abstract class ForeignToLLVM extends LLVMNode {
         return new SlowPathForeignToLLVM();
     }
 
-    public static ForeignToLLVM create(Type type) {
-        return create(convert(type));
-    }
-
-    public static ForeignToLLVM create(LLVMInteropType.Value type) {
-        switch (type.getKind()) {
-            case I1:
-                return ToI1NodeGen.create();
-            case I8:
-                return ToI8NodeGen.create();
-            case I16:
-                return ToI16NodeGen.create();
-            case I32:
-                return ToI32NodeGen.create();
-            case I64:
-                return ToI64NodeGen.create();
-            case FLOAT:
-                return ToFloatNodeGen.create();
-            case DOUBLE:
-                return ToDoubleNodeGen.create();
-            case POINTER:
-                return ToPointer.create(type.getBaseType());
-            default:
-                throw new IllegalStateException("unexpected interop kind " + type.getKind());
-        }
-    }
-
-    public static ForeignToLLVM create(ForeignToLLVMType type) {
-        switch (type) {
-            case VOID:
-                return ToVoidLLVMNodeGen.create();
-            case ANY:
-                return ToAnyLLVMNodeGen.create();
-            case I1:
-                return ToI1NodeGen.create();
-            case I8:
-                return ToI8NodeGen.create();
-            case I16:
-                return ToI16NodeGen.create();
-            case I32:
-                return ToI32NodeGen.create();
-            case I64:
-                return ToI64NodeGen.create();
-            case FLOAT:
-                return ToFloatNodeGen.create();
-            case DOUBLE:
-                return ToDoubleNodeGen.create();
-            case POINTER:
-                return ToPointer.create();
-            default:
-                throw new IllegalStateException(type.toString());
-
-        }
-    }
-
     public static Object defaultValue(ForeignToLLVMType type) {
         switch (type) {
             case I1:
@@ -267,16 +212,17 @@ public abstract class ForeignToLLVM extends LLVMNode {
         @CompilationFinal private LLVMMemory memory;
 
         @TruffleBoundary
-        public Object convert(Type type, Object value) {
-            return convert(ForeignToLLVM.convert(type), value);
+        public Object convert(Type type, Object value, LLVMInteropType.Value interopType) {
+            return convert(ForeignToLLVM.convert(type), value, interopType);
         }
 
         @TruffleBoundary
-        public Object convert(ForeignToLLVMType type, Object value) {
+        public Object convert(ForeignToLLVMType type, Object value, LLVMInteropType.Value interopType) {
             if (type == ForeignToLLVMType.ANY) {
                 return ToAnyLLVM.slowPathPrimitiveConvert(value);
             } else if (type == ForeignToLLVMType.POINTER) {
-                return ToPointer.slowPathPrimitiveConvert(value);
+                LLVMInteropType.Structured interopPointerType = interopType.getKind() == LLVMInteropType.ValueKind.POINTER ? interopType.getBaseType() : null;
+                return ToPointer.slowPathPrimitiveConvert(value, interopPointerType);
             } else {
                 if (memory == null) {
                     CompilerDirectives.transferToInterpreterAndInvalidate();

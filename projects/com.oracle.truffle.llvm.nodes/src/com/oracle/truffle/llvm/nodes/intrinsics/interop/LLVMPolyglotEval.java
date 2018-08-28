@@ -54,7 +54,6 @@ import java.io.IOException;
 public abstract class LLVMPolyglotEval extends LLVMIntrinsic {
 
     @Child GetSourceNode getSource;
-    @Child ForeignToLLVM toLLVM = ForeignToLLVM.create(ForeignToLLVMType.POINTER);
 
     public static LLVMPolyglotEval create(LLVMExpressionNode id, LLVMExpressionNode code) {
         return LLVMPolyglotEvalNodeGen.create(GetSourceStringNodeGen.create(false), id, code);
@@ -75,7 +74,8 @@ public abstract class LLVMPolyglotEval extends LLVMIntrinsic {
     @Specialization
     protected Object doEval(Object idPointer, Object srcPointer,
                     @Cached("createReadString()") LLVMReadStringNode readId,
-                    @Cached("createReadString()") LLVMReadStringNode readSrc) {
+                    @Cached("createReadString()") LLVMReadStringNode readSrc,
+                    @Cached("createForeignToLLVM()") ForeignToLLVM toLLVM) {
         try {
             CallTarget callTarget = getSource.execute(readId.executeWithTarget(idPointer), readSrc.executeWithTarget(srcPointer));
             Object foreign = callTarget.call();
@@ -85,6 +85,11 @@ public abstract class LLVMPolyglotEval extends LLVMIntrinsic {
             CompilerDirectives.transferToInterpreter();
             throw new LLVMPolyglotException(this, e.getMessage());
         }
+    }
+
+    @TruffleBoundary
+    protected ForeignToLLVM createForeignToLLVM() {
+        return getNodeFactory().createForeignToLLVM(ForeignToLLVMType.POINTER);
     }
 
     abstract static class GetSourceNode extends LLVMNode {
@@ -116,9 +121,10 @@ public abstract class LLVMPolyglotEval extends LLVMIntrinsic {
                         @Cached("getContextReference()") ContextReference<LLVMContext> ctxRef) {
             Source sourceObject;
             if (legacyMimeTypeEval) {
-                sourceObject = Source.newBuilder(code).name("<eval>").mimeType(id).build();
+                String language = Source.findLanguage(id);
+                sourceObject = Source.newBuilder(language, code, "<eval>").mimeType(id).build();
             } else {
-                sourceObject = Source.newBuilder(code).name("<eval>").language(id).build();
+                sourceObject = Source.newBuilder(id, code, "<eval>").build();
             }
             return ctxRef.get().getEnv().parse(sourceObject);
         }
@@ -133,7 +139,7 @@ public abstract class LLVMPolyglotEval extends LLVMIntrinsic {
             try {
                 // never cache, since the file content could change between invocations
                 Env env = ctxRef.get().getEnv();
-                Source sourceObject = env.newSourceBuilder(env.getTruffleFile(filename)).name("<eval>").language(id).build();
+                Source sourceObject = Source.newBuilder(id, env.getTruffleFile(filename)).build();
                 return env.parse(sourceObject);
             } catch (IOException ex) {
                 throw new LLVMPolyglotException(this, "Could not parse file %s (%s).", filename, ex.getMessage());

@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.parser.metadata.MDAttachment;
 import com.oracle.truffle.llvm.parser.metadata.MetadataAttachmentHolder;
 import com.oracle.truffle.llvm.parser.metadata.debuginfo.SourceFunction;
@@ -251,10 +250,6 @@ public final class FunctionDefinition implements Constant, FunctionSymbol, Metad
         return sourceFunction != null ? sourceFunction.getLexicalScope() : null;
     }
 
-    public SourceSection getSourceSection() {
-        return sourceFunction != null ? sourceFunction.getSourceSection() : null;
-    }
-
     public SourceFunction getSourceFunction() {
         return sourceFunction;
     }
@@ -266,6 +261,11 @@ public final class FunctionDefinition implements Constant, FunctionSymbol, Metad
     @Override
     public boolean isExported() {
         return Linkage.isExported(linkage, visibility);
+    }
+
+    @Override
+    public boolean isOverridable() {
+        return Linkage.isOverridable(linkage, visibility);
     }
 
     @Override

@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
 
+import com.oracle.truffle.llvm.runtime.debug.LLVMDebuggerValue;
 import org.graalvm.options.OptionDescriptor;
 import org.graalvm.options.OptionDescriptors;
 
@@ -49,10 +50,10 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.llvm.Runner.SulongLibrary;
+import com.oracle.truffle.llvm.runtime.Configuration;
 import com.oracle.truffle.llvm.runtime.LLVMContext;
 import com.oracle.truffle.llvm.runtime.LLVMLanguage;
 import com.oracle.truffle.llvm.runtime.LLVMSymbol;
-import com.oracle.truffle.llvm.runtime.NodeFactory;
 import com.oracle.truffle.llvm.runtime.debug.scope.LLVMDebuggerScopeFactory;
 import com.oracle.truffle.llvm.runtime.debug.scope.LLVMSourceLocation;
 import com.oracle.truffle.llvm.runtime.debug.type.LLVMSourceType;
@@ -63,9 +64,9 @@ import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
 import com.oracle.truffle.llvm.runtime.options.SulongEngineOption;
 import com.oracle.truffle.llvm.runtime.pointer.LLVMPointer;
 
-@TruffleLanguage.Registration(id = "llvm", name = "llvm", version = "6.0.0", mimeType = {Sulong.LLVM_SULONG_TYPE, Sulong.LLVM_BITCODE_MIME_TYPE, Sulong.LLVM_BITCODE_BASE64_MIME_TYPE,
-                Sulong.SULONG_LIBRARY_MIME_TYPE, Sulong.LLVM_ELF_SHARED_MIME_TYPE, Sulong.LLVM_ELF_EXEC_MIME_TYPE}, internal = false, interactive = false)
-// TODO: remove Sulong.SULONG_LIBRARY_MIME_TYPE after GR-5904 is closed.
+@TruffleLanguage.Registration(id = "llvm", name = "llvm", version = "6.0.0", internal = false, interactive = false, defaultMimeType = Sulong.LLVM_BITCODE_MIME_TYPE, //
+                byteMimeTypes = {Sulong.LLVM_BITCODE_MIME_TYPE, Sulong.LLVM_ELF_SHARED_MIME_TYPE, Sulong.LLVM_ELF_EXEC_MIME_TYPE}, //
+                characterMimeTypes = {Sulong.LLVM_BITCODE_BASE64_MIME_TYPE, Sulong.LLVM_SULONG_TYPE})
 @ProvidedTags({StandardTags.StatementTag.class, StandardTags.CallTag.class, StandardTags.RootTag.class, DebuggerTags.AlwaysHalt.class})
 public final class Sulong extends LLVMLanguage {
 
@@ -89,7 +90,7 @@ public final class Sulong extends LLVMLanguage {
     @Override
     protected LLVMContext createContext(com.oracle.truffle.api.TruffleLanguage.Env env) {
         Configuration activeConfiguration = getActiveConfiguration(env);
-        LLVMContext newContext = new LLVMContext(this, env, activeConfiguration.createContextExtensions(env, this), getNodeFactory(env), getLanguageHome());
+        LLVMContext newContext = new LLVMContext(this, env, activeConfiguration, getLanguageHome());
         if (mainContext == null) {
             mainContext = newContext;
         } else {
@@ -108,7 +109,7 @@ public final class Sulong extends LLVMLanguage {
     protected CallTarget parse(com.oracle.truffle.api.TruffleLanguage.ParsingRequest request) throws Exception {
         Source source = request.getSource();
         LLVMContext context = findLLVMContext();
-        return new Runner(context, getNodeFactory(context.getEnv())).parse(source);
+        return new Runner(context).parse(source);
     }
 
     @Override
@@ -145,7 +146,7 @@ public final class Sulong extends LLVMLanguage {
     @Override
     protected boolean isObjectOfLanguage(Object object) {
         return LLVMPointer.isInstance(object) || object instanceof LLVMInternalTruffleObject || object instanceof SulongLibrary ||
-                        object instanceof LLVMDebugObject || object instanceof LLVMSourceType || object instanceof LLVMInteropType;
+                        object instanceof LLVMDebuggerValue || object instanceof LLVMInteropType;
     }
 
     @Override
@@ -177,10 +178,6 @@ public final class Sulong extends LLVMLanguage {
         return OptionDescriptors.create(optionDescriptors);
     }
 
-    private NodeFactory getNodeFactory(Env env) {
-        return getActiveConfiguration(env).getNodeFactory(findLLVMContext());
-    }
-
     @TruffleBoundary
     private static Configuration getActiveConfiguration(Env env) {
         String name = env.getOptions().get(SulongEngineOption.CONFIGURATION);
@@ -194,8 +191,8 @@ public final class Sulong extends LLVMLanguage {
 
     @Override
     protected Object findMetaObject(LLVMContext context, Object value) {
-        if (value instanceof LLVMDebugObject) {
-            return ((LLVMDebugObject) value).getType();
+        if (value instanceof LLVMDebuggerValue) {
+            return ((LLVMDebuggerValue) value).getMetaObject();
         } else if (LLVMPointer.isInstance(value)) {
             LLVMPointer ptr = LLVMPointer.cast(value);
             return ptr.getExportType();
@@ -231,10 +228,10 @@ public final class Sulong extends LLVMLanguage {
 
     @Override
     protected Iterable<Scope> findLocalScopes(LLVMContext context, Node node, Frame frame) {
-        if (!context.getEnv().getOptions().get(SulongEngineOption.ENABLE_LVI)) {
-            return super.findLocalScopes(context, node, frame);
+        if (context.getEnv().getOptions().get(SulongEngineOption.ENABLE_LVI)) {
+            return LLVMDebuggerScopeFactory.createSourceLevelScope(node, frame, context);
         } else {
-            return LLVMDebuggerScopeFactory.create(node, frame, context);
+            return LLVMDebuggerScopeFactory.createIRLevelScope(node, frame, context);
         }
     }
 }

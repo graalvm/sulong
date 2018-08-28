@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates.
+ * Copyright (c) 2018, Oracle and/or its affiliates.
  *
  * All rights reserved.
  *
@@ -30,14 +30,16 @@
 package com.oracle.truffle.llvm.nodes.intrinsics.llvm.arith;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
+import com.oracle.truffle.llvm.nodes.memory.store.LLVM80BitFloatStoreNode;
+import com.oracle.truffle.llvm.nodes.memory.store.LLVM80BitFloatStoreNodeGen;
+import com.oracle.truffle.llvm.runtime.floating.LLVM80BitFloat;
 import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
-import com.oracle.truffle.llvm.runtime.pointer.LLVMNativePointer;
+import com.oracle.truffle.llvm.runtime.pointer.LLVMPointer;
+import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
 
-public final class LLVMComplexMul extends LLVMExpressionNode {
+public final class LLVMComplex80BitFloatDiv extends LLVMExpressionNode {
 
     @Child private LLVMExpressionNode aNode;
     @Child private LLVMExpressionNode bNode;
@@ -45,42 +47,41 @@ public final class LLVMComplexMul extends LLVMExpressionNode {
     @Child private LLVMExpressionNode dNode;
     @Child private LLVMExpressionNode alloc;
 
-    public LLVMComplexMul(LLVMExpressionNode alloc, LLVMExpressionNode a, LLVMExpressionNode b, LLVMExpressionNode c, LLVMExpressionNode d) {
+    @Child private LLVM80BitFloatStoreNode store;
+
+    private final int sizeInBytes;
+
+    public LLVMComplex80BitFloatDiv(LLVMExpressionNode alloc, LLVMExpressionNode a, LLVMExpressionNode b, LLVMExpressionNode c, LLVMExpressionNode d) {
         this.alloc = alloc;
         this.aNode = a;
         this.bNode = b;
         this.cNode = c;
         this.dNode = d;
-    }
 
-    @CompilationFinal private LLVMMemory memory;
-
-    private LLVMMemory getMemory() {
-        if (memory == null) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            memory = getLLVMMemory();
-        }
-        return memory;
+        this.store = LLVM80BitFloatStoreNodeGen.create(null, null);
+        this.sizeInBytes = getContextReference().get().getDataSpecConverter().getSize(PrimitiveType.X86_FP80);
     }
 
     @Override
     public Object executeGeneric(VirtualFrame frame) {
         try {
-            double a = aNode.executeDouble(frame);
-            double b = bNode.executeDouble(frame);
-            double c = cNode.executeDouble(frame);
-            double d = dNode.executeDouble(frame);
+            LLVM80BitFloat longDoubleA = aNode.executeLLVM80BitFloat(frame);
+            LLVM80BitFloat longDoubleB = bNode.executeLLVM80BitFloat(frame);
+            LLVM80BitFloat longDoubleC = cNode.executeLLVM80BitFloat(frame);
+            LLVM80BitFloat longDoubleD = dNode.executeLLVM80BitFloat(frame);
 
-            double ac = a * c;
-            double bd = b * d;
-            double ad = a * d;
-            double bc = b * c;
-            double zReal = ac - bd;
-            double zImag = ad + bc;
+            double a = longDoubleA.getDoubleValue();
+            double b = longDoubleB.getDoubleValue();
+            double c = longDoubleC.getDoubleValue();
+            double d = longDoubleD.getDoubleValue();
 
-            LLVMNativePointer allocatedMemory = alloc.executeLLVMNativePointer(frame);
-            getMemory().putDouble(allocatedMemory, zReal);
-            getMemory().putDouble(allocatedMemory.increment(LLVMExpressionNode.DOUBLE_SIZE_IN_BYTES), zImag);
+            double denom = c * c + d * d;
+            double zReal = (a * c + b * d) / denom;
+            double zImag = (b * c - a * d) / denom;
+
+            LLVMPointer allocatedMemory = alloc.executeLLVMPointer(frame);
+            store.executeWithTarget(allocatedMemory, LLVM80BitFloat.fromDouble(zReal));
+            store.executeWithTarget(allocatedMemory.increment(sizeInBytes), LLVM80BitFloat.fromDouble(zImag));
 
             return allocatedMemory;
         } catch (UnexpectedResultException e) {

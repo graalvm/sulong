@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates.
+ * Copyright (c) 2018, Oracle and/or its affiliates.
  *
  * All rights reserved.
  *
@@ -27,38 +27,28 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.nodes.intrinsics.rust;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.llvm.runtime.GuestLanguageRuntimeException;
+typedef char v9sb __attribute__ ((vector_size(9)));
+typedef short v8ss __attribute__ ((vector_size(16)));
+typedef int v7si __attribute__ ((vector_size(28)));
+typedef long v6sl __attribute__ ((vector_size(48)));
+typedef float v5flt __attribute__ ((vector_size(20)));
+typedef double v4dbl __attribute__ ((vector_size(32)));
 
-public class RustPanicException extends GuestLanguageRuntimeException {
-    private static final long serialVersionUID = -130422912069713860L;
-    public static final int EXIT_CODE_PANIC = 101;
-    private final String desc;
-    private final String filename;
-    private final int linenr;
-    private final String threadname;
+template<typename T> void foo(T bar) {
+}
 
-    RustPanicException(String desc, String filename, int linenr) {
-        super(desc);
-        this.desc = desc;
-        this.filename = filename;
-        this.linenr = linenr;
-        this.threadname = Thread.currentThread().getName();
-    }
+template<typename T> void doReceive(T toInspect) {
+    // call another function to ensure lifetime analysis
+    // doesn't kill the value before inspection
+    foo(toInspect);
+}
 
-    @Override
-    @TruffleBoundary
-    public int handleExit() {
-        print();
-        return EXIT_CODE_PANIC;
-    }
-
-    @TruffleBoundary
-    private void print() {
-        String newline = System.getProperty("line.separator");
-        String panicMessage = "thread '" + threadname + "' panicked at '" + desc + "', " + filename + ":" + linenr + newline + "note: No backtrace available";
-        System.err.print(panicMessage);
-    }
+__attribute__((constructor)) void test() {
+    doReceive((v9sb) {'0', '1', '2', '3', '4', '5', '6', '7', '8'});
+    doReceive((v8ss) {0, 1, 2, 3, 4, 5, 6, 7});
+    doReceive((v7si) {0, 1, 2, 3, 4, 5, 6});
+    doReceive((v6sl) {0L, 1L, 2L, 3L, 4L, 5L});
+    doReceive((v5flt) {0.0f, 1.1f, 2.2f, 3.3f, 4.4f});
+    doReceive((v4dbl) {0.0, 1.1, 2.2, 3.3});
 }

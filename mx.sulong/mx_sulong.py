@@ -41,6 +41,7 @@ import re
 import mx_benchmark
 import mx_sulong_benchmarks
 import mx_unittest
+import mx_buildtools
 
 from mx_unittest import add_config_participant
 from mx_gate import Task, add_gate_runner
@@ -80,11 +81,9 @@ supportedLLVMVersions = [
 
 # the basic LLVM dependencies for running the test cases and executing the mx commands
 basicLLVMDependencies = [
-    'clang',
-    'clang++',
-    'opt',
-    'llc',
-    'llvm-as'
+    mx_buildtools.ClangCompiler.CLANG,
+    mx_buildtools.ClangCompiler.CLANGXX,
+    mx_buildtools.Opt.OPT
 ]
 
 # the file paths that we want to check with clang-format
@@ -115,24 +114,30 @@ def _unittest_config_participant(config):
 
 add_config_participant(_unittest_config_participant)
 
+
+# Temporary set environment variables. By default LC_ALL, LANGUAGE, and LANG are set.
 class TemporaryEnv(object):
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-        self.old_value = None
+    def __init__(self, **kwargs):
+        self.old_env = None
+        self.extra_env = dict(
+            LC_ALL='C',
+            LANGUAGE='en_US:en',
+            LANG='en_US.UTF-8',
+        )
+        self.extra_env.update(kwargs)
 
     def __enter__(self):
-        self.old_value = os.environ.get(self.key)
-        os.environ[self.key] = self.value
+        self.old_env = os.environ.copy()
+        os.environ.update(self.extra_env)
 
     def __exit__(self, ex_type, value, traceback):
-        if self.old_value is None:
-            del os.environ[self.key]
-        else:
-            os.environ[self.key] = self.old_value
+        os.environ.clear()
+        os.environ.update(self.old_env)
+        self.old_env = None
+
 
 def _sulong_gate_runner(args, tasks):
-    with TemporaryEnv('LC_ALL', 'C'):
+    with TemporaryEnv():
         with Task('CheckCopyright', tasks, tags=['style']) as t:
             if t:
                 if mx.checkcopyrights(['--primary']) != 0:
@@ -163,6 +168,8 @@ def _sulong_gate_runner(args, tasks):
             if t: mx_unittest.unittest(['com.oracle.truffle.llvm.test.interop'])
         with Task("TestDebug", tasks, tags=['debug', 'sulongBasic']) as t:
             if t: mx_unittest.unittest(['LLVMDebugTest'])
+        with Task("TestIRDebug", tasks, tags=['irdebug', 'sulongBasic']) as t:
+            if t: mx_unittest.unittest(['LLVMIRDebugTest'])
         with Task('TestAssembly', tasks, tags=['assembly', 'sulongMisc']) as t:
             if t: mx_testsuites.runSuite('assembly')
         with Task('TestArgs', tasks, tags=['args', 'sulongMisc']) as t:
@@ -520,7 +527,7 @@ def getLLVMExplicitArgs(mainLLVMVersion):
     return []
 
 def getClangImplicitArgs():
-    mainLLVMVersion = getLLVMVersion('clang')
+    mainLLVMVersion = getLLVMVersion(mx_buildtools.ClangCompiler.CLANG)
     return " ".join(getLLVMExplicitArgs(mainLLVMVersion))
 
 mx_subst.path_substitutions.register_no_arg('clangImplicitArgs', getClangImplicitArgs)

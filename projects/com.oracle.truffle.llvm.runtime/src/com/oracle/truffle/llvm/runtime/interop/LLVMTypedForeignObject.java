@@ -86,6 +86,31 @@ public final class LLVMTypedForeignObject implements LLVMObjectAccess, LLVMInter
         return new ForeignWriteNode();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        // ignores the type explicitly
+        if (obj instanceof LLVMTypedForeignObject) {
+            LLVMTypedForeignObject other = (LLVMTypedForeignObject) obj;
+            return foreign.equals(other.foreign);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        // ignores the type explicitly
+        return foreign.hashCode();
+    }
+
+    @Override
+    public ForeignAccess getForeignAccess() {
+        return LLVMTypedForeignObjectMessageResolutionForeign.ACCESS;
+    }
+
+    public static boolean isInstance(TruffleObject object) {
+        return object instanceof LLVMTypedForeignObject;
+    }
+
     abstract static class TypeCacheNode extends LLVMNode {
 
         protected abstract LLVMInteropType.Structured execute(LLVMTypedForeignObject object);
@@ -185,14 +210,5 @@ public final class LLVMTypedForeignObject implements LLVMObjectAccess, LLVMInter
         public boolean canAccess(Object obj) {
             return obj instanceof LLVMTypedForeignObject;
         }
-    }
-
-    @Override
-    public ForeignAccess getForeignAccess() {
-        return LLVMTypedForeignObjectMessageResolutionForeign.ACCESS;
-    }
-
-    public static boolean isInstance(TruffleObject object) {
-        return object instanceof LLVMTypedForeignObject;
     }
 }

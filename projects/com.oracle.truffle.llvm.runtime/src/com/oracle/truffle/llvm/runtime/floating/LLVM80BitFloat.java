@@ -69,11 +69,13 @@ public final class LLVM80BitFloat implements LLVMArithmetic {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("sign: " + getSign() + "\n");
-        sb.append("exponent: " + getBinaryString(EXPONENT_BIT_WIDTH, getExponent()) + "\n");
-        sb.append("fraction: " + getBinaryString(FRACTION_BIT_WIDTH, getFraction()) + " " + getHexString(HEX_DIGITS_FRACTION, getFraction()) + "\n");
-        return sb.toString();
+        return toLLVMString(this);
+    }
+
+    @TruffleBoundary
+    public String toDebugString() {
+        return String.format("sign: %s\nexponent: %s\nfraction: %s %s\n", getSign(), getBinaryString(EXPONENT_BIT_WIDTH, getExponent()), getBinaryString(FRACTION_BIT_WIDTH, getFraction()),
+                        getHexString(HEX_DIGITS_FRACTION, getFraction()));
     }
 
     @TruffleBoundary
@@ -97,10 +99,12 @@ public final class LLVM80BitFloat implements LLVMArithmetic {
         }
     }
 
+    @TruffleBoundary
     private static String getBinaryString(int bitWidth, long number) {
         return String.format("%" + bitWidth + "s", Long.toBinaryString(number)).replace(" ", "0");
     }
 
+    @TruffleBoundary
     private static String getHexString(int bitWidth, long number) {
         return String.format("%" + bitWidth + "x", number).replace(" ", "0");
     }
@@ -347,18 +351,6 @@ public final class LLVM80BitFloat implements LLVMArithmetic {
         int newExponent = leftExponent + overFlow;
         long newFraction = resultLo + resultHi << Integer.SIZE;
         return LLVM80BitFloat.fromRawValues(newSign, newExponent, newFraction);
-    }
-
-    public LLVM80BitFloat rem(LLVM80BitFloat right) {
-        return fromDouble(getDoubleValue() % right.getDoubleValue());
-    }
-
-    public LLVM80BitFloat pow(int right) {
-        return fromDouble(Math.pow(getDoubleValue(), right));
-    }
-
-    public LLVM80BitFloat pow(LLVM80BitFloat right) {
-        return fromDouble(Math.pow(getDoubleValue(), right.getDoubleValue()));
     }
 
     public LLVM80BitFloat abs() {
@@ -652,7 +644,7 @@ public final class LLVM80BitFloat implements LLVMArithmetic {
     protected abstract static class LLVM80BitFloatNativeCallNode extends LLVMNode {
         private final String name;
 
-        @Child private Node nativeExecute = Message.createExecute(2).createNode();
+        @Child private Node nativeExecute = Message.EXECUTE.createNode();
 
         public LLVM80BitFloatNativeCallNode(String name) {
             this.name = name;

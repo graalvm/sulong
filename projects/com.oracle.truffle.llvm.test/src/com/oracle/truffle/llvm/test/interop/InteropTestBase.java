@@ -34,6 +34,7 @@ import java.io.IOException;
 import org.junit.ClassRule;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.InteropException;
@@ -55,9 +56,10 @@ public class InteropTestBase {
     protected static TruffleObject loadTestBitcodeInternal(String name) {
         File dir = new File(testBase, name);
         File file = new File(dir, "O0_MEM2REG.bc");
+        TruffleFile tf = runWithPolyglot.getTruffleTestEnv().getTruffleFile(file.toURI());
         Source source;
         try {
-            source = Source.newBuilder(file).language("llvm").build();
+            source = Source.newBuilder("llvm", tf).build();
         } catch (IOException ex) {
             throw new AssertionError(ex);
         }
@@ -82,14 +84,14 @@ public class InteropTestBase {
         private final TruffleObject function;
         @Child private Node execute;
 
-        protected SulongTestNode(TruffleObject testLibrary, String fnName, int argCount) {
+        protected SulongTestNode(TruffleObject testLibrary, String fnName) {
             super(null);
             try {
                 function = (TruffleObject) ForeignAccess.sendRead(Message.READ.createNode(), testLibrary, fnName);
             } catch (InteropException ex) {
                 throw new AssertionError(ex);
             }
-            execute = Message.createExecute(argCount).createNode();
+            execute = Message.EXECUTE.createNode();
         }
 
         @Override

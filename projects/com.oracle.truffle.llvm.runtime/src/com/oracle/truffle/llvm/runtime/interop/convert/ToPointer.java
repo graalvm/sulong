@@ -48,7 +48,7 @@ import com.oracle.truffle.llvm.runtime.pointer.LLVMPointer;
 
 @NodeChild(type = Dummy.class)
 @NodeChild(type = InteropTypeNode.class)
-abstract class ToPointer extends ForeignToLLVM {
+public abstract class ToPointer extends ForeignToLLVM {
 
     public static ToPointer create() {
         return ToPointerNodeGen.create(null, new InteropTypeNode(null));
@@ -147,7 +147,7 @@ abstract class ToPointer extends ForeignToLLVM {
     }
 
     @TruffleBoundary
-    static Object slowPathPrimitiveConvert(Object value) {
+    static Object slowPathPrimitiveConvert(Object value, LLVMInteropType.Structured type) {
         if (value instanceof Number) {
             return new LLVMBoxedPrimitive(value);
         } else if (value instanceof Boolean) {
@@ -163,7 +163,7 @@ abstract class ToPointer extends ForeignToLLVM {
         } else if (value instanceof LLVMInternalTruffleObject) {
             return LLVMManagedPointer.create((LLVMInternalTruffleObject) value);
         } else if (value instanceof TruffleObject && notLLVM((TruffleObject) value)) {
-            LLVMTypedForeignObject typed = LLVMTypedForeignObject.createUnknown((TruffleObject) value);
+            LLVMTypedForeignObject typed = LLVMTypedForeignObject.create((TruffleObject) value, type);
             return LLVMManagedPointer.create(typed);
         } else {
             throw UnsupportedTypeException.raise(new Object[]{value});

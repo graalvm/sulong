@@ -36,10 +36,11 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.llvm.runtime.LLVMBoxedPrimitive;
 import com.oracle.truffle.llvm.runtime.memory.LLVMMemory;
+import com.oracle.truffle.llvm.runtime.pointer.LLVMPointer;
 
-abstract class ToI64 extends ForeignToLLVM {
+public abstract class ToI64 extends ForeignToLLVM {
 
-    @Child private ToI64 toI64;
+    @Child private ForeignToLLVM toI64;
 
     @Specialization
     protected long fromInt(int value) {
@@ -82,13 +83,18 @@ abstract class ToI64 extends ForeignToLLVM {
     }
 
     @Specialization
-    protected long fromForeignPrimitive(LLVMBoxedPrimitive boxed) {
+    protected Object fromForeignPrimitive(LLVMBoxedPrimitive boxed) {
         return recursiveConvert(boxed.getValue());
     }
 
     @Specialization(guards = "notLLVM(obj)")
-    protected long fromTruffleObject(TruffleObject obj) {
+    protected Object fromTruffleObject(TruffleObject obj) {
         return recursiveConvert(fromForeign(obj));
+    }
+
+    @Specialization
+    protected Object fromPointer(LLVMPointer boxed) {
+        return fromTruffleObject(boxed);
     }
 
     @Specialization
@@ -99,7 +105,7 @@ abstract class ToI64 extends ForeignToLLVM {
     private long recursiveConvert(Object o) {
         if (toI64 == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            toI64 = ToI64NodeGen.create();
+            toI64 = insert(getNodeFactory().createForeignToLLVM(ForeignToLLVMType.I64));
         }
         return (long) toI64.executeWithTarget(o);
     }

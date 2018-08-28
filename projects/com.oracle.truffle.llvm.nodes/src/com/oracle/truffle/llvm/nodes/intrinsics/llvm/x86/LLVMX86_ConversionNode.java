@@ -53,7 +53,7 @@ public abstract class LLVMX86_ConversionNode {
                 throw new AssertionError("cvtss2si requires a float[4] as parameter");
             }
 
-            return Math.round(vector.getValues()[0]);
+            return Math.round(vector.getValue(0));
         }
     }
 
@@ -70,7 +70,7 @@ public abstract class LLVMX86_ConversionNode {
 
             // returns an int instead of a long,
             // causes an exception in one OpenCV test application when returning a long
-            return Math.toIntExact(Math.round(vector.getValues()[0]));
+            return Math.toIntExact(Math.round(vector.getValue(0)));
         }
     }
 
@@ -80,7 +80,6 @@ public abstract class LLVMX86_ConversionNode {
         @Specialization
         @ExplodeLoop
         protected int doIntrinsic(LLVMI8Vector vector) {
-
             if (vector.getLength() != 16) {
                 CompilerDirectives.transferToInterpreter();
                 throw new AssertionError("expected a <16 x i8> vector");
@@ -94,6 +93,18 @@ public abstract class LLVMX86_ConversionNode {
 
             return result;
         }
+    }
 
+    @NodeChildren({@NodeChild(type = LLVMExpressionNode.class)})
+    public abstract static class LLVMX86_Movmskpd extends LLVMBuiltin {
+
+        @Specialization
+        protected int doIntrinsic(LLVMDoubleVector vector) {
+            if (vector.getLength() != 2) {
+                CompilerDirectives.transferToInterpreter();
+                throw new AssertionError("expected a <2 x double> vector");
+            }
+            return ((vector.getValue(1) < 0 ? 1 : 0) << 1) | (vector.getValue(0) < 0 ? 1 : 0);
+        }
     }
 }

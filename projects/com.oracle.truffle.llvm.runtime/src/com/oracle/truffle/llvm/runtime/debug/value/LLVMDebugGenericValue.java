@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates.
+ * Copyright (c) 2018, Oracle and/or its affiliates.
  *
  * All rights reserved.
  *
@@ -27,31 +27,51 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm.runtime;
+package com.oracle.truffle.llvm.runtime.debug.value;
 
-public abstract class GuestLanguageRuntimeException extends RuntimeException {
-    private static final long serialVersionUID = 587084213607410827L;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.llvm.runtime.debug.LLVMDebuggerValue;
 
-    protected GuestLanguageRuntimeException() {
-        super();
+public final class LLVMDebugGenericValue extends LLVMDebuggerValue {
+
+    private static final String VALUE_KEY = "<value>";
+    private static final String[] INTEROP_KEYS = new String[]{VALUE_KEY};
+
+    private static final String NO_TYPE = "";
+
+    private final Object value;
+    private final Object type;
+
+    public LLVMDebugGenericValue(Object value, Object type) {
+        this.value = value;
+        this.type = type;
     }
 
-    protected GuestLanguageRuntimeException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    @Override
+    @TruffleBoundary
+    public String toString() {
+        return String.valueOf(value);
     }
 
-    protected GuestLanguageRuntimeException(String message, Throwable cause) {
-        super(message, cause);
+    @TruffleBoundary
+    @Override
+    public Object getMetaObject() {
+        return type == null ? NO_TYPE : String.valueOf(type);
     }
 
-    protected GuestLanguageRuntimeException(String message) {
-        super(message);
+    @Override
+    protected int getElementCountForDebugger() {
+        return value instanceof TruffleObject ? 1 : 0;
     }
 
-    protected GuestLanguageRuntimeException(Throwable cause) {
-        super(cause);
+    @Override
+    protected String[] getKeysForDebugger() {
+        return value instanceof TruffleObject ? INTEROP_KEYS : NO_KEYS;
     }
 
-    public abstract int handleExit();
-
+    @Override
+    protected Object getElementForDebugger(String key) {
+        return VALUE_KEY.equals(key) ? value : null;
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates.
+ * Copyright (c) 2018, Oracle and/or its affiliates.
  *
  * All rights reserved.
  *
@@ -27,35 +27,10 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.oracle.truffle.llvm;
+package com.oracle.truffle.llvm.nodes.op;
 
-import java.util.List;
+import com.oracle.truffle.llvm.runtime.nodes.api.LLVMExpressionNode;
 
-import org.graalvm.options.OptionDescriptor;
-
-import com.oracle.truffle.api.TruffleLanguage;
-import com.oracle.truffle.llvm.runtime.ContextExtension;
-import com.oracle.truffle.llvm.runtime.LLVMContext;
-import com.oracle.truffle.llvm.runtime.NodeFactory;
-
-public interface Configuration {
-
-    String getConfigurationName();
-
-    List<OptionDescriptor> getOptionDescriptors();
-
-    NodeFactory getNodeFactory(LLVMContext context);
-
-    /**
-     * Context extensions encapsulate optional functionality that has a state and which therefore
-     * needs to live on the context-level.
-     */
-    List<ContextExtension> createContextExtensions(com.oracle.truffle.api.TruffleLanguage.Env env, TruffleLanguage<?> language);
-
-    /**
-     * Capabilities encapsulate functionality that is stateless so that it can live on the
-     * language-level.
-     */
-    <E> E getCapability(Class<E> type);
-
+public abstract class LLVMAbstractCompareNode extends LLVMExpressionNode {
+    public abstract boolean executeWithTarget(Object a, Object b);
 }
