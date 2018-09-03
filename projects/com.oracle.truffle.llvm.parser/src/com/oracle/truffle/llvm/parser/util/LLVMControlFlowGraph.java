@@ -105,8 +105,8 @@ public final class LLVMControlFlowGraph {
         }
 
         /**
-         * Calculates the successors of this loop with successors of inner loops potentially forwarded to
-         * the outer loop
+         * Calculates the successors of this loop with successors of inner loops potentially
+         * forwarded to the outer loop.
          */
         private void calculateSuccessors() {
             successors = new HashSet<>();
@@ -236,15 +236,17 @@ public final class LLVMControlFlowGraph {
     }
 
     private void sortLoop(List<CFGLoop> sorted, List<CFGLoop> active, CFGLoop loop) throws ControlFlowBailoutException {
-        if (sorted.contains(loop))
+        if (sorted.contains(loop)) {
             return;
+        }
 
         active.add(loop);
         for (CFGBlock b : loop.body) {
             if (b.isLoopHeader) {
                 CFGLoop inner = cfgLoops.get(b.loopId);
                 if (active.contains(inner)) {
-                    // catches case that there is a stack overflow because two loop nodes are being called iteratively
+                    // catches case that there is a stack overflow because two loop nodes are being
+                    // called iteratively
                     // from one another, without one being left beforehand
                     throw new ControlFlowBailoutException("Irreducible nestedness!");
                 }
@@ -331,7 +333,7 @@ public final class LLVMControlFlowGraph {
 
     private class ControlFlowBailoutException extends Exception {
 
-        public ControlFlowBailoutException(String string) {
+        ControlFlowBailoutException(String string) {
             super(string);
         }
 

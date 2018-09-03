@@ -82,7 +82,7 @@ public abstract class LLVMLoopNode extends LLVMControlFlowNode {
 
             @Child private LLVMExpressionNode bodyNode;
 
-            public LLVMRepeatingNode(LLVMExpressionNode bodyNode) {
+            LLVMRepeatingNode(LLVMExpressionNode bodyNode) {
                 this.bodyNode = bodyNode;
             }
 

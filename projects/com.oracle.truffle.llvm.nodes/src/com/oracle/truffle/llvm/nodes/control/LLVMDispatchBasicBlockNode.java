@@ -65,7 +65,8 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
     @Children private final LLVMStatementNode[] copyArgumentsToFrame;
     @CompilationFinal private final FrameSlot loopSuccessorSlot;
 
-    public LLVMDispatchBasicBlockNode(FrameSlot exceptionValueSlot, LLVMBasicBlockNode[] bodyNodes, LLVMUniquesRegionAllocNode uniquesRegionAllocNode, FrameSlot[][] beforeBlockNuller, FrameSlot[][] afterBlockNuller, LLVMSourceLocation source,
+    public LLVMDispatchBasicBlockNode(FrameSlot exceptionValueSlot, LLVMBasicBlockNode[] bodyNodes, LLVMUniquesRegionAllocNode uniquesRegionAllocNode, FrameSlot[][] beforeBlockNuller,
+                    FrameSlot[][] afterBlockNuller, LLVMSourceLocation source,
                     LLVMStatementNode[] copyArgumentsToFrame, FrameSlot loopSuccessorSlot) {
 
         this.exceptionValueSlot = exceptionValueSlot;
@@ -176,8 +177,8 @@ public final class LLVMDispatchBasicBlockNode extends LLVMExpressionNode {
                 frame.setInt(loopSuccessorSlot, 0); // null frame
 
                 int[] successors = loop.getSuccessors();
-                for(int i = 0; i < successors.length-1; i++) {
-                    if(successorBasicBlockIndex == successors[i]) {
+                for (int i = 0; i < successors.length - 1; i++) {
+                    if (successorBasicBlockIndex == successors[i]) {
                         if (CompilerDirectives.inInterpreter()) {
                             if (successors[i] <= basicBlockIndex) {
                                 backEdgeCounter++;
