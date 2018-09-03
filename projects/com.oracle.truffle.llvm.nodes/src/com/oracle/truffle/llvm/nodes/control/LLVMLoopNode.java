@@ -78,7 +78,7 @@ public abstract class LLVMLoopNode extends LLVMControlFlowNode {
             return successors;
         }
 
-        private static class LLVMRepeatingNode extends Node implements RepeatingNode {
+        private static final class LLVMRepeatingNode extends Node implements RepeatingNode {
 
             @Child private LLVMExpressionNode bodyNode;
 
