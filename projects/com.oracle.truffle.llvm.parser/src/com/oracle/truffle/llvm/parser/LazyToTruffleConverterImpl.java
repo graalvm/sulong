@@ -195,6 +195,11 @@ public class LazyToTruffleConverterImpl implements LazyToTruffleConverter {
 
             // replace header block with loop node
             resolvedNodes.set(headerId, runtime.getNodeFactory().createBasicBlockNode(new LLVMStatementNode[0], loopNode, headerId, ("loopAt" + headerId)));
+
+            // remove inner loops to reduce number of nodes
+            for (CFGLoop innerLoop : loop.getInnerLoops()) {
+                resolvedNodes.set(innerLoop.getHeader().id, null);
+            }
         }
 
         return resolvedNodes;
