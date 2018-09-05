@@ -3,7 +3,7 @@ Obsolete Repository
 
 This repository is obsolete.
 
-Sulong is now integrated in the [Graal repository](https://github.com/oracle/graal/sulong).
+Sulong is now integrated in the [Graal repository](https://github.com/oracle/graal/tree/master/sulong).
 
 Please open new issues or pull requests directly in the [Graal repository](https://github.com/oracle/graal).
 Existing issues and pull requests can stay on this repository. We will
