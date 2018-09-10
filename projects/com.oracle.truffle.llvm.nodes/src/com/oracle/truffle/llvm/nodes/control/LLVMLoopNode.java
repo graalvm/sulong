@@ -45,7 +45,7 @@ import com.oracle.truffle.llvm.runtime.nodes.api.LLVMStatementNode;
 public abstract class LLVMLoopNode extends LLVMControlFlowNode {
 
     public static LLVMLoopNode create(LLVMExpressionNode bodyNode, int[] successorIDs) {
-        return new LLVMLoopNodeImpl(bodyNode, successorIDs, null);  // TODO source section
+        return new LLVMLoopNodeImpl(bodyNode, successorIDs, null);
     }
 
     public LLVMLoopNode(LLVMSourceLocation source) {
