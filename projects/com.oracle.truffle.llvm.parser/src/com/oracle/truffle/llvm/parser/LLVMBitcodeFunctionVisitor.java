@@ -113,6 +113,8 @@ final class LLVMBitcodeFunctionVisitor implements FunctionVisitor {
             visitor.setInstructionIndex(i);
             instruction.accept(visitor);
         }
+
         blocks.add(context.getNodeFactory().createBasicBlockNode(visitor.getInstructions(), visitor.getControlFlowNode(), block.getBlockIndex(), block.getName()));
     }
+
 }
